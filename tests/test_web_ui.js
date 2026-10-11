@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const html = readFileSync(join(__dirname, '..', 'static', 'index.html'), 'utf8');
 const script = readFileSync(join(__dirname, '..', 'static', 'app.js'), 'utf8');
 
-function createApp(fetch) {
+function createApp(fetch, preview = false) {
     const elements = new Map();
     const downloads = [];
     const reportText = [];
@@ -25,6 +25,8 @@ function createApp(fetch) {
             this.children = [];
             this.style = {};
             this.value = '';
+            this.dataset = {};
+            this.hidden = false;
             this.listeners = new Map();
             this.classes = new Set();
             this.classList = {
@@ -56,6 +58,7 @@ function createApp(fetch) {
             this.listeners.get(name).push(listener);
         }
         dispatch(name) { return Promise.all((this.listeners.get(name) || []).map(listener => listener({}))); }
+        dispatchEvent(event) { return this.dispatch(event.type); }
         click() {
             if (this.tag === 'a') downloads.push({ href: this.href, filename: this.download });
             return this.dispatch('click');
@@ -81,14 +84,33 @@ function createApp(fetch) {
     }
 
     const getElementById = id => {
-        if (!elements.has(id)) elements.set(id, new Element());
+        if (!elements.has(id)) {
+            const element = new Element();
+            const openingTag = html.match(new RegExp(`<[^>]*\\bid="${id}"[^>]*>`));
+            element.hidden = openingTag ? /\bhidden(?:\s|>)/.test(openingTag[0]) : false;
+            elements.set(id, element);
+        }
         return elements.get(id);
     };
+    const exampleChips = [...html.matchAll(/class="example-chip" data-prompt="([^"]+)"/g)].map(match => {
+        const chip = new Element('button');
+        chip.dataset.prompt = match[1];
+        return chip;
+    });
+    const previewImages = [...html.matchAll(/data-preview-src="([^"]+)"/g)].map(match => {
+        const image = new Element('img');
+        image.dataset.previewSrc = match[1];
+        return image;
+    });
+    const tryIt = html.split('<section id="try-it">')[1].split('</section>')[0];
+    const controls = [...tryIt.matchAll(/<(?:button|input|textarea|select)\b[^>]*\bid="([^"]+)"/g)]
+        .map(match => getElementById(match[1])).concat(exampleChips);
     getElementById('liveEmotionBars').children = Array.from({ length: 7 }, () => new Element());
     getElementById('styleSelect').value = 'artistic';
     getElementById('generationBackend').textContent = html.match(/id="generationBackend"[^>]*>([^<]*)</)[1];
     const context = vm.createContext({
         document: {
+            documentElement: { dataset: preview ? { preview: 'true' } : {} },
             getElementById,
             createElement: tag => {
                 const element = new Element(tag);
@@ -96,9 +118,15 @@ function createApp(fetch) {
                 return element;
             },
             querySelector: () => null,
-            querySelectorAll: selector => selector === '.history-thumbnail'
-                ? getElementById('historyThumbnails').children.filter(el => el.classList.contains('history-thumbnail'))
-                : []
+            querySelectorAll: selector => {
+                if (selector === '.history-thumbnail') {
+                    return getElementById('historyThumbnails').children.filter(el => el.classList.contains('history-thumbnail'));
+                }
+                if (selector === '.example-chip') return exampleChips;
+                if (selector === '[data-preview-src]') return previewImages;
+                if (selector === '#try-it button, #try-it input, #try-it textarea, #try-it select') return controls;
+                return [];
+            }
         },
         window: { scrollY: 0, addEventListener() {} },
         IntersectionObserver: class { observe() {} },
@@ -112,13 +140,14 @@ function createApp(fetch) {
         setTimeout: callback => { timers.set(++nextTimer, callback); return nextTimer; },
         clearTimeout: id => timers.delete(id),
         AbortController,
+        Event,
         fetch,
         console: { error: (...args) => errors.push(args) }
     });
     vm.runInContext(script, context, { filename: 'static/app.js' });
     const api = vm.runInContext('({ generateImage, analyzeLive, downloadImage, downloadReport })', context);
     return { api, getElementById, downloads, reportText, reportImages, reportDraws,
-        reportCanvases, clipboard, errors, timers };
+        reportCanvases, clipboard, errors, timers, exampleChips, previewImages, controls };
 }
 
 function generation(text, seed, emotion = 'joy', backend = 'null') {
@@ -138,6 +167,60 @@ function generation(text, seed, emotion = 'joy', backend = 'null') {
         timestamp: '2026-10-05T00:00:00Z'
     };
 }
+
+test('static preview shows saved charts and disables controls without making API requests', async () => {
+    const requests = [];
+    const app = createApp(async url => { requests.push(url); }, true);
+    assert.equal(app.getElementById('previewNotice').hidden, false);
+    assert.equal(app.getElementById('saved-results').hidden, false);
+    assert.equal(app.getElementById('generationBackend').textContent, 'Static preview');
+    assert.equal(app.getElementById('liveStatusText').textContent, 'Requires the Python server');
+    assert.equal(app.getElementById('primaryEmotion').textContent, 'Not run');
+    assert.deepEqual(app.previewImages.map(image => image.src), [
+        'assets/results/recovery.svg', 'assets/results/probe-comparison.svg'
+    ]);
+    assert(app.controls.length > 10);
+    assert(app.controls.every(control => control.disabled));
+    for (const bar of app.getElementById('liveEmotionBars').children) {
+        assert.equal(bar.querySelector('.live-emotion-value').textContent, '—');
+    }
+
+    const input = app.getElementById('emotionInput');
+    input.value = 'I feel peaceful';
+    await input.dispatch('input');
+    await app.api.analyzeLive(input.value);
+    await app.api.generateImage();
+    for (const id of ['generateBtn', 'retryBtn', 'regenerateBtn']) {
+        await app.getElementById(id).click();
+    }
+    await app.exampleChips[0].click();
+    for (const callback of app.timers.values()) await callback();
+
+    assert.equal(input.value, 'I feel peaceful');
+    assert.equal(app.timers.size, 0);
+    assert.deepEqual(requests, []);
+    assert.deepEqual(app.errors, []);
+});
+
+test('ordinary server mode keeps preview content hidden and examples trigger live analysis', async () => {
+    const requests = [];
+    const app = createApp(async (url, options) => {
+        requests.push({ url, body: JSON.parse(options.body) });
+        return { json: async () => generation('example', 1) };
+    });
+    assert.equal(app.getElementById('previewNotice').hidden, true);
+    assert.equal(app.getElementById('saved-results').hidden, true);
+    assert(app.controls.every(control => !control.disabled));
+    assert(app.previewImages.every(image => image.src === undefined));
+
+    await app.exampleChips[0].click();
+    const prompt = app.exampleChips[0].dataset.prompt;
+    assert.equal(app.getElementById('emotionInput').value, prompt);
+    assert.equal(app.timers.size, 1);
+    for (const callback of app.timers.values()) await callback();
+    assert.deepEqual(requests, [{ url: '/api/analyze', body: { text: prompt } }]);
+    assert.deepEqual(app.errors, []);
+});
 
 test('history selection restores analysis, seed, image and report downloads', async () => {
     const app = createApp(async (_, options) => {

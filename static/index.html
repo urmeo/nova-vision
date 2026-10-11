@@ -8,6 +8,7 @@
     <title>NovaVision - Emotion-guided image generation</title>
 
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
 
@@ -29,6 +30,36 @@
     </header>
 
     <main>
+
+    <aside class="preview-notice" id="previewNotice" aria-label="Preview information" hidden>
+        <strong>Interface preview</strong>
+        <p>This site shows the interface and saved research results. Text analysis and image generation require the Python server.</p>
+        <div class="preview-links">
+            <a href="https://github.com/urmeo/nova-vision#run">Run locally</a>
+            <a href="#saved-results">View saved results</a>
+            <a href="#how-it-works">See the pipeline</a>
+        </div>
+    </aside>
+
+    <section id="saved-results" aria-labelledby="savedResultsTitle" hidden>
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title" id="savedResultsTitle">Saved results</h2>
+                <p class="section-subtitle">Charts from the recorded pilot and probe checks</p>
+            </div>
+            <div class="saved-results-grid">
+                <figure>
+                    <a href="assets/results/recovery.svg"><img data-preview-src="assets/results/recovery.svg" alt="Pilot recovery accuracy by conditioning tier, with bootstrap 95 percent confidence intervals"></a>
+                    <figcaption>SD-Turbo and CLIP ViT-B/32 on CPU; 256 × 256 images, two subjects, one seed. Each tier has 14 images; the scene control has seven. No condition exceeds the shuffled-label control at p &lt; .05. The pilot does not establish emotion controllability.</figcaption>
+                </figure>
+                <figure>
+                    <a href="assets/results/probe-comparison.svg"><img data-preview-src="assets/results/probe-comparison.svg" alt="Recorded probe accuracy on labelled face and scene samples"></a>
+                    <figcaption>Labelled face samples: n=200. Scene samples: n=400, with no neutral examples. These validation accuracies have not been shown to transfer to generated images.</figcaption>
+                </figure>
+            </div>
+            <p class="results-source"><a href="https://github.com/urmeo/nova-vision/blob/main/docs/results.md">Read the results and limitations</a></p>
+        </div>
+    </section>
 
     <section id="try-it">
         <div class="section-container">
@@ -177,7 +208,7 @@
                             </svg>
                             <p class="placeholder-text">Your image will appear here</p>
                         </div>
-                        <img id="generatedImage" src="" alt="Generated image">
+                        <img id="generatedImage" alt="Generated image">
                     </div>
                     <div class="generation-time" id="generationTime">
                         Generated in <span class="time-value" id="generationTimeValue">0.0</span> seconds

@@ -45,6 +45,11 @@ per process. Change them with `NOVA_RATE_LIMIT` and `NOVA_MAX_CONCURRENCY`.
 Request bodies are limited to 32 KiB. Set `CORS_ORIGINS` to the allowed origins.
 Enable `NOVA_TRUST_PROXY=1` only behind a configured proxy.
 
+GitHub Pages publishes a static interface preview when its source files change on
+`main`. The preview shows saved charts and disables analysis and generation. Build
+it locally with `python scripts/build_pages.py`; the output is `build/pages/`.
+The publishing workflow can also be run manually from GitHub Actions.
+
 ## Research commands
 
 Regenerate the visual report from saved records. This writes charts and tables to

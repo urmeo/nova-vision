@@ -22,6 +22,8 @@ These validation accuracies have not been shown to transfer to generated images.
 
 [All plots, tables, and limitations](docs/results.md) · [Method and data](docs/method.md)
 
+[View the interface preview](https://urmeo.github.io/nova-vision/). Text analysis and image generation require the Flask server described below.
+
 ## Run
 
 Python 3.9 or newer; CI checks 3.9–3.12.
@@ -57,6 +59,6 @@ tests/       Regression tests and synthetic fixtures
 outputs/     Saved records, original figures, and new runs
 ```
 
-[Interface preview](docs/assets/interface.png) · [Development](CONTRIBUTING.md) · [Notebook](notebooks/reproduce.ipynb) · [Folder guide](docs/structure.md)
+[Interface screenshot](docs/assets/interface.png) · [Development](CONTRIBUTING.md) · [Notebook](notebooks/reproduce.ipynb) · [Folder guide](docs/structure.md)
 
 Sole contributor: [urmeo](https://github.com/urmeo). Project code: [MIT](LICENSE). Model and dataset terms apply separately.

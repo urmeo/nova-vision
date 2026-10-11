@@ -1,3 +1,4 @@
+const isPreview = document.documentElement.dataset.preview === 'true';
 const navbar = document.getElementById('navbar');
 const heroTitle = document.querySelector('.app-header-title');
 const heroSubtitle = document.querySelector('.app-header-subtitle');
@@ -81,14 +82,14 @@ function resetToEmpty() {
     liveEmotionBars.classList.add('muted');
     liveTip.classList.remove('visible');
     liveStatus.classList.remove('analyzing', 'active');
-    liveStatusText.textContent = 'Ready';
+    liveStatusText.textContent = isPreview ? 'Requires the Python server' : 'Ready';
 
     for (const bar of liveEmotionBars.children) {
         bar.querySelector('.live-emotion-name').classList.remove('dominant');
         const fill = bar.querySelector('.live-emotion-fill');
         fill.style.width = '2px';
         fill.className = 'live-emotion-fill muted';
-        bar.querySelector('.live-emotion-value').textContent = '0%';
+        bar.querySelector('.live-emotion-value').textContent = isPreview ? '—' : '0%';
     }
 }
 
@@ -122,6 +123,7 @@ function updateLiveEmotions(emotions, primaryEmotion, confidence) {
 }
 
 async function analyzeLive(text) {
+    if (isPreview) return;
     text = text.trim();
     if (text.length < minTextLength || text.length > maxTextLength) {
         resetToEmpty();
@@ -168,6 +170,7 @@ const emotionInput = document.getElementById('emotionInput');
 resetToEmpty();
 
 emotionInput.addEventListener('input', () => {
+    if (isPreview) return;
     clearTimeout(debounceTimer);
 
     const text = emotionInput.value.trim();
@@ -359,6 +362,7 @@ document.getElementById('downloadReportBtn').addEventListener('click', downloadR
 
 document.querySelectorAll('.example-chip').forEach(chip => {
     chip.addEventListener('click', () => {
+        if (isPreview) return;
         emotionInput.value = chip.dataset.prompt;
         emotionInput.focus();
 
@@ -571,6 +575,7 @@ function displayGeneration(data) {
 }
 
 async function generateImage() {
+    if (isPreview) return;
     const text = emotionInput.value.trim();
     if (!text) {
         emotionInput.focus();
@@ -646,7 +651,7 @@ async function generateImage() {
 generateBtn.addEventListener('click', generateImage);
 
 document.getElementById('regenerateBtn').addEventListener('click', () => {
-    if (!currentGenerationData || generateBtn.disabled) return;
+    if (isPreview || !currentGenerationData || generateBtn.disabled) return;
     clearTimeout(debounceTimer);
     cancelLiveAnalysis();
     emotionInput.value = currentGenerationData.original_text;
@@ -660,6 +665,26 @@ document.getElementById('regenerateBtn').addEventListener('click', () => {
 });
 
 retryBtn.addEventListener('click', generateImage);
+
+if (isPreview) {
+    document.getElementById('previewNotice').hidden = false;
+    document.getElementById('saved-results').hidden = false;
+    document.querySelectorAll('[data-preview-src]').forEach(image => {
+        image.src = image.dataset.previewSrc;
+    });
+    document.querySelectorAll('#try-it button, #try-it input, #try-it textarea, #try-it select')
+        .forEach(control => { control.disabled = true; });
+    btnText.textContent = 'Run locally to generate images';
+    emotionInput.placeholder = 'Text analysis and image generation require the Python server.';
+    placeholder.querySelector('.placeholder-text').textContent = 'Image generation is unavailable in this preview.';
+    document.getElementById('generationBackend').textContent = 'Static preview';
+    document.getElementById('primaryEmotion').textContent = 'Not run';
+    document.getElementById('valenceDisplay').textContent = '—';
+    document.getElementById('arousalDisplay').textContent = '—';
+    document.querySelectorAll('#emotionBars .emotion-value').forEach(value => {
+        value.textContent = '—';
+    });
+}
 
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
