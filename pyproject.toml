@@ -9,7 +9,7 @@ description = "Emotion-guided image generation and paired emotion-recovery evalu
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "Urme" }]
+authors = [{ name = "urmeo" }]
 requires-python = ">=3.9"
 keywords = [
     "emotion", "affective-computing", "text-to-image", "diffusion", "clip",
@@ -35,7 +35,7 @@ research = ["matplotlib>=3.7", "datasets>=2.18"]
 dev = ["pytest>=8.0", "ruff>=0.5", "matplotlib>=3.7", "flask>=3.0", "flask-cors>=4.0", "gunicorn>=21"]
 
 [project.urls]
-Repository = "https://github.com/urmeo/NovaVision"
+Repository = "https://github.com/urmeo/nova-vision"
 
 [tool.setuptools.packages.find]
 include = ["novavision*"]

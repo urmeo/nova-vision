@@ -1,4 +1,4 @@
-"How large must the powered run be to detect a controllability effect?"
+"Estimate sample sizes with an illustrative binomial simulation."
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def power_at(n: int, p1: float, chance: float, rng: np.random.Generator) -> floa
 def min_n_for_power(
     p1: float, chance: float, rng: np.random.Generator, n_max: int = 5000
 ) -> int | None:
-    """Smallest n reaching TARGET_POWER, or None if unreachable within n_max."""
+    """Smallest tested n reaching TARGET_POWER, or None within n_max."""
     if p1 <= chance:
         return None
     for n in range(10, n_max + 1, 10):
@@ -74,9 +74,10 @@ def analyze(ceiling: float, planned_n: int) -> dict:
 def _format(report: dict) -> str:
     lines = [
         "Illustrative binomial planning simulation; not power of the benchmark's permutation test.",
-        f"Probe ceiling {report['probe_ceiling']} (real-scene recovery); "
+        f"Assumed ceiling {report['probe_ceiling']} from real-scene validation; "
         f"chance {report['chance']}; alpha {report['alpha']}; "
         f"target power {report['target_power']}.",
+        "Assumes validation accuracy transfers to generated images and trials are independent.",
         "",
         "| Effect s | Recovery acc | n for 80% power | Power at planned n={} |".format(
             report["planned_n"]
@@ -93,11 +94,11 @@ def _format(report: dict) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Sample-size analysis for the powered run")
+    parser = argparse.ArgumentParser(description="Illustrative binomial sample-size simulation")
     parser.add_argument(
         "--probe-validation",
         default="outputs/results/probe_validation_scene_l14.json",
-        help="probe validation JSON; its accuracy is the recovery ceiling",
+        help="probe validation JSON; assumes its accuracy is a ceiling for generated images",
     )
     parser.add_argument("--planned-n", type=int, default=420, help="per-tier n of the planned run")
     parser.add_argument("--out", default="outputs/generated/power_analysis.json")

@@ -13,6 +13,7 @@ def test_submission_from_committed_results_matches_schema():
     schema = json.loads(
         (
             Path(make_submission.__file__).resolve().parents[1]
+            / "docs"
             / "benchmark"
             / "submission.schema.json"
         ).read_text()

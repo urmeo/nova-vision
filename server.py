@@ -14,6 +14,7 @@ from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory
 
+from novavision.affect.analyzer import EmotionAnalysis
 from novavision.pipeline import NovaVision, build_pipeline
 from novavision.prompting import STYLE_PRESETS
 from novavision.serving import ConcurrencyGuard, RateLimiter, env_int, resolve_host, token_ok
@@ -55,9 +56,15 @@ def pipeline() -> NovaVision:
     return _pipeline
 
 
-def _emotion_list(scores: dict[str, float]):
-    ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
-    return [{"name": name, "score": round(score * 100, 1)} for name, score in ranked]
+def _analysis_payload(analysis: EmotionAnalysis) -> dict:
+    ranked = sorted(analysis.scores.items(), key=lambda item: item[1], reverse=True)
+    return {
+        "primary_emotion": analysis.primary,
+        "confidence": round(analysis.confidence * 100, 1),
+        "valence": analysis.valence,
+        "arousal": analysis.arousal,
+        "emotions": [{"name": name, "score": round(score * 100, 1)} for name, score in ranked],
+    }
 
 
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
@@ -113,21 +120,12 @@ def analyze():
         return jsonify({"error": error}), 400
 
     try:
-        a = pipeline().analyzer.analyze(text)
+        analysis = pipeline().analyzer.analyze(text)
     except Exception:
         logger.exception("analyze failed")
         return jsonify({"error": "Analysis failed."}), 500
 
-    return jsonify(
-        {
-            "success": True,
-            "primary_emotion": a.primary,
-            "confidence": round(a.confidence * 100, 1),
-            "valence": a.valence,
-            "arousal": a.arousal,
-            "emotions": _emotion_list(a.scores),
-        }
-    )
+    return jsonify({"success": True, **_analysis_payload(analysis)})
 
 
 @app.route("/api/generate", methods=["POST"])
@@ -171,16 +169,11 @@ def generate():
     buffer = BytesIO()
     result.image.save(buffer, format="PNG")
     image = base64.b64encode(buffer.getvalue()).decode("utf-8")
-    a = result.analysis
     return jsonify(
         {
             "success": True,
+            **_analysis_payload(result.analysis),
             "image": f"data:image/png;base64,{image}",
-            "primary_emotion": a.primary,
-            "confidence": round(a.confidence * 100, 1),
-            "valence": a.valence,
-            "arousal": a.arousal,
-            "emotions": _emotion_list(a.scores),
             "prompt": result.prompt,
             "original_text": text,
             "style": style,

@@ -62,7 +62,10 @@ def main() -> None:
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(submission, indent=2))
-    print(f"Wrote {args.out}. Validate against benchmark/submission.schema.json before submitting.")
+    print(
+        f"Wrote {args.out}. "
+        "Validate against docs/benchmark/submission.schema.json before submitting."
+    )
 
 
 if __name__ == "__main__":

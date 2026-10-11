@@ -6,7 +6,9 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("recorded_figures", ROOT / "docs/render_results.py")
+SPEC = importlib.util.spec_from_file_location(
+    "recorded_figures", ROOT / "scripts/render_results.py"
+)
 renderer = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(renderer)
 

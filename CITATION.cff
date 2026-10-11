@@ -4,8 +4,8 @@ type: software
 title: "NovaVision: Emotion-guided image generation and recovery evaluation"
 version: 1.0.0
 date-released: 2026-09-06
-url: "https://github.com/urmeo/NovaVision"
-repository-code: "https://github.com/urmeo/NovaVision"
+url: "https://github.com/urmeo/nova-vision"
+repository-code: "https://github.com/urmeo/nova-vision"
 license: MIT
 authors:
   - given-names: Urme

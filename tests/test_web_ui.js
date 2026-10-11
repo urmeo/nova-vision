@@ -111,8 +111,6 @@ function createApp(fetch) {
         Math: Object.assign(Object.create(Math), { random: () => 0.5 }),
         setTimeout: callback => { timers.set(++nextTimer, callback); return nextTimer; },
         clearTimeout: id => timers.delete(id),
-        setInterval: () => ++nextTimer,
-        clearInterval() {},
         AbortController,
         fetch,
         console: { error: (...args) => errors.push(args) }
@@ -350,5 +348,67 @@ test('unsafe seeds are rejected and the largest safe seed is submitted exactly',
     await app.api.generateImage();
     assert.equal(requests[0].seed, Number.MAX_SAFE_INTEGER);
     assert.equal(app.getElementById('lastSeedValue').textContent, '9007199254740991');
+    assert.deepEqual(app.errors, []);
+});
+
+test('short scene descriptions are analyzed and completed low scores have a ready status', async () => {
+    const requests = [];
+    const app = createApp(async (url, options) => {
+        requests.push({ url, body: JSON.parse(options.body) });
+        return { json: async () => ({
+            ...generation('cat', 1, 'neutral'),
+            confidence: 25,
+            emotions: [{ name: 'neutral', score: 25 }, { name: 'joy', score: 20 }]
+        }) };
+    });
+
+    await app.api.analyzeLive('cat');
+
+    assert.deepEqual(requests, [{ url: '/api/analyze', body: { text: 'cat' } }]);
+    assert.equal(app.getElementById('liveStatusText').textContent, 'Scores ready');
+    assert(!app.getElementById('liveStatus').classList.contains('analyzing'));
+    assert(app.getElementById('liveStatus').classList.contains('active'));
+    assert.deepEqual(app.errors, []);
+});
+
+test('analysis and generation reject text outside the API length limits', async () => {
+    let requests = 0;
+    const app = createApp(async () => { requests += 1; });
+
+    for (const text of ['ab', 'a'.repeat(2001)]) {
+        await app.api.analyzeLive(text);
+        assert.equal(app.getElementById('liveStatusText').textContent, 'Use 3–2000 characters');
+        app.getElementById('emotionInput').value = text;
+        await app.api.generateImage();
+        assert.equal(app.getElementById('errorText').textContent, 'Enter 3–2000 characters.');
+    }
+
+    assert.equal(requests, 0);
+    assert.deepEqual(app.errors, []);
+});
+
+test('failed generation keeps the previous result and clears the loading state', async () => {
+    let requests = 0;
+    const app = createApp(async () => ({ json: async () => ++requests === 1
+        ? { ...generation('first image', 1, 'neutral'), valence: 0 }
+        : { error: 'Server busy. Try again shortly.' }
+    }));
+    app.getElementById('emotionInput').value = 'first image';
+    await app.api.generateImage();
+    assert(app.getElementById('valenceDisplay').innerHTML.startsWith('Neutral'));
+    assert(app.getElementById('valenceDisplay').classList.contains('neutral'));
+
+    app.getElementById('emotionInput').value = 'second image';
+    await app.api.generateImage();
+
+    assert.equal(app.getElementById('generatedImage').src, 'data:image/png;base64,first image');
+    assert.equal(app.getElementById('placeholder').style.display, 'none');
+    assert.equal(app.getElementById('errorDetails').textContent, 'Server busy. Try again shortly.');
+    assert(!app.getElementById('loadingOverlay').classList.contains('active'));
+    assert(!app.getElementById('imageDisplay').classList.contains('generating'));
+    assert(!app.getElementById('generateBtn').disabled);
+    assert.equal(app.getElementById('generateBtn').querySelector('.btn-text').textContent, 'Generate image');
+    app.api.downloadImage();
+    assert.equal(app.downloads[0].href, 'data:image/png;base64,first image');
     assert.deepEqual(app.errors, []);
 });

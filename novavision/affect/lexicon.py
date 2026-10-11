@@ -80,36 +80,37 @@ class AffectLexicon:
         return len(self._entries)
 
     def lookup(self, word: str) -> tuple[float, float] | None:
-        for v in _variants(word.lower()):
-            if v in STOPWORDS or v in NEGATORS:
+        for variant in _variants(word.lower()):
+            if variant in STOPWORDS or variant in NEGATORS:
                 continue
-            if v in self._entries:
-                return self._entries[v]
+            if variant in self._entries:
+                return self._entries[variant]
         return None
 
     def score(self, text: str) -> AffectScore:
 
         tokens = _TOKEN.findall(text.lower().replace("’", "'"))
         matched: list[tuple[float, float]] = []
-        n_content = 0
-        for i, tok in enumerate(tokens):
-            if tok in STOPWORDS or tok in NEGATORS:
+        content_count = 0
+        for index, token in enumerate(tokens):
+            if token in STOPWORDS or token in NEGATORS:
                 continue
-            n_content += 1
-            hit = self.lookup(tok)
+            content_count += 1
+            hit = self.lookup(token)
             if hit is None:
                 continue
-            v, a = hit
+            valence, arousal = hit
 
-            if any(t in NEGATORS for t in tokens[max(0, i - 2) : i]):
-                v = -v
-            matched.append((v, a))
+            if any(previous in NEGATORS for previous in tokens[max(0, index - 2) : index]):
+                valence = -valence
+            matched.append((valence, arousal))
         if not matched:
             return AffectScore(0.0, 0.5, 0.0)
 
-        valence = sum(v for v, _ in matched) / len(matched)
-        arousal = sum(a for _, a in matched) / len(matched)
-        return AffectScore(round(valence, 4), round(arousal, 4), round(len(matched) / n_content, 4))
+        valence = sum(value for value, _ in matched) / len(matched)
+        arousal = sum(value for _, value in matched) / len(matched)
+        coverage = len(matched) / content_count
+        return AffectScore(round(valence, 4), round(arousal, 4), round(coverage, 4))
 
     @classmethod
     def load(cls, path: str | os.PathLike | None = None) -> AffectLexicon:

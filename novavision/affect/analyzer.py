@@ -1,4 +1,4 @@
-"""Discrete emotion classification with grounded valence/arousal."""
+"""Emotion classification with lexicon-based valence and arousal."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class EmotionAnalysis:
 
 
 class EmotionAnalyzer:
-    """DistilRoBERTa emotion classifier + lexicon-grounded affect."""
+    """Blend word-level affect scores with priors for the classified emotion."""
 
     def __init__(
         self,
@@ -82,18 +82,19 @@ class EmotionAnalyzer:
             raise ValueError("Input text cannot be empty")
 
         raw = self.classifier(text, truncation=True)[0]
-        scores = {r["label"].lower(): float(r["score"]) for r in raw}
-        primary = max(scores, key=lambda k: scores[k])
+        scores = {result["label"].lower(): float(result["score"]) for result in raw}
+        primary = max(scores, key=scores.__getitem__)
 
         affect = self.lexicon.score(text)
-        pv, pa = prior(primary)
-        c = (
+        prior_valence, prior_arousal = prior(primary)
+        lexicon_weight = (
             self.coverage_override
             if self.coverage_override is not None
             else min(affect.coverage, MAX_LEXICON_BLEND)
         )
-        valence = c * affect.valence + (1 - c) * pv
-        arousal = c * affect.arousal + (1 - c) * pa
+        prior_weight = 1 - lexicon_weight
+        valence = lexicon_weight * affect.valence + prior_weight * prior_valence
+        arousal = lexicon_weight * affect.arousal + prior_weight * prior_arousal
 
         return EmotionAnalysis(
             primary=primary,

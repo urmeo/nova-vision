@@ -1,4 +1,4 @@
-"""Render audits of saved predictions; no image or model validation is rerun."""
+"""Plot saved probe predictions without rerunning models or validating images."""
 
 from __future__ import annotations
 
@@ -15,7 +15,6 @@ import numpy as np
 from matplotlib import font_manager
 
 ROOT = Path(__file__).resolve().parents[1]
-FONT = Path("/System/Library/Fonts/Supplemental/Times New Roman.ttf")
 SOURCES = (
     ("Faces", "probe_validation.json", "probe_validation_l14.json"),
     ("Scenes", "probe_validation_scene.json", "probe_validation_scene_l14.json"),
@@ -47,17 +46,18 @@ def _canvas(title, subtitle):
     fig.text(
         0.06,
         0.04,
-        "Original image IDs/revisions absent; no model rerun or human validation.",
+        "Image IDs and revisions were not saved. No model rerun or human validation.",
         fontsize=14,
     )
-    fig.subplots_adjust(left=0.16, right=0.95, bottom=0.20, top=0.78)
+    fig.subplots_adjust(left=0.20, right=0.95, bottom=0.20, top=0.78)
     return fig, ax
 
 
-def render(output_dir, font=FONT):
-    font_manager.fontManager.addfont(str(font))
-    family = font_manager.FontProperties(fname=str(font)).get_name()
-    plt.rcParams.update({"font.family": family, "font.size": 17})
+def render(output_dir, font=None):
+    if font is not None:
+        font_manager.fontManager.addfont(str(font))
+        plt.rcParams["font.family"] = font_manager.FontProperties(fname=str(font)).get_name()
+    plt.rcParams["font.size"] = 17
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     reports, sources = {}, {}
@@ -77,8 +77,8 @@ def render(output_dir, font=FONT):
         metadata = {
             "sources_sha256": sources,
             "fields": fields,
-            "method": "Recomputed from retained gold/prediction arrays",
-            "limit": "Original image IDs and revisions are absent; not reproduced validation",
+            "method": "Recomputed from saved gold labels and predictions",
+            "limit": "Original image IDs and revisions are absent; image validation was not rerun",
         }
         fig.savefig(output_dir / filename, metadata={"Description": json.dumps(metadata)})
         plt.close(fig)
@@ -98,7 +98,7 @@ def render(output_dir, font=FONT):
     save(fig, "recorded-probe-accuracy.png", ["gold", "predictions", "n"])
 
     report, _, counts = reports["Scenes"][0]
-    fig, ax = _canvas("Recorded scene errors", "CLIP B/32; 400 retained gold/prediction pairs")
+    fig, ax = _canvas("Recorded scene errors", "CLIP B/32; 400 saved gold labels and predictions")
     ax.imshow(counts, cmap="GnBu", vmin=0, vmax=counts.max())
     ax.set_xticks(range(len(report["labels"])), report["labels"], rotation=30, ha="right")
     ax.set_yticks(range(len(report["labels"])), report["labels"])
@@ -120,7 +120,7 @@ def render(output_dir, font=FONT):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--font", type=Path, default=FONT)
+    parser.add_argument("--font", type=Path, help="optional path to a font file")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "outputs/figures")
     args = parser.parse_args()
     render(args.output_dir, args.font)

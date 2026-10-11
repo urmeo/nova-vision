@@ -1,4 +1,4 @@
-"""Local diffusion backend (reproducible, seedable)."""
+"""Local text-to-image generation with Diffusers."""
 
 from __future__ import annotations
 

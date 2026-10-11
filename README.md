@@ -1,108 +1,62 @@
 # NovaVision
 
-Emotion-guided images · paired recovery evaluation
+Generate images from English text and emotion labels. Compare intended and recovered emotion in separate experiments.
 
-[Notebook](reproduce.ipynb) · [Development](CONTRIBUTING.md)
+![Text to image pipeline and separate experiment evaluation](docs/assets/pipeline.svg)
 
-<p align="center">
-  <img src="outputs/figures/demo.gif" alt="NovaVision demo" width="1000">
-</p>
-
-## Overview
-
-English text → emotion-conditioned images. The saved pilot **does not establish emotion controllability**.
-
-### Data flow
-
-```mermaid
-flowchart LR
-    T[Text] --> A[Emotion + lexical affect] --> P[Prompt] --> G[Generator]
-    G --> I[Image] --> R[Recovery probe] --> M[Paired metrics]
-```
+**Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask**
 
 ## Results
 
-**SD-Turbo · CLIP B/32 · CPU · 256 px · 2 neutral prompts · 1 seed**
+| Generator | Recovery probe | Device | Resolution | Subjects | Seeds |
+|---|---|---|---|---:|---:|
+| SD-Turbo | CLIP ViT-B/32 | CPU | 256 × 256 | 2 | 1 |
 
-| Tier | n | Recovery | Bootstrap 95% CI | Permutation p |
-|---|---:|---:|---:|---:|
-| Raw | 14 | 14.3% | 0–35.7% | .857 |
-| Emotion | 14 | 21.4% | 0–42.9% | .226 |
-| Affect | 14 | 21.4% | 0–42.9% | .137 |
-| Scene | 7 | 28.6% | 0–57.5% | .145 |
+![Saved pilot recovery accuracy with bootstrap 95% confidence intervals](docs/assets/results/recovery.png)
 
-**Chance: 14.3%.** No conditioning tier survives Holm correction; naive is unmeasured.
+The pilot does not establish emotion controllability. It has 14 images per conditioning tier and seven scene controls. The probe predicts neutral for 90.5% of conditioning-tier images. No condition exceeds the shuffled-label control at p < .05; `naive` is unmeasured.
 
-| Recovery, 95% CI | Raw confusion |
-|:---:|:---:|
-| <img src="outputs/figures/accuracy.png" alt="Recovery intervals" width="420"> | <img src="outputs/figures/confusion_raw.png" alt="Raw confusion" width="420"> |
+![Recorded probe accuracy on labelled face and scene samples](docs/assets/results/probe-comparison.png)
 
-[All figures](outputs/figures) · [Records](outputs/results/results.json)
+These validation accuracies have not been shown to transfer to generated images. The scene sample has no neutral examples. Exact image replay is unverified because historical source and image provenance are incomplete.
 
-### Probe diagnostics
+[All plots, tables, and limitations](docs/results.md) · [Method and data](docs/method.md)
 
-| Probe | Faces, n=200 | Scenes, n=400 |
-|---|---:|---:|
-| CLIP B/32 | 29.0% | 40.3% |
-| CLIP L/14 | 37.5% | 45.5% |
+## Run
 
-McNemar p: **.040 faces · .038 scenes**. Pilot: **2/7 predicted labels · 90.5% neutral**.
+Python 3.9 or newer; CI checks 3.9–3.12.
 
-Correction covers **5/7 classes: 10.0% apparent → 16.5% corrected**. Seven-class correction and uncertainty are unavailable.
+```bash
+git clone https://github.com/urmeo/nova-vision.git
+cd nova-vision
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[app,ml]"
+NOVA_BACKEND=diffusers python server.py
+```
 
-### Protocol & provenance
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). Models download on first use. CPU generation can be slow. The default backend, `null`, creates test images; text analysis still needs its classifier. Hosted generation uses `NOVA_BACKEND=hf-api` and `HF_TOKEN` and sends prompts to the provider.
 
-1. Shared seeds, neutral content and a separate scene control.
-2. Saved-record metrics reproduce; 2,000 permutations test recovery against shuffled labels.
-3. Historical source commits, model pins and original images are missing; image replay is unverified.
+Check the code and regenerate the charts without model downloads:
 
-## Architecture
+```bash
+python -m pip install -e ".[dev,research]"
+python -m pytest
+python scripts/visualize.py
+```
 
-| Module | Role |
-|---|---|
-| `affect` | Classifier + lexical affect blended with emotion priors |
-| `prompting` | Raw → naive → emotion → affect; scene control |
-| `generation` | Local, hosted or synthetic test images |
-| `eval` / `experiments` | Probes, statistics, ratings, provenance, guarded resume |
-| `outputs/` | Results, figures and generated runs |
+## Repository
 
-## Tech stack
+```text
+novavision/  Analysis, prompts, generation, and evaluation
+static/      Web interface; server.py serves it
+scripts/     Research commands and chart generation
+notebooks/   Saved-result checks and optional model runs
+docs/        Method, visual results, and submission schema
+tests/       Regression tests and synthetic fixtures
+outputs/     Saved records, original figures, and new runs
+```
 
-| Layer | Tools |
-|---|---|
-| App | Python, Flask, Gunicorn, HTML/CSS/JavaScript |
-| Models | PyTorch, Transformers, Diffusers, DistilRoBERTa, CLIP |
-| Research | NumPy, Pillow, matplotlib, Hugging Face Datasets |
+[Interface preview](docs/assets/interface.png) · [Development](CONTRIBUTING.md) · [Notebook](notebooks/reproduce.ipynb) · [Folder guide](docs/structure.md)
 
-| Interface | Analysis |
-|:---:|:---:|
-| <img src="outputs/figures/main_interface.png" alt="Interface" width="420"> | <img src="outputs/figures/emotion_analysis.png" alt="Analysis" width="420"> |
-
-## Limitations
-
-1. **Small pilot:** 14 images/tier; seven scenes; no naive result.
-2. **Probe error:** collapsed labels; incomplete correction; no validated controllability score.
-3. **Affect:** content uses priors; the demo lexicon lacks empirical norms.
-
-## Future work
-
-1. Validate with ≥3 independent human raters.
-2. Evaluate text-grounded affect using research norms.
-3. Preregister 420 images/tier; save originals and complete provenance.
-
-## Ethics & data use
-
-1. Predictions do not verify feelings; avoid clinical assessments.
-2. Obtain rater consent; respect model/data licenses; fixtures are for tests.
-3. Hosted generation shares prompts with its provider; exclude sensitive text.
-
-## References
-
-1. Radford et al. (2021). [CLIP](https://proceedings.mlr.press/v139/radford21a.html). ICML.
-2. Sauer et al. (2023). [Adversarial Diffusion Distillation](https://arxiv.org/abs/2311.17042).
-3. Demszky et al. (2020). [GoEmotions](https://aclanthology.org/2020.acl-main.372/). ACL.
-4. Yang et al. (2023). [EmoSet](https://arxiv.org/abs/2307.07961). ICCV.
-
-## License
-
-[MIT](LICENSE)
+Sole contributor: [urmeo](https://github.com/urmeo). Project code: [MIT](LICENSE). Model and dataset terms apply separately.

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from math import comb
+from pathlib import Path
 
 
 def mcnemar_exact(gold, pred_a, pred_b) -> dict:
@@ -27,8 +28,8 @@ def main() -> None:
     parser.add_argument("report_b", help="probe_validation JSON from the same sample")
     args = parser.parse_args()
 
-    a = json.load(open(args.report_a))
-    b = json.load(open(args.report_b))
+    a = json.loads(Path(args.report_a).read_text())
+    b = json.loads(Path(args.report_b).read_text())
     if a["gold"] != b["gold"]:
         raise SystemExit("reports are not from the same sample; a paired test is invalid")
     for r in (a, b):

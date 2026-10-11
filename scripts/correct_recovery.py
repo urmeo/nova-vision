@@ -58,20 +58,20 @@ def correct(results: dict, validation: dict, tier: str) -> dict:
     for e in EMOTIONS:
         a, (sens, spec) = apparent[e], ss[e]
         c = rogan_gladen(a, sens, spec) if a == a else float("nan")
+        if not np.isfinite(a):
+            status = "no_run_records"
+        elif not np.isfinite(sens):
+            status = "no_validation_support"
+        elif not np.isfinite(c):
+            status = "non_discriminating_probe"
+        else:
+            status = "estimable"
         per_class[e] = {
             "apparent": _round(a),
             "sensitivity": _round(sens),
             "specificity": _round(spec),
             "corrected": _round(c),
-            "status": (
-                "no_run_records"
-                if not np.isfinite(a)
-                else "no_validation_support"
-                if not np.isfinite(sens)
-                else "non_discriminating_probe"
-                if not np.isfinite(c)
-                else "estimable"
-            ),
+            "status": status,
         }
         if c == c:
             corrected_vals.append(c)

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="390" viewBox="0 0 1200 390" role="img" aria-labelledby="title description">
+  <title id="title">NovaVision pipeline</title>
+  <desc id="description">The web app analyzes English text, builds an image prompt, and generates an image. Experiments separately use an image probe to compare recovered emotion with intended labels.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#7c3aed"/></marker>
+  </defs>
+  <rect width="1200" height="390" rx="22" fill="#f8fafc"/>
+  <g font-family="Arial, sans-serif">
+    <text x="40" y="45" font-size="24" font-weight="700" fill="#0f172a">Text to image</text>
+    <text x="1160" y="45" text-anchor="end" font-size="16" fill="#64748b">Web app</text>
+    <g fill="#fff" stroke="#ddd6fe" stroke-width="2">
+      <rect x="40" y="80" width="235" height="145" rx="16"/>
+      <rect x="335" y="80" width="235" height="145" rx="16"/>
+      <rect x="630" y="80" width="235" height="145" rx="16"/>
+      <rect x="925" y="80" width="235" height="145" rx="16"/>
+    </g>
+    <g fill="#7c3aed" font-size="16" font-weight="700">
+      <text x="62" y="113">01</text><text x="357" y="113">02</text><text x="652" y="113">03</text><text x="947" y="113">04</text>
+    </g>
+    <g fill="#0f172a" font-size="24" font-weight="700">
+      <text x="62" y="155">Text</text><text x="357" y="155">Analyze</text><text x="652" y="155">Build prompt</text><text x="947" y="155">Generate</text>
+    </g>
+    <g fill="#475569" font-size="16">
+      <text x="62" y="190">English sentence</text><text x="357" y="190">Emotion + word scores</text><text x="652" y="190">Text + mood + style</text><text x="947" y="190">Local or hosted image</text>
+    </g>
+    <g stroke="#7c3aed" stroke-width="3" marker-end="url(#arrow)">
+      <path d="M285 152H323"/><path d="M580 152H618"/><path d="M875 152H913"/>
+    </g>
+    <rect x="40" y="263" width="1120" height="92" rx="16" fill="#f1f5f9" stroke="#cbd5e1" stroke-dasharray="6 5"/>
+    <text x="62" y="297" font-size="20" font-weight="700" fill="#0f172a">Experiment runner</text>
+    <text x="62" y="326" font-size="14" fill="#64748b">Paired seeds · intended labels</text>
+    <g fill="#fff" stroke="#cbd5e1"><rect x="430" y="286" width="185" height="46" rx="9"/><rect x="665" y="286" width="185" height="46" rx="9"/><rect x="900" y="286" width="235" height="46" rx="9"/></g>
+    <g fill="#334155" font-size="17" text-anchor="middle"><text x="522" y="315">Generated image</text><text x="757" y="315">Recovery probe</text><text x="1017" y="315">Compare with target</text></g>
+    <g stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"><path d="M625 309H653"/><path d="M860 309H888"/></g>
+  </g>
+</svg>

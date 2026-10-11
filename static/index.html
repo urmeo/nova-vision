@@ -202,27 +202,6 @@
             margin-bottom: 64px;
         }
 
-        .section-tag {
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #7C3AED;
-            margin-bottom: 16px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .section-tag::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: linear-gradient(135deg, #7C3AED, #8b5cf6);
-            border-radius: 50%;
-            box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
-        }
-
         .section-title {
             font-size: 40px;
             font-weight: 700;
@@ -705,6 +684,7 @@
 
         .dimension-item {
             flex: 1;
+            min-width: 0;
             padding: 14px 18px;
             background: #fff;
             border-radius: 10px;
@@ -754,6 +734,28 @@
             color: #94a3b8;
             font-weight: 400;
             margin-left: 4px;
+        }
+
+        .dimension-scale {
+            height: 5px;
+            border-radius: 3px;
+            margin: 12px 0 5px;
+        }
+
+        .valence-scale {
+            background: linear-gradient(90deg, #64748b, #e2e8f0, #7c3aed);
+        }
+
+        .arousal-scale {
+            background: linear-gradient(90deg, #cbd5e1, #7c3aed);
+        }
+
+        .dimension-range {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            color: #64748b;
+            font-size: 11px;
         }
 
         .all-emotions-grid {
@@ -1698,165 +1700,67 @@
             background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.3), transparent);
         }
 
-        .steps-container {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 24px;
-            position: relative;
-        }
-
-
-        .steps-container::before {
-            content: '';
-            position: absolute;
-            top: 44px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60%;
-            height: 4px;
-            background: linear-gradient(90deg,
-                transparent 0%,
-                #e2e8f0 10%,
-                #7C3AED 35%,
-                #7C3AED 65%,
-                #e2e8f0 90%,
-                transparent 100%);
-            border-radius: 2px;
-            z-index: 0;
-        }
-
-        .step {
-            flex: 1;
-            max-width: 300px;
-            text-align: center;
-            position: relative;
-            padding: 0 16px;
-            transition: transform 0.3s ease;
-        }
-
-        .step:hover {
-            transform: translateY(-4px);
-        }
-
-
-        .step-number {
-            width: 80px;
-            height: 80px;
-            background: #fff;
-            border: 2px solid #e2e8f0;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 24px;
-            font-size: 28px;
-            font-weight: 700;
-            color: #7C3AED;
-            position: relative;
-            z-index: 1;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
-
-        .step:hover .step-number {
-            border-color: #7C3AED;
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
-        }
-
-        .step-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 12px;
-            letter-spacing: -0.5px;
-        }
-
-        .step-description {
-            font-size: 15px;
-            color: #64748b;
-            line-height: 1.7;
-        }
-
-
-        #features {
-            background: linear-gradient(180deg, #fff 0%, #faf9fc 100%);
-            position: relative;
-        }
-
-        #features::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.3), transparent);
-        }
-
-        .features-grid {
+        .pipeline {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 32px;
+            list-style: none;
+            counter-reset: pipeline;
         }
 
-        .feature-card {
-            padding: 32px;
-            background: #ffffff;
-            border-radius: 12px;
-            border: 1px solid rgba(124, 58, 237, 0.08);
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .pipeline-step {
+            position: relative;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #fff;
+            counter-increment: pipeline;
         }
 
-        .feature-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 16px 48px rgba(124, 58, 237, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
-            border-color: rgba(124, 58, 237, 0.15);
+        .pipeline-step::before {
+            content: counter(pipeline);
+            display: block;
+            color: #7c3aed;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 16px;
         }
 
-        .feature-icon {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, #7C3AED 0%, #8b5cf6 100%);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 24px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+        .pipeline-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            top: 50%;
+            right: -26px;
+            transform: translateY(-50%);
+            color: #7c3aed;
+            font-size: 24px;
         }
 
-        .feature-card:hover .feature-icon {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+        .pipeline-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 16px;
+            color: #7c3aed;
         }
 
-        .feature-icon svg {
-            width: 26px;
-            height: 26px;
-            color: #fff;
-        }
-
-        .feature-title {
-            font-size: 20px;
+        .pipeline-title {
+            font-size: 19px;
             font-weight: 600;
-            color: #0f172a;
-            margin-bottom: 12px;
-            letter-spacing: -0.5px;
-            transition: color 0.3s ease;
+            margin-bottom: 8px;
         }
 
-        .feature-card:hover .feature-title {
-            color: #7C3AED;
-        }
-
-        .feature-description {
-            font-size: 15px;
+        .pipeline-detail {
+            font-size: 14px;
+            line-height: 1.6;
             color: #64748b;
-            line-height: 1.75;
+        }
+
+        .pipeline-note {
+            max-width: 760px;
+            margin: 24px auto 0;
+            color: #64748b;
+            text-align: center;
+            font-size: 13px;
         }
 
 
@@ -1953,6 +1857,11 @@
             margin-bottom: 16px;
         }
 
+        .footer-tagline a {
+            color: #7c3aed;
+            text-underline-offset: 3px;
+        }
+
         .footer-copyright {
             font-size: 13px;
             color: #94a3b8;
@@ -2008,7 +1917,6 @@
         .tech-badge,
         .nav-links a,
         .footer-logo,
-        .step-number,
         .history-thumbnail,
         .example-chip {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2016,25 +1924,20 @@
 
 
         @media (max-width: 968px) {
-            .features-grid {
+            .pipeline {
                 grid-template-columns: 1fr;
-                gap: 24px;
+                gap: 32px;
+                max-width: 480px;
+                margin: 0 auto;
             }
 
-            .steps-container {
-                flex-direction: column;
-                align-items: center;
-                gap: 40px;
+            .pipeline-step:not(:last-child)::after {
+                content: '↓';
+                top: auto;
+                right: 50%;
+                bottom: -31px;
+                transform: translateX(50%);
             }
-
-            .steps-container::before {
-                display: none;
-            }
-
-            .step {
-                max-width: 400px;
-            }
-
 
 
             .app-container {
@@ -2046,6 +1949,11 @@
         @media (max-width: 768px) {
             .nav-links {
                 display: none;
+            }
+
+            .dimension-indicators {
+                flex-direction: column;
+                gap: 12px;
             }
 
 
@@ -2073,10 +1981,9 @@
         <div class="nav-container">
             <span class="nav-logo">NovaVision</span>
             <div class="nav-links">
-                <a href="#analysisSection">Emotion Analysis</a>
+                <a href="#analysisSection">Text analysis</a>
                 <a href="#prompt-section">Prompt</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="#features">Features</a>
+                <a href="#how-it-works">Pipeline</a>
                 <a href="#about">About</a>
             </div>
         </div>
@@ -2095,8 +2002,8 @@
             <div class="app-container fade-in">
                 <div class="app-card input-card">
                     <div class="form-group">
-                        <label class="form-label">How are you feeling today?</label>
-                        <textarea id="emotionInput" placeholder="Share a thought, memory, or describe how you're feeling..."></textarea>
+                        <label class="form-label" for="emotionInput">Describe a feeling, memory, or scene</label>
+                        <textarea id="emotionInput" minlength="3" maxlength="2000" placeholder="For example: I feel peaceful watching the sunset."></textarea>
                         <div class="example-prompts">
                             <div class="example-prompts-label">Try these examples:</div>
                             <div class="example-chips">
@@ -2108,7 +2015,7 @@
                         </div>
                         <div class="live-emotions" id="liveEmotions">
                             <div class="live-emotions-header">
-                                <span class="live-emotions-title">Live Emotion Analysis</span>
+                                <span class="live-emotions-title">Text emotion scores</span>
                                 <span class="live-emotions-status" id="liveStatus">
                                     <span class="dot"></span>
                                     <span id="liveStatusText">Ready</span>
@@ -2125,12 +2032,12 @@
                             </div>
                             <div class="live-emotions-tip" id="liveTip">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                                Tip: Describe how you're feeling for better analysis
+                                These scores estimate emotion labels in text.
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Visual Style</label>
+                        <label class="form-label" for="styleSelect">Visual style</label>
                         <div class="select-wrapper">
                             <select id="styleSelect">
                                 <option value="artistic">Artistic</option>
@@ -2148,20 +2055,20 @@
                     </div>
                     <div class="advanced-settings">
                         <button class="advanced-toggle" id="advancedToggle">
-                            <span>Advanced Settings</span>
+                            <span>Advanced settings</span>
                             <svg viewBox="0 0 16 16" fill="none">
                                 <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                             </svg>
                         </button>
                         <div class="advanced-content" id="advancedContent">
                             <div class="seed-control">
-                                <label class="seed-label">Seed:</label>
+                                <label class="seed-label" for="seedInput">Seed:</label>
                                 <input type="text" class="seed-input" id="seedInput" placeholder="Random (leave empty)">
-                                <button class="copy-seed-btn" id="copySeedBtn">Copy Seed</button>
+                                <button class="copy-seed-btn" id="copySeedBtn">Copy seed</button>
                             </div>
                             <div class="seed-control">
-                                <label class="seed-label">API token:</label>
-                                <input type="password" class="seed-input" id="tokenInput" placeholder="Only if the server sets NOVA_API_TOKEN" autocomplete="off">
+                                <label class="seed-label" for="tokenInput">API token:</label>
+                                <input type="password" class="seed-input" id="tokenInput" placeholder="Required only if the server uses a token" autocomplete="off">
                             </div>
                             <div class="used-seed-display" id="usedSeedDisplay">Last used seed: <span id="lastSeedValue">-</span></div>
                         </div>
@@ -2169,7 +2076,7 @@
 
                     <button class="generate-btn" id="generateBtn">
                         <span class="spinner"></span>
-                        <span class="btn-text">Generate Visualization</span>
+                        <span class="btn-text">Generate image</span>
                     </button>
 
                     <div class="error-display" id="errorDisplay">
@@ -2180,7 +2087,7 @@
                                 <line x1="12" y1="16" x2="12.01" y2="16"/>
                             </svg>
                             <div>
-                                <div class="error-text" id="errorText">Generation failed. Please try again.</div>
+                                <div class="error-text" id="errorText">Generation failed. Try again.</div>
                                 <div class="error-details" id="errorDetails"></div>
                             </div>
                         </div>
@@ -2189,7 +2096,7 @@
                                 <polyline points="23 4 23 10 17 10"/>
                                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                             </svg>
-                            Try Again
+                            Try again
                         </button>
                     </div>
                 </div>
@@ -2198,8 +2105,8 @@
                         <div class="skeleton-loader" id="skeletonLoader"></div>
                         <div class="loading-overlay" id="loadingOverlay">
                             <div class="loading-spinner-large"></div>
-                            <div class="loading-text" id="loadingText">Analyzing text...</div>
-                            <div class="loading-subtext" id="loadingSubtext">Time depends on the backend and device.</div>
+                            <div class="loading-text">Generating image...</div>
+                            <div class="loading-subtext">The server analyzes text, builds a prompt, and renders an image. Time depends on the backend and device.</div>
                         </div>
                         <div class="image-placeholder" id="placeholder">
                             <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
@@ -2207,9 +2114,9 @@
                                 <circle cx="8.5" cy="8.5" r="1.5"/>
                                 <polyline points="21 15 16 10 5 21"/>
                             </svg>
-                            <p class="placeholder-text">Your art will appear here</p>
+                            <p class="placeholder-text">Your image will appear here</p>
                         </div>
-                        <img id="generatedImage" src="" alt="Generated artwork">
+                        <img id="generatedImage" src="" alt="Generated image">
                     </div>
                     <div class="generation-time" id="generationTime">
                         Generated in <span class="time-value" id="generationTimeValue">0.0</span> seconds
@@ -2222,7 +2129,7 @@
                                 <polyline points="7 10 12 15 17 10"/>
                                 <line x1="12" y1="15" x2="12" y2="3"/>
                             </svg>
-                            Download
+                            Download image
                         </button>
                         <button class="download-btn" id="downloadReportBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2231,7 +2138,7 @@
                                 <line x1="16" y1="13" x2="8" y2="13"/>
                                 <line x1="16" y1="17" x2="8" y2="17"/>
                             </svg>
-                            Report
+                            Download report
                         </button>
                         <button class="regenerate-btn" id="regenerateBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2243,7 +2150,7 @@
                     </div>
                     <div class="image-history" id="imageHistory">
                         <div class="history-header">
-                            <span class="history-title">Recent Generations</span>
+                            <span class="history-title">Recent images</span>
                             <span class="history-count" id="historyCount">0 of 4</span>
                         </div>
                         <div class="history-thumbnails" id="historyThumbnails">
@@ -2263,13 +2170,13 @@
                         <line x1="9" y1="9" x2="9.01" y2="9"/>
                         <line x1="15" y1="9" x2="15.01" y2="9"/>
                     </svg>
-                    <span>Emotion Analysis</span>
+                    <span>Text analysis</span>
                 </div>
                 <div class="analysis-content" id="analysisContent">
-                    <p id="analysisScope" style="font-size: 13px; color: #64748b; margin-bottom: 16px;">Text classifier scores. Valence/arousal combine lexicon values and label priors; human affect is unvalidated.</p>
+                    <p id="analysisScope" style="font-size: 13px; color: #64748b; margin-bottom: 16px;">The classifier scores emotion labels in text. Valence and arousal combine word scores with preset values for each label. These estimates have not been validated against human feelings.</p>
 
                     <div class="primary-emotion-display" id="primaryEmotionSection">
-                        <span class="primary-emotion-label">Primary Emotion:</span>
+                        <span class="primary-emotion-label">Leading label:</span>
                         <span class="primary-emotion-value default" id="primaryEmotion">Neutral</span>
                         <span class="primary-emotion-confidence" id="primaryConfidence">--</span>
                     </div>
@@ -2279,16 +2186,20 @@
                         <div class="dimension-item">
                             <div class="dimension-label">Valence</div>
                             <div class="dimension-value neutral" id="valenceDisplay">Neutral<span class="dimension-number">(0.0)</span></div>
+                            <div class="dimension-scale valence-scale" aria-hidden="true"></div>
+                            <div class="dimension-range"><span>−1 negative</span><span>+1 positive</span></div>
                         </div>
                         <div class="dimension-item">
                             <div class="dimension-label">Arousal</div>
                             <div class="dimension-value calm" id="arousalDisplay">Calm<span class="dimension-number">(0.0)</span></div>
+                            <div class="dimension-scale arousal-scale" aria-hidden="true"></div>
+                            <div class="dimension-range"><span>0 low</span><span>1 high</span></div>
                         </div>
                     </div>
 
 
                     <div class="all-emotions-grid" id="allEmotionsSection">
-                        <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 16px;">All Emotions</h4>
+                        <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 16px;">Label scores</h4>
                         <div id="emotionBars">
                             <div class="emotion-bar"><span class="emotion-name">Joy</span><div class="emotion-track"><div class="emotion-fill" style="width: 0%"></div></div><span class="emotion-value">0%</span></div>
                             <div class="emotion-bar"><span class="emotion-name">Sadness</span><div class="emotion-track"><div class="emotion-fill" style="width: 0%"></div></div><span class="emotion-value">0%</span></div>
@@ -2302,8 +2213,8 @@
 
 
                     <div class="prompt-section" id="promptSection">
-                        <div class="prompt-label">Generated Prompt</div>
-                        <p class="prompt-text default" id="promptText">The generation prompt will appear here...</p>
+                        <div class="prompt-label">Generation prompt</div>
+                        <p class="prompt-text default" id="promptText">The generation prompt will appear here.</p>
                     </div>
                 </div>
             </div>
@@ -2325,9 +2236,9 @@
                                         <circle cx="12" cy="7" r="4"/>
                                     </svg>
                                 </div>
-                                <span class="prompt-column-title">Your Input</span>
+                                <span class="prompt-column-title">Your text</span>
                             </div>
-                            <p class="prompt-column-text" id="userInputDisplay">Your text will appear here...</p>
+                            <p class="prompt-column-text" id="userInputDisplay">Your text will appear here.</p>
                         </div>
                         <div class="prompt-column">
                             <div class="prompt-column-header">
@@ -2336,16 +2247,16 @@
                                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                                     </svg>
                                 </div>
-                                <span class="prompt-column-title">Generation Prompt</span>
+                                <span class="prompt-column-title">Generation prompt</span>
                             </div>
-                            <p class="prompt-column-text" id="enhancedPromptDisplay">The generation prompt will appear here...</p>
+                            <p class="prompt-column-text" id="enhancedPromptDisplay">The generation prompt will appear here.</p>
                         </div>
                     </div>
                     <div class="modifiers-section">
-                        <div class="modifiers-title">Modifiers Added</div>
+                        <div class="modifiers-title">Prompt components</div>
                         <div id="modifiersList">
                             <div class="modifier-item">
-                                <span class="modifier-badge user">User</span>
+                                <span class="modifier-badge user">Text</span>
                                 <div class="modifier-content">
                                     <div class="modifier-text" id="modUserText">-</div>
                                     <div class="modifier-description">Your original description</div>
@@ -2355,14 +2266,14 @@
                                 <span class="modifier-badge style">Style</span>
                                 <div class="modifier-content">
                                     <div class="modifier-text" id="modStyleText">-</div>
-                                    <div class="modifier-description">Added based on your style selection</div>
+                                    <div class="modifier-description">Terms for the selected style</div>
                                 </div>
                             </div>
                             <div class="modifier-item">
-                                <span class="modifier-badge quality">Quality</span>
+                                <span class="modifier-badge quality">Fixed</span>
                                 <div class="modifier-content">
                                     <div class="modifier-text">"masterpiece, highly detailed, sharp focus, professional"</div>
-                                    <div class="modifier-description">Added to every generation prompt</div>
+                                    <div class="modifier-description">Terms added to every generation prompt</div>
                                 </div>
                             </div>
                         </div>
@@ -2373,81 +2284,49 @@
     </section>
 
 
-    <section id="how-it-works">
+    <section id="how-it-works" aria-labelledby="pipelineTitle">
         <div class="section-container">
             <div class="section-header fade-in">
-                <p class="section-tag">Generation steps</p>
-                <h2 class="section-title">How It Works</h2>
-                <p class="section-subtitle">Analyze text, build a prompt, and generate an image</p>
+                <h2 class="section-title" id="pipelineTitle">Text to image</h2>
+                <p class="section-subtitle">Four steps from your description to a generated image</p>
             </div>
-            <div class="steps-container">
-                <div class="step fade-in" data-delay="1">
-                    <div class="step-number">1</div>
-                    <h3 class="step-title">Enter text</h3>
-                    <p class="step-description">Enter a feeling, memory, or scene.</p>
-                </div>
-                <div class="step fade-in" data-delay="2">
-                    <div class="step-number">2</div>
-                    <h3 class="step-title">Analyze text</h3>
-                    <p class="step-description">The classifier estimates emotion labels from your text. For non-neutral text, the prompt adds mood, palette, and lighting cues.</p>
-                </div>
-                <div class="step fade-in" data-delay="3">
-                    <div class="step-number">3</div>
-                    <h3 class="step-title">Generate image</h3>
-                    <p class="step-description">Generate an image from the prompt. Completion time depends on the image backend and device.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    <section id="features">
-        <div class="section-container">
-            <div class="section-header fade-in">
-                <p class="section-tag">Why NovaVision</p>
-                <h2 class="section-title">Features</h2>
-                <p class="section-subtitle">Image prompts guided by emotion labels</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card fade-in" data-delay="1">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                            <line x1="9" y1="9" x2="9.01" y2="9"/>
-                            <line x1="15" y1="9" x2="15.01" y2="9"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">Emotion Labels from Text</h3>
-                    <p class="feature-description">
-                        The classifier scores seven emotion labels from your words and uses the leading label to guide the image prompt's mood.
-                    </p>
-                </div>
-                <div class="feature-card fade-in" data-delay="2">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                            <path d="M2 17l10 5 10-5"/>
-                            <path d="M2 12l10 5 10-5"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">Palette and lighting cues</h3>
-                    <p class="feature-description">
-                        For non-neutral text, valence and arousal estimates add palette and lighting cues to the prompt alongside your selected visual style.
-                    </p>
-                </div>
-                <div class="feature-card fade-in" data-delay="3">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">Images Ready to Download</h3>
-                    <p class="feature-description">
-                        Download 512×512 images and copy the seed used for each generation.
-                    </p>
-                </div>
-            </div>
+            <ol class="pipeline">
+                <li class="pipeline-step fade-in" data-delay="1">
+                    <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <rect x="5" y="6" width="30" height="28" rx="4"/>
+                        <path d="M11 14h18M11 20h18M11 26h10"/>
+                    </svg>
+                    <h3 class="pipeline-title">Text</h3>
+                    <p class="pipeline-detail">A feeling, memory, or scene.<br>Choose a visual style.</p>
+                </li>
+                <li class="pipeline-step fade-in" data-delay="2">
+                    <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M5 34h30M10 28V18M20 28V8M30 28V14"/>
+                    </svg>
+                    <h3 class="pipeline-title">Text analysis</h3>
+                    <p class="pipeline-detail">Seven emotion labels.<br>Word scores + label presets → valence and arousal.</p>
+                </li>
+                <li class="pipeline-step fade-in" data-delay="3">
+                    <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M6 11h28M6 20h28M6 29h28"/>
+                        <circle cx="14" cy="11" r="3" fill="white"/>
+                        <circle cx="26" cy="20" r="3" fill="white"/>
+                        <circle cx="18" cy="29" r="3" fill="white"/>
+                    </svg>
+                    <h3 class="pipeline-title">Prompt</h3>
+                    <p class="pipeline-detail">Your text + visual style.<br>Emotion cues add mood, palette, and lighting.</p>
+                </li>
+                <li class="pipeline-step fade-in" data-delay="4">
+                    <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <rect x="5" y="6" width="30" height="28" rx="4"/>
+                        <circle cx="27" cy="14" r="3"/>
+                        <path d="m6 29 10-11 8 9 5-5 6 7"/>
+                    </svg>
+                    <h3 class="pipeline-title">Image</h3>
+                    <p class="pipeline-detail">Render with the selected backend.<br>Download the image or report.</p>
+                </li>
+            </ol>
+            <p class="pipeline-note">Neutral text skips emotion cues. Text scores are model estimates; they have not been validated against human feelings. Image analysis runs separately in the research experiments.</p>
         </div>
     </section>
 
@@ -2455,17 +2334,16 @@
     <section id="about">
         <div class="section-container">
             <div class="section-header fade-in">
-                <p class="section-tag">Technology</p>
                 <h2 class="section-title">About NovaVision</h2>
             </div>
             <div class="about-content fade-in">
                 <p class="about-text">
-                    NovaVision uses emotion detection to guide image prompts and supports local,
-                    hosted, and test image generation backends.
+                    NovaVision is a prototype for image prompts guided by text emotion labels.
+                    It supports local diffusion models, hosted image generation, and synthetic test images.
                 </p>
                 <div class="tech-stack fade-in" data-delay="1">
                     <span class="tech-badge">Python</span>
-                    <span class="tech-badge">HuggingFace</span>
+                    <span class="tech-badge">PyTorch</span>
                     <span class="tech-badge">Transformers</span>
                     <span class="tech-badge" id="generationBackend">Image backend</span>
                 </div>
@@ -2477,8 +2355,8 @@
 
     <footer>
         <div class="footer-logo">NovaVision</div>
-        <p class="footer-tagline">Emotion-guided image generation</p>
-        <p class="footer-copyright">&copy; 2026 NovaVision. All rights reserved.</p>
+        <p class="footer-tagline">Sole contributor: <a href="https://github.com/urmeo">urmeo</a></p>
+        <p class="footer-copyright">&copy; 2026 urmeo &middot; MIT license</p>
     </footer>
 
     <script>
@@ -2512,13 +2390,11 @@
         window.addEventListener('scroll', () => {
             const scrollY = window.scrollY;
 
-
             if (scrollY > 50) {
                 navbar.classList.add('scrolled');
             } else {
                 navbar.classList.remove('scrolled');
             }
-
 
             if (scrollY < 400) {
                 const parallaxAmount = scrollY * 0.15;
@@ -2533,13 +2409,10 @@
                 }
             }
 
-
             updateActiveNav();
         }, { passive: true });
 
-
         updateActiveNav();
-
 
         const observerOptions = {
             root: null,
@@ -2566,31 +2439,11 @@
         let liveAnalysisVersion = 0;
 
         const emotionOrder = ['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'neutral'];
+        const minTextLength = 3;
+        const maxTextLength = 2000;
 
-
-        const emotionWords = [
-            'happy', 'sad', 'angry', 'scared', 'afraid', 'surprised', 'disgusted',
-            'joy', 'joyful', 'excited', 'love', 'hate', 'fear', 'anxious', 'worried',
-            'upset', 'frustrated', 'annoyed', 'pleased', 'delighted', 'thrilled',
-            'depressed', 'lonely', 'hopeful', 'grateful', 'proud', 'ashamed',
-            'embarrassed', 'nervous', 'calm', 'peaceful', 'content', 'miserable',
-            'furious', 'terrified', 'amazed', 'shocked', 'feel', 'feeling', 'felt',
-            'mood', 'emotion', 'hurt', 'pain', 'suffering', 'blessed', 'wonderful',
-            'terrible', 'awful', 'great', 'amazing', 'horrible', 'fantastic'
-        ];
-
-        function hasEmotionalContext(text) {
-            const lowerText = text.toLowerCase();
-            const words = lowerText.split(/\s+/);
-
-
-            const hasEmotionWord = emotionWords.some(ew => lowerText.includes(ew));
-
-
-            const isSentence = words.length >= 4 ||
-                              /\b(i |i'm |i am |we |you |they |he |she |it |is |are |was |were |feel|think|believe|want|need|love|hate)\b/i.test(lowerText);
-
-            return hasEmotionWord || isSentence;
+        function formatEmotionName(emotion) {
+            return emotion.charAt(0).toUpperCase() + emotion.slice(1);
         }
 
         function cancelLiveAnalysis() {
@@ -2620,16 +2473,13 @@
             });
         }
 
-        function updateLiveEmotions(emotions, primaryEmotion, confidence, showTip = false) {
+        function updateLiveEmotions(emotions, primaryEmotion, confidence) {
             liveEmotionBars.classList.remove('muted');
-            liveTip.classList.toggle('visible', showTip);
+            liveTip.classList.add('visible');
             liveStatus.classList.remove('analyzing');
             liveStatus.classList.add('active');
 
-            const emotionMap = {};
-            emotions.forEach(e => { emotionMap[e.name] = e.score; });
-
-
+            const emotionMap = Object.fromEntries(emotions.map(emotion => [emotion.name, emotion.score]));
             const showDominant = confidence > 30;
 
             emotionOrder.forEach((emotion, index) => {
@@ -2640,9 +2490,7 @@
                     const value = bar.querySelector('.live-emotion-value');
                     const score = Math.max(0, Math.min(100, Number(emotionMap[emotion]) || 0));
 
-
-                    const width = score > 0 ? Math.max(2, score) + '%' : '2px';
-                    fill.style.width = width;
+                    fill.style.width = score > 0 ? Math.max(2, score) + '%' : '2px';
 
                     const isPrimary = emotion === primaryEmotion && showDominant;
                     fill.className = 'live-emotion-fill' + (isPrimary ? ' primary' : '');
@@ -2651,29 +2499,20 @@
                 }
             });
 
-            if (showDominant) {
-                liveStatusText.textContent = primaryEmotion.charAt(0).toUpperCase() + primaryEmotion.slice(1);
-            } else {
-                liveStatusText.textContent = 'Analyzing...';
-            }
+            liveStatusText.textContent = showDominant ? formatEmotionName(primaryEmotion) : 'Scores ready';
         }
 
         async function analyzeLive(text) {
+            text = text.trim();
+            if (text.length < minTextLength || text.length > maxTextLength) {
+                resetToEmpty();
+                liveStatusText.textContent = `Use ${minTextLength}–${maxTextLength} characters`;
+                return;
+            }
             cancelLiveAnalysis();
             liveStatus.classList.add('analyzing');
             liveStatus.classList.remove('active');
             liveStatusText.textContent = 'Analyzing...';
-
-            const hasEmotion = hasEmotionalContext(text);
-            const wordCount = text.split(/\s+/).length;
-
-
-
-            if (wordCount <= 2 && !hasEmotion) {
-                liveStatus.classList.remove('analyzing');
-                liveStatusText.textContent = 'Type a bit more to analyze';
-                return;
-            }
 
             const controller = new AbortController();
             const version = liveAnalysisVersion;
@@ -2690,17 +2529,16 @@
                 if (controller.signal.aborted || version !== liveAnalysisVersion) return;
 
                 if (data.success) {
-                    const showTip = !hasEmotion && wordCount < 5;
-                    updateLiveEmotions(data.emotions, data.primary_emotion, data.confidence, showTip);
+                    updateLiveEmotions(data.emotions, data.primary_emotion, data.confidence);
                 } else {
                     liveStatus.classList.remove('analyzing');
-                    liveStatusText.textContent = 'Ready';
+                    liveStatusText.textContent = 'Analysis unavailable';
                 }
             } catch (error) {
                 if (controller.signal.aborted || version !== liveAnalysisVersion) return;
                 console.error('Live analysis error:', error);
                 liveStatus.classList.remove('analyzing');
-                liveStatusText.textContent = 'Ready';
+                liveStatusText.textContent = 'Analysis unavailable';
             } finally {
                 if (liveAnalysisController === controller) liveAnalysisController = null;
             }
@@ -2713,25 +2551,23 @@
         emotionInput.addEventListener('input', () => {
             clearTimeout(debounceTimer);
 
-            cancelLiveAnalysis();
             const text = emotionInput.value.trim();
 
-            if (text.length < 2) {
+            if (text.length < minTextLength) {
                 resetToEmpty();
                 generateBtn.classList.remove('ready');
                 return;
             }
-
-
-            if (text.length >= 2) {
-                generateBtn.classList.add('ready');
+            if (text.length > maxTextLength) {
+                resetToEmpty();
+                generateBtn.classList.remove('ready');
+                liveStatusText.textContent = `Use ${minTextLength}–${maxTextLength} characters`;
+                return;
             }
 
-            if (text.length >= 2) {
-                debounceTimer = setTimeout(() => {
-                    analyzeLive(text);
-                }, 500);
-            }
+            cancelLiveAnalysis();
+            generateBtn.classList.add('ready');
+            debounceTimer = setTimeout(() => analyzeLive(text), 500);
         });
 
         let currentGenerationData = null;
@@ -2794,10 +2630,8 @@
             const inputEndY = inputStartY + (inputLines.length - 1) * 26;
             canvas.height = Math.max(1600, inputEndY + 100);
 
-
             ctx.fillStyle = '#fafafa';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
 
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
             gradient.addColorStop(0, '#6366f1');
@@ -2805,11 +2639,9 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, 80);
 
-
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 32px Inter, sans-serif';
             ctx.fillText('NovaVision', 40, 52);
-
 
             ctx.font = '16px Inter, sans-serif';
             ctx.fillStyle = 'rgba(255,255,255,0.8)';
@@ -2817,7 +2649,6 @@
             ctx.textAlign = 'right';
             ctx.fillText(date, canvas.width - 40, 52);
             ctx.textAlign = 'left';
-
 
             const img = new Image();
             img.onload = () => {
@@ -2833,72 +2664,60 @@
                 ctx.fillStyle = '#64748b';
                 ctx.fillText(backendLabel(generationData.backend), 50, 840);
 
-
                 ctx.fillStyle = '#0f172a';
                 ctx.font = 'bold 24px Inter, sans-serif';
-                ctx.fillText('Emotion Analysis', 780, 160);
-
+                ctx.fillText('Text analysis', 780, 160);
 
                 ctx.font = '14px Inter, sans-serif';
                 ctx.fillStyle = '#64748b';
-                ctx.fillText('PRIMARY EMOTION', 780, 200);
+                ctx.fillText('LEADING LABEL', 780, 200);
 
                 ctx.font = 'bold 36px Inter, sans-serif';
                 ctx.fillStyle = '#6366f1';
-                const primaryText = generationData.primary_emotion.charAt(0).toUpperCase() +
-                    generationData.primary_emotion.slice(1);
-                ctx.fillText(primaryText, 780, 240);
+                ctx.fillText(formatEmotionName(generationData.primary_emotion), 780, 240);
 
                 ctx.font = '16px Inter, sans-serif';
                 ctx.fillStyle = '#94a3b8';
-                ctx.fillText(generationData.confidence + '% confidence', 780, 270);
-
+                ctx.fillText(generationData.confidence + '% classifier score', 780, 270);
 
                 let yPos = 320;
-                generationData.emotions.forEach((e, i) => {
+                generationData.emotions.forEach((emotion, index) => {
                     ctx.font = '13px Inter, sans-serif';
                     ctx.fillStyle = '#64748b';
-                    ctx.fillText(e.name.charAt(0).toUpperCase() + e.name.slice(1), 780, yPos);
-
+                    ctx.fillText(formatEmotionName(emotion.name), 780, yPos);
 
                     ctx.fillStyle = '#e2e8f0';
                     ctx.fillRect(870, yPos - 10, 250, 8);
 
-
-                    ctx.fillStyle = i === 0 ? '#6366f1' : '#cbd5e1';
-                    ctx.fillRect(870, yPos - 10, (e.score / 100) * 250, 8);
-
+                    ctx.fillStyle = index === 0 ? '#6366f1' : '#cbd5e1';
+                    ctx.fillRect(870, yPos - 10, (emotion.score / 100) * 250, 8);
 
                     ctx.fillStyle = '#94a3b8';
-                    ctx.fillText((Number(e.score) || 0).toFixed(1) + '%', 1130, yPos);
+                    ctx.fillText((Number(emotion.score) || 0).toFixed(1) + '%', 1130, yPos);
 
                     yPos += 35;
                 });
 
-
                 ctx.fillStyle = '#0f172a';
                 ctx.font = 'bold 20px Inter, sans-serif';
-                ctx.fillText('Generated Prompt', 40, 880);
+                ctx.fillText('Generation prompt', 40, 880);
 
                 ctx.font = '14px Inter, sans-serif';
                 ctx.fillStyle = '#64748b';
-
 
                 promptLines.forEach((line, index) => {
                     ctx.fillText(line, 40, promptStartY + index * 24);
                 });
 
-
                 ctx.fillStyle = '#0f172a';
                 ctx.font = 'bold 20px Inter, sans-serif';
-                ctx.fillText('Original Input', 40, inputHeadingY);
+                ctx.fillText('Your text', 40, inputHeadingY);
 
                 ctx.font = 'italic 16px Inter, sans-serif';
                 ctx.fillStyle = '#64748b';
                 inputLines.forEach((line, index) => {
                     ctx.fillText(line, 40, inputStartY + index * 26);
                 });
-
 
                 ctx.fillStyle = '#e2e8f0';
                 ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
@@ -2907,7 +2726,6 @@
                 ctx.fillStyle = '#94a3b8';
                 ctx.textAlign = 'center';
                 ctx.fillText('NovaVision · Image generation guided by emotion labels', canvas.width / 2, canvas.height - 25);
-
 
                 const link = document.createElement('a');
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -2948,10 +2766,10 @@
         copySeedBtn.addEventListener('click', () => {
             if (lastUsedSeed !== null) {
                 navigator.clipboard.writeText(lastUsedSeed.toString()).then(() => {
-                    copySeedBtn.textContent = 'Copied!';
+                    copySeedBtn.textContent = 'Copied';
                     copySeedBtn.classList.add('copied');
                     setTimeout(() => {
-                        copySeedBtn.textContent = 'Copy Seed';
+                        copySeedBtn.textContent = 'Copy seed';
                         copySeedBtn.classList.remove('copied');
                     }, 2000);
                 });
@@ -2977,7 +2795,6 @@
             historyThumbnails.innerHTML = '';
             historyCount.textContent = `${imageHistory.length} of ${maxHistoryItems}`;
 
-
             imageHistory.forEach(item => {
                 const thumb = document.createElement('div');
                 thumb.className = 'history-thumbnail' + (item === currentGenerationData ? ' active' : '');
@@ -2996,16 +2813,14 @@
                 historyThumbnails.appendChild(thumb);
             });
 
-
             const remainingSlots = maxHistoryItems - imageHistory.length;
             for (let i = 0; i < remainingSlots; i++) {
                 const placeholder = document.createElement('div');
                 placeholder.className = 'history-placeholder';
-                placeholder.innerHTML = '+';
+                placeholder.textContent = '+';
                 historyThumbnails.appendChild(placeholder);
             }
         }
-
 
         const generateBtn = document.getElementById('generateBtn');
         const styleSelect = document.getElementById('styleSelect');
@@ -3017,8 +2832,6 @@
 
         const skeletonLoader = document.getElementById('skeletonLoader');
         const loadingOverlay = document.getElementById('loadingOverlay');
-        const loadingText = document.getElementById('loadingText');
-        const loadingSubtext = document.getElementById('loadingSubtext');
 
         const generationTimeEl = document.getElementById('generationTime');
         const generationTimeValue = document.getElementById('generationTimeValue');
@@ -3028,9 +2841,6 @@
         const errorDetails = document.getElementById('errorDetails');
         const retryBtn = document.getElementById('retryBtn');
 
-
-
-
         const styleDescriptions = {
             'photorealistic': 'hyperrealistic photograph, 85mm lens, natural light, ultra sharp, 8k',
             'artistic': 'digital painting, expressive brushwork, rich color, dramatic lighting',
@@ -3039,39 +2849,16 @@
             'dreamscape': 'surreal dreamscape, ethereal glow, volumetric light, imaginative'
         };
 
-        const loadingMessages = [
-            { text: 'Analyzing text...', sub: 'The classifier scores emotion labels.' },
-            { text: 'Building image prompt...', sub: 'Text, mood, and style form the image prompt.' },
-            { text: 'Generating image...', sub: 'Time depends on the backend and device.' }
-        ];
-
-        let loadingInterval = null;
-
         function startLoadingAnimation() {
-
             errorDisplay.classList.remove('visible');
-
-
             skeletonLoader.classList.add('active');
             loadingOverlay.classList.add('active');
             imageDisplay.classList.add('generating');
 
             placeholder.style.display = 'none';
-
-
-            let messageIndex = 0;
-            loadingText.textContent = loadingMessages[0].text;
-            loadingSubtext.textContent = loadingMessages[0].sub;
-
-            loadingInterval = setInterval(() => {
-                messageIndex = (messageIndex + 1) % loadingMessages.length;
-                loadingText.textContent = loadingMessages[messageIndex].text;
-                loadingSubtext.textContent = loadingMessages[messageIndex].sub;
-            }, 3000);
         }
 
         function stopLoadingAnimation() {
-            clearInterval(loadingInterval);
             skeletonLoader.classList.remove('active');
             loadingOverlay.classList.remove('active');
             imageDisplay.classList.remove('generating');
@@ -3083,13 +2870,14 @@
             errorDisplay.classList.add('visible');
         }
 
+        const backendLabels = new Map([
+            ['null', 'Test image · null backend'],
+            ['diffusers', 'Local generation · diffusers backend'],
+            ['hf-api', 'Hosted generation · hf-api backend']
+        ]);
+
         function backendLabel(backend) {
-            const labels = new Map([
-                ['null', 'Test image · null backend'],
-                ['diffusers', 'Local generation · diffusers backend'],
-                ['hf-api', 'Hosted generation · hf-api backend']
-            ]);
-            return labels.get(backend) || `Image backend · ${backend || 'unknown'}`;
+            return backendLabels.get(backend) || `Image backend · ${backend || 'unknown'}`;
         }
 
         function displayGeneration(data) {
@@ -3109,27 +2897,22 @@
             generationTimeValue.textContent = data.generationSeconds;
             generationTimeEl.classList.add('visible');
 
-
             downloadActions.classList.add('visible');
-
 
             const primaryEmotionEl = document.getElementById('primaryEmotion');
             primaryEmotionEl.classList.remove('default');
-            primaryEmotionEl.textContent =
-                data.primary_emotion.charAt(0).toUpperCase() + data.primary_emotion.slice(1);
+            primaryEmotionEl.textContent = formatEmotionName(data.primary_emotion);
             document.getElementById('primaryConfidence').textContent =
-                data.confidence + '% confidence';
-
+                data.confidence + '% classifier score';
 
             const valence = Number(data.valence);
             const arousal = Number(data.arousal);
             const valenceDisplay = document.getElementById('valenceDisplay');
-            const valenceLabel = valence >= 0 ? 'Positive' : 'Negative';
-            const valenceClass = valence >= 0 ? 'positive' : 'negative';
+            const valenceLabel = valence === 0 ? 'Neutral' : valence > 0 ? 'Positive' : 'Negative';
+            const valenceClass = valence === 0 ? 'neutral' : valence > 0 ? 'positive' : 'negative';
             valenceDisplay.className = 'dimension-value ' + valenceClass;
             valenceDisplay.innerHTML = valenceLabel + '<span class="dimension-number">(' +
                 (Number.isFinite(valence) ? (valence >= 0 ? '+' : '') + valence.toFixed(1) : 'n/a') + ')</span>';
-
 
             const arousalDisplay = document.getElementById('arousalDisplay');
             const arousalLabel = arousal >= 0.5 ? 'Energized' : 'Calm';
@@ -3138,33 +2921,30 @@
             arousalDisplay.innerHTML = arousalLabel + '<span class="dimension-number">(' +
                 (Number.isFinite(arousal) ? arousal.toFixed(1) : 'n/a') + ')</span>';
 
-
             const emotionBars = document.getElementById('emotionBars');
             emotionBars.innerHTML = '';
-            data.emotions.forEach((e, i) => {
+            data.emotions.forEach((emotion, index) => {
                 const bar = document.createElement('div');
                 bar.className = 'emotion-bar';
                 const name = document.createElement('span');
                 name.className = 'emotion-name';
-                name.textContent = e.name.charAt(0).toUpperCase() + e.name.slice(1);
+                name.textContent = formatEmotionName(emotion.name);
                 const track = document.createElement('div');
                 track.className = 'emotion-track';
                 const fill = document.createElement('div');
-                fill.className = 'emotion-fill' + (i > 0 ? ' secondary' : '');
-                fill.style.width = Math.max(0, Math.min(100, Number(e.score) || 0)) + '%';
+                fill.className = 'emotion-fill' + (index > 0 ? ' secondary' : '');
+                fill.style.width = Math.max(0, Math.min(100, Number(emotion.score) || 0)) + '%';
                 track.appendChild(fill);
                 const value = document.createElement('span');
                 value.className = 'emotion-value';
-                value.textContent = (Number(e.score) || 0).toFixed(1) + '%';
+                value.textContent = (Number(emotion.score) || 0).toFixed(1) + '%';
                 bar.append(name, track, value);
                 emotionBars.appendChild(bar);
             });
 
-
             const promptTextEl = document.getElementById('promptText');
             promptTextEl.classList.remove('default');
             promptTextEl.textContent = '"' + data.prompt + '"';
-
 
             document.getElementById('userInputDisplay').textContent = data.original_text;
             document.getElementById('enhancedPromptDisplay').textContent = data.prompt;
@@ -3173,13 +2953,17 @@
         }
 
         async function generateImage() {
-            if (!emotionInput.value.trim()) {
+            const text = emotionInput.value.trim();
+            if (!text) {
                 emotionInput.focus();
                 return;
             }
-
-
-
+            if (text.length < minTextLength || text.length > maxTextLength) {
+                showError(`Enter ${minTextLength}–${maxTextLength} characters.`,
+                    'Describe a feeling, memory, or scene.');
+                emotionInput.focus();
+                return;
+            }
             const userSeed = seedInput.value.trim();
             if (userSeed && !/^\d+$/.test(userSeed)) {
                 showError('Seed must be a whole number.', 'Fix the seed field and try again.');
@@ -3192,8 +2976,6 @@
                 return;
             }
 
-            errorDisplay.classList.remove('visible');
-
             generateBtn.disabled = true;
             generateBtn.classList.remove('ready');
             generateBtn.classList.add('loading');
@@ -3204,8 +2986,6 @@
             const startTime = performance.now();
 
             try {
-
-
                 const generateHeaders = { 'Content-Type': 'application/json' };
                 const apiToken = tokenInput.value.trim();
                 if (apiToken) generateHeaders['X-API-Token'] = apiToken;
@@ -3213,38 +2993,35 @@
                     method: 'POST',
                     headers: generateHeaders,
                     body: JSON.stringify({
-                        text: emotionInput.value.trim(),
+                        text,
                         style: styleSelect.value,
-                        seed: seed
+                        seed
                     })
                 });
 
                 const data = await response.json();
 
                 if (data.error) {
-                    showError('Generation failed. Please try again.', data.error);
-                    stopLoadingAnimation();
-                    placeholder.style.display = 'block';
+                    showError('Generation failed. Try again.', data.error);
                     return;
                 }
 
                 const endTime = performance.now();
                 const generationSeconds = ((endTime - startTime) / 1000).toFixed(1);
 
-                stopLoadingAnimation();
                 const generation = { ...data, seed: data.seed ?? seed, generationSeconds };
                 displayGeneration(generation);
                 addToHistory(generation);
 
             } catch (error) {
-                console.error('Error:', error);
-                stopLoadingAnimation();
-                placeholder.style.display = 'block';
-                showError('Failed to connect to server.', 'Make sure the server is running on localhost:8000');
+                console.error('Generation request failed:', error);
+                showError('Could not complete the request.', 'Check the server connection and try again.');
             } finally {
+                stopLoadingAnimation();
+                placeholder.style.display = currentGenerationData ? 'none' : 'block';
                 generateBtn.disabled = false;
                 generateBtn.classList.remove('loading');
-                btnText.textContent = 'Generate Visualization';
+                btnText.textContent = 'Generate image';
             }
         }
 
@@ -3264,11 +3041,7 @@
             return generateImage();
         });
 
-        retryBtn.addEventListener('click', () => {
-            errorDisplay.classList.remove('visible');
-            generateImage();
-        });
-
+        retryBtn.addEventListener('click', generateImage);
 
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function(e) {

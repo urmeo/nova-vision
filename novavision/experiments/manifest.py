@@ -61,7 +61,7 @@ def device_info() -> dict:
 
 
 def build_manifest(**config) -> dict:
-    """Everything a reader needs to reconstruct the environment and run."""
+    """Record model revisions, configuration, and environment details."""
     from novavision.config import (
         CLIP_MODEL,
         CLIP_REVISION,
