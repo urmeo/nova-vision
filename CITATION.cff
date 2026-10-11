@@ -8,7 +8,7 @@ url: "https://github.com/urmeo/nova-vision"
 repository-code: "https://github.com/urmeo/nova-vision"
 license: MIT
 authors:
-  - given-names: Urme
+  - given-names: urme
     alias: urmeo
 abstract: >-
   An emotion-guided image app and paired evaluation harness with
