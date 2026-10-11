@@ -404,7 +404,7 @@
         <div class="section-container">
             <div class="section-header fade-in">
                 <h2 class="section-title" id="pipelineTitle">Text to image</h2>
-                <p class="section-subtitle">Four steps from your description to a generated image</p>
+                <p class="section-subtitle">Follow the text, the analysis, and the prompt that creates the image</p>
             </div>
             <ol class="pipeline">
                 <li class="pipeline-step fade-in" data-delay="1">
@@ -412,15 +412,15 @@
                         <rect x="5" y="6" width="30" height="28" rx="4"/>
                         <path d="M11 14h18M11 20h18M11 26h10"/>
                     </svg>
-                    <h3 class="pipeline-title">Text</h3>
-                    <p class="pipeline-detail">A feeling, memory, or scene.<br>Choose a visual style.</p>
+                    <h3 class="pipeline-title">Input</h3>
+                    <p class="pipeline-detail">Write an English description. Choose a visual style and, optionally, a seed.</p>
                 </li>
                 <li class="pipeline-step fade-in" data-delay="2">
                     <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M5 34h30M10 28V18M20 28V8M30 28V14"/>
                     </svg>
-                    <h3 class="pipeline-title">Text analysis</h3>
-                    <p class="pipeline-detail">Seven emotion labels.<br>Word scores + label presets → valence and arousal.</p>
+                    <h3 class="pipeline-title">Analyze</h3>
+                    <p class="pipeline-detail">Score seven emotion labels. Blend matched word values with the leading label's preset to estimate valence and arousal.</p>
                 </li>
                 <li class="pipeline-step fade-in" data-delay="3">
                     <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -429,8 +429,8 @@
                         <circle cx="26" cy="20" r="3" fill="white"/>
                         <circle cx="18" cy="29" r="3" fill="white"/>
                     </svg>
-                    <h3 class="pipeline-title">Prompt</h3>
-                    <p class="pipeline-detail">Your text + visual style.<br>Emotion cues add mood, palette, and lighting.</p>
+                    <h3 class="pipeline-title">Build prompt</h3>
+                    <p class="pipeline-detail">Keep your text and style. Neutral uses <code>raw</code>; other labels use <code>affect</code> to add mood, palette, and lighting cues.</p>
                 </li>
                 <li class="pipeline-step fade-in" data-delay="4">
                     <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -438,11 +438,19 @@
                         <circle cx="27" cy="14" r="3"/>
                         <path d="m6 29 10-11 8 9 5-5 6 7"/>
                     </svg>
-                    <h3 class="pipeline-title">Image</h3>
-                    <p class="pipeline-detail">Render with the selected backend.<br>Download the image or report.</p>
+                    <h3 class="pipeline-title">Render</h3>
+                    <p class="pipeline-detail">The selected backend renders the prompt. Keep the image, full prompt, and seed.</p>
                 </li>
             </ol>
-            <p class="pipeline-note">Neutral text skips emotion cues. Text scores are model estimates; they have not been validated against human feelings. Image analysis runs separately in the research experiments.</p>
+            <details class="pipeline-research">
+                <summary>Separate research experiments</summary>
+                <ol>
+                    <li><strong>Set known targets.</strong> Use intended emotion labels and shared seeds to compare <code>raw</code>, <code>naive</code>, <code>emotion</code>, and <code>affect</code> prompts.</li>
+                    <li><strong>Probe the images.</strong> An independent image model estimates the recovered emotion and affect. This step runs in the experiment runner.</li>
+                    <li><strong>Compare with targets.</strong> Report recovery accuracy, confusion, affect estimates, uncertainty, and shuffled-label controls. Fixed scenes form a separate diagnostic.</li>
+                </ol>
+            </details>
+            <p class="pipeline-note">Text and image scores have not been validated against human feelings. The bundled word values are demonstration data.</p>
         </div>
     </section>
 

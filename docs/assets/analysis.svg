@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title description">
+  <title id="title">How NovaVision analyzes text and chooses a prompt</title>
+  <desc id="description">English text follows two analysis branches. A DistilRoBERTa classifier scores seven emotion labels. The highest score selects the app prompt tier and supplies fixed affect priors. A word lexicon averages matched valence and arousal values and reports coverage. By default, the lexicon weight is the smaller of coverage and 0.8. Affect is this weighted word value plus the remaining weight times the leading label's prior. With no matched words the prior supplies the estimate.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#7c3aed"/></marker>
+  </defs>
+  <rect width="1200" height="650" rx="24" fill="#f8fafc"/>
+  <g font-family="Arial, sans-serif">
+    <text x="40" y="48" font-size="30" font-weight="700" fill="#0f172a">Inside text analysis</text>
+    <text x="40" y="80" font-size="19" fill="#475569">One branch scores text labels. The other adds word-level affect values.</text>
+    <g fill="#fff" stroke="#ddd6fe" stroke-width="2">
+      <rect x="40" y="263" width="180" height="110" rx="16"/>
+      <rect x="270" y="122" width="350" height="180" rx="16"/>
+      <rect x="270" y="374" width="350" height="180" rx="16"/>
+      <rect x="710" y="122" width="450" height="180" rx="16"/>
+      <rect x="710" y="374" width="450" height="180" rx="16"/>
+    </g>
+    <g fill="#0f172a" font-size="23" font-weight="700">
+      <text x="60" y="310">English text</text>
+      <text x="292" y="163">Text classifier</text>
+      <text x="292" y="415">Word lexicon</text>
+      <text x="732" y="163">Choose the app prompt</text>
+      <text x="732" y="415">Blend valence and arousal</text>
+    </g>
+    <g fill="#475569" font-size="20">
+      <text x="292" y="205">DistilRoBERTa · seven labels</text>
+      <text x="292" y="236">Highest score → leading label</text>
+      <text x="292" y="267">Label → fixed affect priors</text>
+      <text x="292" y="457">Average matched word values</text>
+      <text x="292" y="488" font-size="18">Coverage = matched / content words</text>
+      <text x="292" y="519">Nearby negation flips valence</text>
+      <text x="732" y="205">Leading label is neutral → raw</text>
+      <text x="732" y="236">Any other label → affect</text>
+      <text x="732" y="267">Affect adds mood, palette, and lighting</text>
+      <text x="732" y="457">w = min(coverage, 0.8)</text>
+      <text x="732" y="488">Estimate = w × word value + (1 − w) × prior</text>
+      <text x="732" y="519">No matches → use the label prior</text>
+    </g>
+    <text x="60" y="342" font-size="18" fill="#64748b">Two branches</text>
+    <g fill="none" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#arrow)">
+      <path d="M220 318H245V212H258"/>
+      <path d="M245 318V464H258"/>
+      <path d="M620 212H698"/>
+      <path d="M620 464H698"/>
+      <path d="M620 267H665V400H698"/>
+      <path d="M935 362V314"/>
+    </g>
+    <rect x="631" y="323" width="68" height="28" rx="7" fill="#ede9fe"/>
+    <text x="665" y="342" text-anchor="middle" font-size="16" fill="#6d28d9">priors</text>
+    <text x="952" y="344" font-size="18" fill="#6d28d9">palette + lighting</text>
+    <text x="40" y="594" font-size="18" fill="#475569">Valence: −1 to 1. Arousal: 0 to 1. The diagram shows the default coverage-based blend.</text>
+    <text x="40" y="625" font-size="18" fill="#475569">The bundled word values are demonstrations, not empirical norms. Text scores do not verify feelings.</text>
+  </g>
+</svg>

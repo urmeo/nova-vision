@@ -14,11 +14,22 @@ Recorded demo from an earlier interface. The current interface text differs. The
 
 ## Pipeline
 
-![English text to analysis, prompt construction, and image generation; recovery evaluation runs separately](docs/assets/pipeline.svg)
+![Four app stages: input, analyze, build prompt, render. Separate experiments use known targets, paired tiers, generation, an image probe, and comparison.](docs/assets/pipeline.svg)
 
-The app scores seven emotion labels in text, estimates valence and arousal, builds a prompt, and renders an image. Neutral text skips emotion cues. The experiment runner separately compares image-probe predictions with intended labels using shared seeds across conditioning tiers.
+The app scores seven emotion labels and blends word values with label priors to estimate valence and arousal. The leading label selects the prompt: neutral uses `raw`; other labels use `affect`, which adds mood, palette, and lighting cues. Every tier retains style and fixed quality terms.
 
-Text scores do not verify a person's feelings. The bundled affect lexicon contains demonstration values, not empirical norms.
+Experiments compare `raw`, `naive`, `emotion`, and `affect` with the same seed for each input and intended label. An independent image probe supplies predictions for recovery and affect metrics. The app does not use those predictions to revise its images.
+
+<details>
+<summary>How text analysis and affect estimates work</summary>
+
+![Text branches into a seven-label classifier and a word lexicon; the leading label chooses the prompt tier, and coverage controls the blend of word values and label priors.](docs/assets/analysis.svg)
+
+The default lexicon weight is `min(coverage, 0.8)`. With no matched words, the estimate comes from the leading label's prior. Text scores do not verify a person's feelings. The bundled lexicon contains demonstration values, not empirical norms.
+
+[Pipeline details, controls, and code](docs/method.md)
+
+</details>
 
 ## Interface
 
