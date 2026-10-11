@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'">
-    <title>NovaVision - Transform Emotions into AI Art</title>
+    <title>NovaVision - Emotion-guided image generation</title>
 
     <style>
         * {
@@ -2085,7 +2085,7 @@
 
     <header class="app-header">
         <h1 class="app-header-title fade-in">NovaVision</h1>
-        <p class="app-header-subtitle fade-in">Transform emotions into AI-generated art</p>
+        <p class="app-header-subtitle fade-in">Generate images from text and emotion labels</p>
     </header>
 
     <main>
@@ -2303,7 +2303,7 @@
 
                     <div class="prompt-section" id="promptSection">
                         <div class="prompt-label">Generated Prompt</div>
-                        <p class="prompt-text default" id="promptText">Your enhanced prompt will appear here...</p>
+                        <p class="prompt-text default" id="promptText">The generation prompt will appear here...</p>
                     </div>
                 </div>
             </div>
@@ -2313,7 +2313,7 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
-                    <span>How Your Prompt Was Enhanced</span>
+                    <span>How the prompt is built</span>
                 </div>
                 <div class="prompt-engineering-content" id="promptEngineeringContent">
                     <div class="prompt-comparison">
@@ -2336,9 +2336,9 @@
                                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                                     </svg>
                                 </div>
-                                <span class="prompt-column-title">Enhanced Prompt</span>
+                                <span class="prompt-column-title">Generation Prompt</span>
                             </div>
-                            <p class="prompt-column-text" id="enhancedPromptDisplay">Enhanced prompt will appear here...</p>
+                            <p class="prompt-column-text" id="enhancedPromptDisplay">The generation prompt will appear here...</p>
                         </div>
                     </div>
                     <div class="modifiers-section">
@@ -2362,7 +2362,7 @@
                                 <span class="modifier-badge quality">Quality</span>
                                 <div class="modifier-content">
                                     <div class="modifier-text">"masterpiece, highly detailed, sharp focus, professional"</div>
-                                    <div class="modifier-description">Added automatically for high-quality output</div>
+                                    <div class="modifier-description">Added to every generation prompt</div>
                                 </div>
                             </div>
                         </div>
@@ -2376,24 +2376,24 @@
     <section id="how-it-works">
         <div class="section-container">
             <div class="section-header fade-in">
-                <p class="section-tag">Your Journey</p>
+                <p class="section-tag">Generation steps</p>
                 <h2 class="section-title">How It Works</h2>
-                <p class="section-subtitle">From feeling to artwork in three seamless steps</p>
+                <p class="section-subtitle">Analyze text, build a prompt, and generate an image</p>
             </div>
             <div class="steps-container">
                 <div class="step fade-in" data-delay="1">
                     <div class="step-number">1</div>
-                    <h3 class="step-title">Express</h3>
-                    <p class="step-description">Type anything: a feeling, a memory, or a scene you want to see come to life.</p>
+                    <h3 class="step-title">Enter text</h3>
+                    <p class="step-description">Enter a feeling, memory, or scene.</p>
                 </div>
                 <div class="step fade-in" data-delay="2">
                     <div class="step-number">2</div>
-                    <h3 class="step-title">Understand</h3>
+                    <h3 class="step-title">Analyze text</h3>
                     <p class="step-description">The classifier estimates emotion labels from your text. For non-neutral text, the prompt adds mood, palette, and lighting cues.</p>
                 </div>
                 <div class="step fade-in" data-delay="3">
                     <div class="step-number">3</div>
-                    <h3 class="step-title">Create</h3>
+                    <h3 class="step-title">Generate image</h3>
                     <p class="step-description">Generate an image from the prompt. Completion time depends on the image backend and device.</p>
                 </div>
             </div>
@@ -2431,7 +2431,7 @@
                             <path d="M2 12l10 5 10-5"/>
                         </svg>
                     </div>
-                    <h3 class="feature-title">Smart Visual Translation</h3>
+                    <h3 class="feature-title">Palette and lighting cues</h3>
                     <p class="feature-description">
                         For non-neutral text, valence and arousal estimates add palette and lighting cues to the prompt alongside your selected visual style.
                     </p>
@@ -2477,7 +2477,7 @@
 
     <footer>
         <div class="footer-logo">NovaVision</div>
-        <p class="footer-tagline">AI-powered emotion visualization</p>
+        <p class="footer-tagline">Emotion-guided image generation</p>
         <p class="footer-copyright">&copy; 2026 NovaVision. All rights reserved.</p>
     </footer>
 
