@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Watch the current NovaVision interface tour and an earlier generation recording, with descriptions and downloadable videos.">
+    <meta name="color-scheme" content="light">
+    <title>NovaVision videos</title>
+    <link rel="stylesheet" href="videos.css">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to videos</a>
+    <header class="page-header">
+      <a class="brand" href="../">NovaVision</a>
+      <nav aria-label="Project links">
+        <a href="../">Interface preview</a>
+        <a href="https://github.com/urmeo/nova-vision#pipeline">README and pipeline</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <div class="intro">
+        <p class="eyebrow">Watch the workflow</p>
+        <h1>NovaVision videos</h1>
+        <p>A tour of the current interface and a recording of the earlier app. Both videos are silent; text descriptions appear below each player.</p>
+        <nav class="video-links" aria-label="Choose a video">
+          <a href="#pipeline-tour">Current pipeline tour <span aria-hidden="true">↓</span></a>
+          <a href="#recorded-demo">Earlier generation demo <span aria-hidden="true">↓</span></a>
+        </nav>
+      </div>
+
+      <section class="video-card" id="pipeline-tour" aria-labelledby="tour-heading">
+        <div class="card-heading">
+          <p class="eyebrow">Current interface · silent tour · 0:28</p>
+          <h2 id="tour-heading">Follow the pipeline</h2>
+          <p id="tour-description">This recording shows the static interface preview. Analysis and generation controls are disabled; it does not run the Flask backend or generate an image.</p>
+        </div>
+        <video controls playsinline preload="metadata" poster="pipeline-interface.png" width="1280" height="900" aria-labelledby="tour-heading" aria-describedby="tour-description tour-text">
+          <source src="pipeline-tour.mp4" type="video/mp4">
+          <track kind="captions" src="pipeline-tour.vtt" srclang="en" label="English descriptions" default>
+          <p>Your browser cannot play this video. <a href="pipeline-tour.mp4" download>Download the pipeline tour</a>.</p>
+        </video>
+        <div class="card-details">
+          <p id="tour-text"><strong>Text description:</strong> The tour opens on the static-preview notice, then shows the empty image panel and disabled controls. It follows Input → Analyze → Build prompt → Render, expands the separate research pipeline, and shows the saved result charts. Running the app locally enables text analysis and image generation.</p>
+          <a class="download-link" href="pipeline-tour.mp4" download>Download pipeline tour <span class="file-type">MP4</span></a>
+        </div>
+      </section>
+
+      <section class="video-card" id="recorded-demo" aria-labelledby="demo-heading">
+        <div class="card-heading">
+          <p class="eyebrow">Earlier interface · silent recording · 2:05</p>
+          <h2 id="demo-heading">Recorded generation demo</h2>
+          <p id="demo-description">An earlier app recording showing text analysis and image generation. Its interface and wording differ from the current version.</p>
+        </div>
+        <video controls playsinline preload="metadata" poster="demo-poster.png" width="1280" height="700" aria-labelledby="demo-heading" aria-describedby="demo-description demo-text">
+          <source src="demo.mp4" type="video/mp4">
+          <p>Your browser cannot play this video. <a href="demo.mp4" download>Download the earlier generation demo</a>.</p>
+        </video>
+        <div class="card-details">
+          <p id="demo-text"><strong>Text description:</strong> The earlier interface displays text emotion scores, affect estimates, a generation prompt, and cafe images. Later in the recording, the expanded prompt is pasted back as input, so the input changes between runs. Its model and run settings are unavailable. Displayed timings and wording belong to the earlier app; the recording is not a benchmark or evidence of emotion controllability.</p>
+          <a class="download-link" href="demo.mp4" download>Download earlier demo <span class="file-type">MP4</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Read the <a href="https://github.com/urmeo/nova-vision/blob/main/docs/method.md">method</a> and <a href="https://github.com/urmeo/nova-vision/blob/main/docs/results.md">saved results and limitations</a>.</p>
+      <p>Sole contributor: <a href="https://github.com/urmeo">urmeo</a>.</p>
+    </footer>
+  </body>
+</html>

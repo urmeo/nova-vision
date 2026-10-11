@@ -2,19 +2,31 @@
 
 Generate images from English text and emotion labels. Compare intended and recovered emotion in separate research experiments.
 
-[Interface preview](https://urmeo.github.io/nova-vision/) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
-
-<p align="center">
-  <img src="outputs/figures/demo.gif" alt="Recorded NovaVision interface demo showing text analysis and image generation" width="640">
-</p>
-
-Recorded demo from an earlier interface. The current interface text differs. The animation illustrates the workflow; it is not an evaluation result.
+[Interface preview](https://urmeo.github.io/nova-vision/) · [Videos](#videos) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
 
 **Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask**
 
+## Videos
+
+| Current interface and pipeline · 0:28 | Earlier generation demo · 2:05 |
+|:---:|:---:|
+| <a href="https://urmeo.github.io/nova-vision/assets/videos.html#pipeline-tour"><img src="docs/assets/pipeline-interface.png" alt="Watch the current interface tour: four pipeline stages and separate research details" width="420"></a> | <a href="https://urmeo.github.io/nova-vision/assets/videos.html#recorded-demo"><img src="docs/assets/demo-poster.png" alt="Watch the earlier recording showing a coffee-shop description, text scores, and a displayed cafe image" width="420"></a> |
+| [Watch tour](https://urmeo.github.io/nova-vision/assets/videos.html#pipeline-tour) · [MP4 file](docs/assets/pipeline-tour.mp4) | [Watch full recording](https://urmeo.github.io/nova-vision/assets/videos.html#recorded-demo) · [MP4 file](docs/assets/demo.mp4) |
+
+The current tour shows the static preview, its pipeline, and saved charts. Analysis and generation require the Python server. The earlier recording uses an older interface; its wording and timings are historical, and its model and run settings are unavailable. Neither video is a benchmark result. Both are silent, with text descriptions on the video page.
+
+<details>
+<summary>10-second excerpt from the earlier recording</summary>
+
+<p align="center">
+  <a href="https://urmeo.github.io/nova-vision/assets/videos.html#recorded-demo"><img src="outputs/figures/demo.gif" alt="Short animated excerpt of the earlier NovaVision interface; open the full recording" width="640"></a>
+</p>
+
+</details>
+
 ## Pipeline
 
-![Four app stages: input, analyze, build prompt, render. Separate experiments use known targets, paired tiers, generation, an image probe, and comparison.](docs/assets/pipeline.svg)
+[![Four app stages: input, analyze, build prompt, render. Separate experiments use known targets, paired tiers, generation, an image probe, and comparison.](docs/assets/pipeline.svg)](docs/assets/pipeline.svg)
 
 The app scores seven emotion labels and blends word values with label priors to estimate valence and arousal. The leading label selects the prompt: neutral uses `raw`; other labels use `affect`, which adds mood, palette, and lighting cues. Every tier retains style and fixed quality terms.
 
@@ -23,7 +35,7 @@ Experiments compare `raw`, `naive`, `emotion`, and `affect` with the same seed f
 <details>
 <summary>How text analysis and affect estimates work</summary>
 
-![Text branches into a seven-label classifier and a word lexicon; the leading label chooses the prompt tier, and coverage controls the blend of word values and label priors.](docs/assets/analysis.svg)
+[![Text branches into a seven-label classifier and a word lexicon; the leading label chooses the prompt tier, and coverage controls the blend of word values and label priors.](docs/assets/analysis.svg)](docs/assets/analysis.svg)
 
 The default lexicon weight is `min(coverage, 0.8)`. With no matched words, the estimate comes from the leading label's prior. Text scores do not verify a person's feelings. The bundled lexicon contains demonstration values, not empirical norms.
 
@@ -35,9 +47,15 @@ The default lexicon weight is `min(coverage, 0.8)`. With no matched words, the e
 
 | Current local interface | Earlier text-analysis example |
 |:---:|:---:|
-| <img src="docs/assets/interface.png" alt="Current NovaVision interface with text input, style selection, and an empty image panel" width="420"> | <img src="outputs/figures/emotion_analysis.png" alt="Earlier interface showing text emotion scores, affect estimates, and a generation prompt" width="420"> |
+| <a href="docs/assets/interface.png"><img src="docs/assets/interface.png" alt="Current NovaVision interface with text input, style selection, and an empty image panel" width="420"></a> | <a href="outputs/figures/emotion_analysis.png"><img src="outputs/figures/emotion_analysis.png" alt="Earlier interface showing text emotion scores, affect estimates, and a generation prompt" width="420"></a> |
 
 The screenshots show interface states, not benchmark measurements. The [public preview](https://urmeo.github.io/nova-vision/) displays the interface and saved charts. Analysis and generation require the Flask server below.
+
+| Earlier prompt details | Earlier displayed image |
+|:---:|:---:|
+| <a href="docs/assets/prompt-example.png"><img src="docs/assets/prompt-example.png" alt="Earlier interface showing the New adventure input and the longer prompt assembled from it" width="420"></a> | <a href="docs/assets/generation-example.png"><img src="docs/assets/generation-example.png" alt="Earlier interface showing the New adventure input, text emotion scores, and a sunlit meadow image" width="420"></a> |
+
+These archived examples use older prompt wording. Their original model and run settings are unavailable. Open any gallery image to inspect it at full size.
 
 ## Results
 
@@ -54,21 +72,21 @@ The screenshots show interface states, not benchmark measurements. The [public p
 
 | Recovery and 95% confidence intervals | Raw-tier confusion |
 |:---:|:---:|
-| <img src="docs/assets/results/recovery.png" alt="Saved pilot recovery accuracy with item-bootstrap 95 percent confidence intervals and chance reference" width="420"> | <img src="outputs/figures/confusion_raw.png" alt="Raw-tier confusion matrix comparing intended and recovered emotion labels" width="420"> |
+| <a href="docs/assets/results/recovery.png"><img src="docs/assets/results/recovery.png" alt="Saved pilot recovery accuracy with item-bootstrap 95 percent confidence intervals and chance reference" width="420"></a> | <a href="outputs/figures/confusion_raw.png"><img src="outputs/figures/confusion_raw.png" alt="Raw-tier confusion matrix comparing intended and recovered emotion labels" width="420"></a> |
 
 | Emotion-tier confusion | Affect-tier confusion |
 |:---:|:---:|
-| <img src="outputs/figures/confusion_emotion.png" alt="Emotion-tier confusion matrix from the saved pilot" width="420"> | <img src="outputs/figures/confusion_affect.png" alt="Affect-tier confusion matrix from the saved pilot" width="420"> |
+| <a href="outputs/figures/confusion_emotion.png"><img src="outputs/figures/confusion_emotion.png" alt="Emotion-tier confusion matrix from the saved pilot" width="420"></a> | <a href="outputs/figures/confusion_affect.png"><img src="outputs/figures/confusion_affect.png" alt="Affect-tier confusion matrix from the saved pilot" width="420"></a> |
 
 | Separate scene diagnostic | Affect-tier valence and arousal |
 |:---:|:---:|
-| <img src="outputs/figures/confusion_scene.png" alt="Confusion matrix for the seven fixed-scene diagnostic images" width="420"> | <img src="outputs/figures/va_affect.png" alt="Intended prior values versus image-probe estimates of valence and arousal in the affect tier" width="420"> |
+| <a href="outputs/figures/confusion_scene.png"><img src="outputs/figures/confusion_scene.png" alt="Confusion matrix for the seven fixed-scene diagnostic images" width="420"></a> | <a href="outputs/figures/va_affect.png"><img src="outputs/figures/va_affect.png" alt="Intended prior values versus image-probe estimates of valence and arousal in the affect tier" width="420"></a> |
 
 The matrices show row-normalized predictions. Across the three conditioning tiers, the probe uses only two of seven labels and predicts neutral for 90.5% of images. The affect plot compares intended prior values with image-probe estimates; it does not measure human ratings.
 
 ### Probe checks
 
-![Saved CLIP accuracy on labelled face and scene samples](docs/assets/results/probe-comparison.png)
+[![Saved CLIP accuracy on labelled face and scene samples](docs/assets/results/probe-comparison.png)](docs/assets/results/probe-comparison.png)
 
 | Probe | Faces, n=200 | Scenes, n=400 |
 |---|---:|---:|
@@ -81,7 +99,7 @@ The recovery correction covers five of seven classes: 10.0% apparent recovery be
 
 ### Planning curve
 
-![Illustrative sample-size curve connecting the saved binomial simulation points](docs/assets/results/planning-curve.png)
+[![Illustrative sample-size curve connecting the saved binomial simulation points](docs/assets/results/planning-curve.png)](docs/assets/results/planning-curve.png)
 
 This is a saved planning simulation. It assumes independent binomial trials and transfer of real-image probe accuracy to generated images. It does not estimate power for the paired benchmark. A 420-images-per-tier run and a study with at least three independent human raters remain future work.
 

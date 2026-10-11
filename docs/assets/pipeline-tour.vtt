@@ -1,0 +1,21 @@
+WEBVTT
+
+00:00.000 --> 00:03.000
+Current static preview. Run the Python server
+for text analysis and image generation.
+
+00:03.000 --> 00:08.000
+Analysis and generation controls are disabled
+in this public preview.
+
+00:08.000 --> 00:14.000
+App pipeline:
+Input → Analyze → Build prompt → Render.
+
+00:14.000 --> 00:21.000
+Separate research: compare paired prompts
+using intended labels and an image probe.
+
+00:21.000 --> 00:28.000
+Saved pilot and probe-check charts.
+These are recorded results, not a new run.
