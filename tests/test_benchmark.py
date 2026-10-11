@@ -40,10 +40,22 @@ def test_content_bank_is_neutral_and_nonempty():
 
 
 def test_load_benchmark_tolerates_utf8_bom(tmp_path):
+    benchmark = tmp_path / "bom.csv"
+    benchmark.write_text("text,emotion\nhello there,joy\n", encoding="utf-8-sig")
+    assert load_benchmark(benchmark) == [{"text": "hello there", "emotion": "joy"}]
 
-    p = tmp_path / "bom.csv"
-    p.write_text("text,emotion\nhello there,joy\n", encoding="utf-8-sig")
-    assert load_benchmark(p) == [{"text": "hello there", "emotion": "joy"}]
+
+def test_load_benchmark_preserves_newlines_inside_quoted_text(tmp_path):
+    benchmark = tmp_path / "multiline.csv"
+    benchmark.write_bytes(b'text,emotion\r\n"first line\r\nsecond line",joy\r\n')
+    assert load_benchmark(benchmark) == [{"text": "first line\r\nsecond line", "emotion": "joy"}]
+
+
+def test_load_benchmark_reports_physical_line_after_multiline_text(tmp_path):
+    benchmark = tmp_path / "multiline.csv"
+    benchmark.write_text('text,emotion\n"first line\nsecond line",joy\nbad row,unknown\n')
+    with pytest.raises(ValueError, match=r"multiline\.csv:4 unknown emotion"):
+        load_benchmark(benchmark)
 
 
 def test_content_bank_rejects_duplicates(tmp_path):

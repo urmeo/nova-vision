@@ -13,10 +13,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import PercentFormatter
-from render_results import checked_probe
+from render_results import SOURCES, checked_probe
+
+from novavision.eval.metrics import confusion_matrix
+from novavision.prompting import TIERS
 
 ROOT = Path(__file__).resolve().parents[1]
-CONDITIONS = ("raw", "naive", "emotion", "affect", "scene")
+CONDITIONS = (*TIERS, "scene")
 NAMES = {
     "raw": "Raw text",
     "naive": "Emotion label",
@@ -24,10 +27,7 @@ NAMES = {
     "affect": "Affect cues",
     "scene": "Scene diagnostic",
 }
-PROBES = {
-    "Faces": ("probe_validation.json", "probe_validation_l14.json"),
-    "Scenes": ("probe_validation_scene.json", "probe_validation_scene_l14.json"),
-}
+PROBES = {name: (first, second) for name, first, second in SOURCES}
 INK, TEAL, CORAL = "#163858", "#168778", "#c76b47"
 
 
@@ -51,14 +51,6 @@ def probability(value, name: str) -> float:
     return float(value)
 
 
-def confusion(gold: list[str], predicted: list[str], labels: list[str]) -> np.ndarray:
-    index = {label: i for i, label in enumerate(labels)}
-    counts = np.zeros((len(labels), len(labels)), dtype=int)
-    for actual, prediction in zip(gold, predicted):
-        counts[index[actual], index[prediction]] += 1
-    return counts
-
-
 def checked_pilot(report: dict, labels: list[str]) -> list[str]:
     metrics, records = report["metrics"], report["records"]
     tiers = [tier for tier in CONDITIONS if tier in metrics]
@@ -67,11 +59,12 @@ def checked_pilot(report: dict, labels: list[str]) -> list[str]:
     chance = probability(metrics["chance"], "Pilot chance")
     if round(1 / len(labels), 4) != chance:
         raise ValueError("Pilot chance disagrees with the label count")
+    known_labels = set(labels)
     for tier in tiers:
         subset = [record for record in records if record["tier"] == tier]
         if not subset or metrics[tier]["n"] != len(subset):
             raise ValueError(f"Pilot {tier}: saved record counts disagree")
-        if any({row["intended"], row["predicted"]} - set(labels) for row in subset):
+        if any({row["intended"], row["predicted"]} - known_labels for row in subset):
             raise ValueError(f"Pilot {tier}: unknown emotion label")
         accuracy = probability(metrics[tier]["accuracy"], f"Pilot {tier} accuracy")
         observed = sum(row["intended"] == row["predicted"] for row in subset) / len(subset)
@@ -120,8 +113,8 @@ def load_saved_results(source_dir: Path) -> dict:
         except (KeyError, TypeError, ValueError) as exc:
             raise ValueError(f"Cannot chart {path}: {exc}") from exc
         reports[filename] = report
-    for filenames in PROBES.values():
-        first, second = (reports[name] for name in filenames)
+    for pair in PROBES.values():
+        first, second = (reports[name] for name in pair)
         if first["gold"] != second["gold"] or first["labels"] != second["labels"]:
             raise ValueError("Paired probe reports have different gold labels or label orders")
     labels = reports[PROBES["Faces"][0]]["labels"]
@@ -186,7 +179,7 @@ def recovery_chart(pilot: dict):
 
 def confusion_chart(pilot: dict, labels: list[str]):
     records = [row for row in pilot["records"] if row["tier"] == "emotion"]
-    counts = confusion(
+    counts = confusion_matrix(
         [row["intended"] for row in records], [row["predicted"] for row in records], labels
     )
     majority = counts.sum(axis=0).argmax()

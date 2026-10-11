@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from PIL import Image
 
 from novavision.affect.analyzer import EmotionAnalysis, EmotionAnalyzer
+from novavision.config import Settings, get_settings
 from novavision.generation import ImageBackend, get_backend
 from novavision.prompting import NEGATIVE_PROMPT, build_prompt
 from novavision.taxonomy import NEUTRAL
@@ -58,7 +59,16 @@ class NovaVision:
         tier = "raw" if analysis.primary == NEUTRAL else "affect"
         return self._render(text, analysis, style, tier, seed, width, height)
 
-    def _render(self, text, analysis, style, tier, seed, width, height) -> Result:
+    def _render(
+        self,
+        text: str,
+        analysis: EmotionAnalysis,
+        style: str,
+        tier: str,
+        seed: int,
+        width: int,
+        height: int,
+    ) -> Result:
         prompt = build_prompt(
             text,
             emotion=analysis.primary,
@@ -73,12 +83,12 @@ class NovaVision:
         return Result(image, prompt, analysis, tier, seed, self.backend.name)
 
 
-def build_pipeline(settings=None) -> NovaVision:
-    "Construct the pipeline from settings, the one factory both entry points use."
-    from novavision.config import get_settings
-
-    cfg = settings or get_settings()
-    backend_name = cfg.backend.lower()
-    kwargs = {"model_id": cfg.diffusion_model} if backend_name in {"diffusers", "hf-api"} else {}
+def build_pipeline(settings: Settings | None = None) -> NovaVision:
+    "Construct the app and CLI pipeline from shared settings."
+    settings = settings or get_settings()
+    backend_name = settings.backend.lower()
+    kwargs = (
+        {"model_id": settings.diffusion_model} if backend_name in {"diffusers", "hf-api"} else {}
+    )
     backend = get_backend(backend_name, **kwargs)
-    return NovaVision(backend=backend, analyzer=EmotionAnalyzer(cfg.emotion_model))
+    return NovaVision(backend=backend, analyzer=EmotionAnalyzer(settings.emotion_model))

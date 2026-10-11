@@ -46,23 +46,23 @@ def load_hf_dataset(
 
     from datasets import load_dataset
 
-    ds = load_dataset(name, split=split, revision=revision)
-    feat = ds.features.get(label_key)
-    names = getattr(feat, "names", None)
+    dataset = load_dataset(name, split=split, revision=revision)
+    feature = dataset.features.get(label_key)
+    names = getattr(feature, "names", None)
 
-    raw_labels = ds[label_key]
-    labels = [names[r] if names and isinstance(r, int) else r for r in raw_labels]
-    ekman = [EKMAN_ALIASES.get(str(lab).lower()) for lab in labels]
+    raw_labels = dataset[label_key]
+    labels = [names[label] if names and isinstance(label, int) else label for label in raw_labels]
+    emotions = [EKMAN_ALIASES.get(str(label).lower()) for label in labels]
 
-    order = list(range(len(ds)))
+    order = list(range(len(dataset)))
     random.Random(seed).shuffle(order)
     known = set(EMOTIONS)
     pairs: list = []
     for i in order:
         if len(pairs) >= n:
             break
-        if ekman[i] in known:
-            pairs.append((ds[i][image_key].convert("RGB"), ekman[i]))
+        if emotions[i] in known:
+            pairs.append((dataset[i][image_key].convert("RGB"), emotions[i]))
     if not pairs:
         raise ValueError(
             f"{name}[{split}] column '{label_key}' yielded no Ekman-mappable labels "
@@ -77,13 +77,14 @@ def load_image_folder(root: str | Path) -> list[tuple[Path, str]]:
     """Images under ``root/<ekman_emotion>/*`` → (path, label) pairs."""
     root = Path(root)
     pairs: list[tuple[Path, str]] = []
-    for sub in sorted(root.iterdir()):
-        label = EKMAN_ALIASES.get(sub.name.lower(), sub.name.lower())
-        if not sub.is_dir() or label not in set(EMOTIONS):
+    known = set(EMOTIONS)
+    for folder in sorted(root.iterdir()):
+        label = EKMAN_ALIASES.get(folder.name.lower(), folder.name.lower())
+        if not folder.is_dir() or label not in known:
             continue
-        for img in sorted(sub.iterdir()):
-            if img.suffix.lower() in _EXTS:
-                pairs.append((img, label))
+        for image_path in sorted(folder.iterdir()):
+            if image_path.is_file() and image_path.suffix.lower() in _EXTS:
+                pairs.append((image_path, label))
     if not pairs:
         raise ValueError(f"No labelled images found under {root}/<emotion>/")
     return pairs
@@ -95,10 +96,14 @@ def validate(probe, pairs: list) -> dict:
 
     y_true, y_pred = [], []
     for item, label in pairs:
-        img = item if isinstance(item, Image.Image) else Image.open(item).convert("RGB")
-        rec = probe.recover(img)
+        if isinstance(item, Image.Image):
+            image = item
+        else:
+            with Image.open(item) as source:
+                image = source.convert("RGB")
+        recovery = probe.recover(image)
         y_true.append(label)
-        y_pred.append(rec.emotion)
+        y_pred.append(recovery.emotion)
 
     cm = confusion_matrix(y_true, y_pred, EMOTIONS)
     return {

@@ -14,6 +14,7 @@ FIXTURE = Path(__file__).parent / "fixtures" / "affectbench_sample.csv"
     "options",
     [
         {"track": "typo"},
+        {"track": "text"},
         {"seeds": 0},
         {"seeds": -1},
         {"contents": -1},

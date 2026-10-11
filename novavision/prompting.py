@@ -59,13 +59,13 @@ def va_descriptors(valence: float, arousal: float) -> str:
         palette = "balanced natural palette"
 
     if arousal >= AROUSAL_HIGH:
-        light = "dramatic high-contrast lighting, dynamic composition"
+        lighting = "dramatic high-contrast lighting, dynamic composition"
     elif arousal <= AROUSAL_LOW:
-        light = "soft gentle lighting, calm still composition"
+        lighting = "soft gentle lighting, calm still composition"
     else:
-        light = "even lighting, steady composition"
+        lighting = "even lighting, steady composition"
 
-    return f"{palette}, {light}"
+    return f"{palette}, {lighting}"
 
 
 def build_prompt(
@@ -81,19 +81,19 @@ def build_prompt(
     if tier not in TIERS and tier not in FLOORS:
         raise ValueError(f"Unknown tier '{tier}', expected one of {TIERS + FLOORS}")
 
-    style_desc = STYLE_PRESETS.get(style.lower(), STYLE_PRESETS["artistic"])
+    style_description = STYLE_PRESETS.get(style.lower(), STYLE_PRESETS["artistic"])
     mood = EMOTION_MOODS.get(emotion, EMOTION_MOODS[NEUTRAL])
 
     if tier == "raw":
-        parts = [content, style_desc, QUALITY]
+        parts = [content, style_description, QUALITY]
     elif tier == "naive":
-        parts = [content, emotion, style_desc, QUALITY]
+        parts = [content, emotion, style_description, QUALITY]
     elif tier == "emotion":
-        parts = [content, mood, style_desc, QUALITY]
+        parts = [content, mood, style_description, QUALITY]
     elif tier == "affect":
-        parts = [content, mood, va_descriptors(valence, arousal), style_desc, QUALITY]
+        parts = [content, mood, va_descriptors(valence, arousal), style_description, QUALITY]
     else:
         scene = EMOTION_SCENES.get(emotion, EMOTION_SCENES[NEUTRAL])
-        parts = [scene, style_desc, QUALITY]
+        parts = [scene, style_description, QUALITY]
 
-    return ", ".join(p for p in parts if p)
+    return ", ".join(part for part in parts if part)

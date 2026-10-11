@@ -35,7 +35,6 @@ def test_token_ok_enforced_when_set(monkeypatch):
 
 
 def test_token_ok_handles_non_ascii(monkeypatch):
-
     monkeypatch.setenv("NOVA_API_TOKEN", "clé-secrète")
     assert serving.token_ok("clé-secrète") is True
     assert serving.token_ok("wrong") is False

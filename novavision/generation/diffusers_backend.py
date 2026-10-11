@@ -27,25 +27,24 @@ class DiffusersBackend(ImageBackend):
 
     def __init__(
         self,
-        model_id: str = "stabilityai/sd-turbo",
+        model_id: str = DIFFUSION_MODEL,
         device: str | None = None,
         steps: int = 2,
         revision: str | None = None,
     ):
         self.model_id = model_id
-        revision = revision or default_revision(model_id, DIFFUSION_MODEL, DIFFUSION_REVISION)
         self.device = device or _pick_device()
         self.dtype = "float16" if self.device == "cuda" else "float32"
         self.steps = steps
-        self.revision = revision
+        self.revision = revision or default_revision(model_id, DIFFUSION_MODEL, DIFFUSION_REVISION)
         self._pipe = None
-        self._lock = threading.Lock()
+        self._load_lock = threading.Lock()
         self._generate_lock = threading.Lock()
 
     @property
     def pipe(self):
         if self._pipe is None:
-            with self._lock:
+            with self._load_lock:
                 if self._pipe is None:
                     import torch
                     from diffusers import AutoPipelineForText2Image
@@ -53,8 +52,7 @@ class DiffusersBackend(ImageBackend):
                     dtype = torch.float16 if self.dtype == "float16" else torch.float32
                     pipe = AutoPipelineForText2Image.from_pretrained(
                         self.model_id, torch_dtype=dtype, revision=self.revision
-                    )
-                    pipe = pipe.to(self.device)
+                    ).to(self.device)
                     pipe.set_progress_bar_config(disable=True)
                     self._pipe = pipe
         return self._pipe
@@ -74,7 +72,7 @@ class DiffusersBackend(ImageBackend):
         turbo = "turbo" in self.model_id.lower()
 
         with self._generate_lock:
-            out = self.pipe(
+            result = self.pipe(
                 prompt=prompt,
                 width=width,
                 height=height,
@@ -83,4 +81,4 @@ class DiffusersBackend(ImageBackend):
                 negative_prompt=None if turbo else negative_prompt,
                 generator=generator,
             )
-        return out.images[0]
+        return result.images[0]

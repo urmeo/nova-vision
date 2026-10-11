@@ -97,18 +97,17 @@ class HFImageClassifierProbe(Probe):
                 scores[label] = scores.get(label, 0.0) + float(pred["score"])
         if not scores:
             raise RuntimeError(f"{self.model_id} produced no Ekman-mappable labels for this image")
-        emotion = max(scores, key=lambda k: scores[k])
-        v, a = prior(emotion)
-        return Recovery(emotion, v, a, scores)
+        emotion = max(scores, key=scores.__getitem__)
+        valence, arousal = prior(emotion)
+        return Recovery(emotion, valence, arousal, scores)
 
 
 def _softmax(values):
     import numpy as np
 
-    z = np.asarray(values, dtype=float)
-    z = z - z.max()
-    e = np.exp(z)
-    return e / e.sum()
+    logits = np.asarray(values, dtype=float)
+    weights = np.exp(logits - logits.max())
+    return weights / weights.sum()
 
 
 class CLIPProbe(Probe):
@@ -127,9 +126,9 @@ class CLIPProbe(Probe):
         self._model: Any = None
         self._processor: Any = None
         self._scale: float = 1.0
-        self._emo_feats: Any = None
-        self._val_feats: Any = None
-        self._aro_feats: Any = None
+        self._emotion_features: Any = None
+        self._valence_features: Any = None
+        self._arousal_features: Any = None
 
     def _load(self):
         if self._model is None:
@@ -137,13 +136,16 @@ class CLIPProbe(Probe):
             from transformers import CLIPModel, CLIPProcessor
 
             self._device = self._device or ("cuda" if torch.cuda.is_available() else "cpu")
-            self._model = (
+            model = (
                 CLIPModel.from_pretrained(self.model_id, revision=self.revision)
                 .to(self._device)
                 .eval()
             )
-            self._processor = CLIPProcessor.from_pretrained(self.model_id, revision=self.revision)
-            self._scale = float(self._model.logit_scale.exp().item())
+            processor = CLIPProcessor.from_pretrained(self.model_id, revision=self.revision)
+            scale = float(model.logit_scale.exp().item())
+            self._model = model
+            self._processor = processor
+            self._scale = scale
 
     def _image_features(self, image: Image.Image):
         import torch
@@ -152,8 +154,8 @@ class CLIPProbe(Probe):
         inputs = self._processor(images=image, return_tensors="pt").to(self._device)
         with torch.no_grad():
             pooled = self._model.vision_model(pixel_values=inputs["pixel_values"]).pooler_output
-            feats = self._model.visual_projection(pooled)
-        return feats / feats.norm(dim=-1, keepdim=True)
+            features = self._model.visual_projection(pooled)
+        return features / features.norm(dim=-1, keepdim=True)
 
     def _text_features(self, texts):
         import torch
@@ -166,45 +168,48 @@ class CLIPProbe(Probe):
             pooled = self._model.text_model(
                 input_ids=inputs["input_ids"], attention_mask=inputs.get("attention_mask")
             ).pooler_output
-            feats = self._model.text_projection(pooled)
-        return feats / feats.norm(dim=-1, keepdim=True)
+            features = self._model.text_projection(pooled)
+        return features / features.norm(dim=-1, keepdim=True)
 
     def _fixed_features(self):
-        if self._emo_feats is None:
+        if self._emotion_features is None:
             import torch
 
             means = []
             for label in EMOTIONS:
-                feats = self._text_features(EMOTION_PROMPTS[label])
-                mean = feats.mean(dim=0)
+                features = self._text_features(EMOTION_PROMPTS[label])
+                mean = features.mean(dim=0)
                 means.append(mean / mean.norm())
-            self._emo_feats = torch.stack(means)
-            self._val_feats = self._text_features([p for p, _ in VALENCE_LADDER])
-            self._aro_feats = self._text_features([p for p, _ in AROUSAL_LADDER])
-        return self._emo_feats, self._val_feats, self._aro_feats
+            emotion_features = torch.stack(means)
+            valence_features = self._text_features([prompt for prompt, _ in VALENCE_LADDER])
+            arousal_features = self._text_features([prompt for prompt, _ in AROUSAL_LADDER])
+            self._emotion_features = emotion_features
+            self._valence_features = valence_features
+            self._arousal_features = arousal_features
+        return self._emotion_features, self._valence_features, self._arousal_features
 
-    def _expected(self, img, feats, ladder):
+    def _expected(self, image_features, text_features, ladder):
         import numpy as np
 
-        sims = (img @ feats.T).squeeze(0).cpu().numpy()
-        probs = _softmax(_VA_TEMPERATURE * sims)
-        return float(np.dot(probs, [v for _, v in ladder]))
+        similarities = (image_features @ text_features.T).squeeze(0).cpu().numpy()
+        probabilities = _softmax(_VA_TEMPERATURE * similarities)
+        return float(np.dot(probabilities, [value for _, value in ladder]))
 
     def recover(self, image: Image.Image) -> Recovery:
         labels = list(EMOTIONS)
-        emo_feats, val_feats, aro_feats = self._fixed_features()
-        img = self._image_features(image)
+        emotion_features, valence_features, arousal_features = self._fixed_features()
+        image_features = self._image_features(image)
 
-        emo = (img @ emo_feats.T).squeeze(0).cpu().numpy()
-        probs = _softmax(self._scale * emo)
-        scores = {label: float(p) for label, p in zip(labels, probs)}
-        emotion = labels[int(probs.argmax())]
+        similarities = (image_features @ emotion_features.T).squeeze(0).cpu().numpy()
+        probabilities = _softmax(self._scale * similarities)
+        scores = {label: float(p) for label, p in zip(labels, probabilities)}
+        emotion = labels[int(probabilities.argmax())]
 
-        valence = self._expected(img, val_feats, VALENCE_LADDER)
-        arousal = self._expected(img, aro_feats, AROUSAL_LADDER)
+        valence = self._expected(image_features, valence_features, VALENCE_LADDER)
+        arousal = self._expected(image_features, arousal_features, AROUSAL_LADDER)
         return Recovery(emotion, valence, arousal, scores)
 
     def clip_t(self, image: Image.Image, text: str) -> float:
-        img = self._image_features(image)
-        txt = self._text_features([text])
-        return float((img @ txt.T).item())
+        image_features = self._image_features(image)
+        text_features = self._text_features([text])
+        return float((image_features @ text_features.T).item())

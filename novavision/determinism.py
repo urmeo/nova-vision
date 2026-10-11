@@ -7,7 +7,8 @@ import random
 
 
 def set_determinism(seed: int = 0) -> None:
-    "Seed python, numpy, and torch, and ask torch for deterministic kernels."
+    "Seed Python, NumPy, and PyTorch, and request deterministic kernels."
+    # Python reads this value at startup, so it applies to child processes.
     os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
 

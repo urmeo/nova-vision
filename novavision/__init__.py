@@ -7,7 +7,6 @@ __all__ = ["NovaVision", "Result", "build_pipeline", "run_experiment", "__versio
 
 
 def __getattr__(name: str):
-
     if name == "run_experiment":
         from novavision.experiments.run import run_experiment
 

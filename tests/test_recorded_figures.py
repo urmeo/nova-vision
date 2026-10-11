@@ -1,16 +1,11 @@
-import importlib.util
 import json
 from copy import deepcopy
 from pathlib import Path
 
 import pytest
+import render_results as renderer
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location(
-    "recorded_figures", ROOT / "scripts/render_results.py"
-)
-renderer = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(renderer)
 
 
 def test_all_saved_probe_metrics_match_predictions():

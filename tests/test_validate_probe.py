@@ -32,6 +32,14 @@ def test_load_rejects_empty(tmp_path):
         validate_probe.load_image_folder(tmp_path)
 
 
+def test_load_image_folder_skips_directories_with_image_extensions(tmp_path):
+    _make_dataset(tmp_path)
+    (tmp_path / "joy" / "not-an-image.png").mkdir()
+    pairs = validate_probe.load_image_folder(tmp_path)
+    assert len(pairs) == 2
+    assert all(path.is_file() for path, _ in pairs)
+
+
 def test_validate_reports_accuracy(tmp_path):
     _make_dataset(tmp_path)
     report = validate_probe.validate(FakeProbe(), validate_probe.load_image_folder(tmp_path))

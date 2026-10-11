@@ -9,6 +9,7 @@ import random
 from collections import defaultdict
 from pathlib import Path
 
+from novavision.data import sha256
 from novavision.taxonomy import EMOTIONS, to_ekman
 
 DATASET = "google-research-datasets/go_emotions"
@@ -27,7 +28,7 @@ def _drop_overlap(
     "Remove examples whose normalised text appears in ``exclude_norms``."
     if not exclude_norms:
         return examples
-    return [(t, e) for t, e in examples if _normalize(t) not in exclude_norms]
+    return [(text, emotion) for text, emotion in examples if _normalize(text) not in exclude_norms]
 
 
 def _curate(examples: list[tuple[str, str]], n_per_class: int, seed: int) -> dict[str, list[str]]:
@@ -36,10 +37,10 @@ def _curate(examples: list[tuple[str, str]], n_per_class: int, seed: int) -> dic
     seen: set[str] = set()
     for text, emotion in examples:
         text = text.strip()
-        norm = _normalize(text)
-        if not text or norm in seen or emotion not in set(EMOTIONS):
+        normalized = _normalize(text)
+        if not text or normalized in seen or emotion not in EMOTIONS:
             continue
-        seen.add(norm)
+        seen.add(normalized)
         buckets[emotion].append(text)
 
     rng = random.Random(seed)
@@ -54,10 +55,10 @@ def _curate(examples: list[tuple[str, str]], n_per_class: int, seed: int) -> dic
 def _interleave(sampled: dict[str, list[str]]) -> list[tuple[str, str]]:
     """Round-robin across classes so a prefix stays stratified."""
     rows: list[tuple[str, str]] = []
-    for i in range(max((len(v) for v in sampled.values()), default=0)):
+    for index in range(max((len(texts) for texts in sampled.values()), default=0)):
         for emotion in EMOTIONS:
-            if i < len(sampled[emotion]):
-                rows.append((sampled[emotion][i], emotion))
+            if index < len(sampled[emotion]):
+                rows.append((sampled[emotion][index], emotion))
     return rows
 
 
@@ -92,17 +93,15 @@ def build(
     sampled = _curate(examples, n_per_class, seed)
     rows = _interleave(sampled)
 
-    from novavision.data import sha256
-
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w", encoding="utf-8", newline="") as fh:
-        writer = csv.writer(fh)
+    with out_path.open("w", encoding="utf-8", newline="") as destination:
+        writer = csv.writer(destination)
         writer.writerow(["text", "emotion"])
         writer.writerows(rows)
 
-    counts = {e: len(sampled[e]) for e in EMOTIONS}
-    short = sorted(e for e, c in counts.items() if c < n_per_class)
+    counts = {emotion: len(sampled[emotion]) for emotion in EMOTIONS}
+    underfilled = sorted(emotion for emotion, count in counts.items() if count < n_per_class)
     manifest = {
         "dataset": DATASET,
         "split": split,
@@ -111,15 +110,17 @@ def build(
         "seed": seed,
         "counts": counts,
         "total": len(rows),
-        "underfilled": short,
-        "balanced": not short,
+        "underfilled": underfilled,
+        "balanced": not underfilled,
         "drop_train_overlap": bool(drop_train_overlap and split != "train"),
         "dropped_train_overlap": dropped_overlap,
         "sha256": sha256(out_path),
     }
-    out_path.with_suffix(".manifest.json").write_text(json.dumps(manifest, indent=2))
-    if short:
-        print(f"WARNING: classes below {n_per_class}: {short}")
+    out_path.with_suffix(".manifest.json").write_text(
+        json.dumps(manifest, indent=2), encoding="utf-8"
+    )
+    if underfilled:
+        print(f"WARNING: classes below {n_per_class}: {underfilled}")
     return out_path
 
 

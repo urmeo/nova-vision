@@ -15,7 +15,7 @@ CLIP_REVISION = "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268"
 
 
 def default_revision(model_id: str, default_model: str, revision: str) -> str | None:
-    "The pinned revision, but only when the default checkpoint is what loads."
+    "Return the pinned revision only for the default model."
     return revision if model_id == default_model else None
 
 

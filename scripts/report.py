@@ -4,46 +4,51 @@ from __future__ import annotations
 
 import argparse
 import json
+from math import isfinite
 from pathlib import Path
 
 from novavision.eval.metrics import cohens_h, holm_bonferroni
 from novavision.experiments.run import ALL_CONDITIONS as CONDITIONS
 
-
-def _fmt(x) -> str:
-    return "n/a" if x is None or (isinstance(x, float) and x != x) else f"{x:.3f}"
+CONDITIONING_TIERS = ("naive", "emotion", "affect")
 
 
-def _rho(m: dict, key: str) -> str:
-    """Correlation with its bootstrap CI when available, never a bare 3-decimal."""
-    rho = m.get(key)
-    ci = m.get(f"{key}_ci")
+def _fmt(value: float | None) -> str:
+    return f"{value:.3f}" if value is not None and isfinite(value) else "n/a"
 
-    if ci:
-        lo = ci[0]
-        if lo is not None and not (isinstance(lo, float) and lo != lo):
-            return f"{_fmt(rho)} [{ci[0]:.2f}, {ci[1]:.2f}]"
+
+def _rho(metrics: dict, key: str) -> str:
+    """Format a correlation and its bootstrap interval when both bounds are finite."""
+    rho = metrics.get(key)
+    interval = metrics.get(f"{key}_ci")
+
+    if (
+        interval
+        and len(interval) == 2
+        and all(bound is not None and isfinite(bound) for bound in interval)
+    ):
+        return f"{_fmt(rho)} [{interval[0]:.2f}, {interval[1]:.2f}]"
     return _fmt(rho)
 
 
 def _shuffled_note(metrics: dict) -> str:
     """Circularity check: does any conditioning tier beat the shuffled-label null?"""
-    parts = []
-    for cond in ("naive", "emotion", "affect"):
-        sc = (metrics.get(cond) or {}).get("shuffled_control") or {}
-
-        p = sc.get("p_value")
-        if p is not None:
-            parts.append(f"{cond} p={p:.2f}")
+    controls = {
+        tier: (metrics.get(tier) or {}).get("shuffled_control") or {} for tier in CONDITIONING_TIERS
+    }
+    parts = [
+        f"{tier} p={control['p_value']:.2f}"
+        for tier, control in controls.items()
+        if control.get("p_value") is not None
+    ]
     if not parts:
         return ""
 
     null_mean = next(
         (
-            nm
-            for cond in ("naive", "emotion", "affect")
-            for nm in [((metrics.get(cond) or {}).get("shuffled_control") or {}).get("null_mean")]
-            if nm is not None
+            control["null_mean"]
+            for control in controls.values()
+            if control.get("null_mean") is not None
         ),
         None,
     )
@@ -59,16 +64,16 @@ def metrics_table(metrics: dict) -> str:
     head = "| Condition | Recovery [95% CI] | Macro-F1 | Valence ρ†‡ | Arousal ρ†‡ | CLIP-T | n |"
     rule = "|" + "---|" * 7
     lines = [head, rule]
-    for cond in CONDITIONS:
-        m = metrics.get(cond)
-        if not m:
+    for condition in CONDITIONS:
+        row = metrics.get(condition)
+        if not row:
             continue
-        lo, hi = m["accuracy_ci"]
+        low, high = row["accuracy_ci"]
 
-        acc = f"{_fmt(m['accuracy'])} [{_fmt(lo)}, {_fmt(hi)}]"
+        accuracy = f"{_fmt(row['accuracy'])} [{_fmt(low)}, {_fmt(high)}]"
         lines.append(
-            f"| {cond} | {acc} | {_fmt(m['macro_f1'])} | {_rho(m, 'valence_rho')} | "
-            f"{_rho(m, 'arousal_rho')} | {_fmt(m['clip_t'])} | {m['n']} |"
+            f"| {condition} | {accuracy} | {_fmt(row['macro_f1'])} | {_rho(row, 'valence_rho')} | "
+            f"{_rho(row, 'arousal_rho')} | {_fmt(row['clip_t'])} | {row['n']} |"
         )
     chance = metrics.get("chance")
     base = metrics.get("raw", {}).get("majority_baseline")
@@ -107,34 +112,37 @@ def contrasts_table(contrasts: dict, metrics: dict | None = None) -> str:
     rule = "|" + "---|" * 5
     lines = [head, rule]
     metrics = metrics or {}
-    for name, c in contrasts.items():
-        ci = f"[{_fmt(c['ci_low'])}, {_fmt(c['ci_high'])}]"
-        diff = c["mean_diff"]
-        diff_s = f"{diff:+.3f}" if isinstance(diff, (int, float)) else _fmt(diff)
+    for name, contrast in contrasts.items():
+        interval = f"[{_fmt(contrast['ci_low'])}, {_fmt(contrast['ci_high'])}]"
+        difference = contrast["mean_diff"]
+        formatted_difference = (
+            f"{difference:+.3f}" if difference is not None and isfinite(difference) else "n/a"
+        )
         label = name.replace("_", " ")
         lines.append(
-            f"| {label} | {diff_s} | {ci} | {_cohens_h(name, metrics)} | {_fmt(c['p_value'])} |"
+            f"| {label} | {formatted_difference} | {interval} | {_cohens_h(name, metrics)} | "
+            f"{_fmt(contrast['p_value'])} |"
         )
     return "\n".join(lines)
 
 
 def _cohens_h(contrast_name: str, metrics: dict) -> str:
     """Effect size for a tier-vs-tier contrast, from the two tiers' accuracies."""
-    hi, _, lo = contrast_name.partition("_vs_")
-    a_hi = (metrics.get(hi) or {}).get("accuracy")
-    a_lo = (metrics.get(lo) or {}).get("accuracy")
-    if a_hi is None or a_lo is None:
+    condition, _, baseline = contrast_name.partition("_vs_")
+    accuracy = (metrics.get(condition) or {}).get("accuracy")
+    baseline_accuracy = (metrics.get(baseline) or {}).get("accuracy")
+    if accuracy is None or baseline_accuracy is None:
         return "n/a"
-    return f"{cohens_h(a_hi, a_lo):+.3f}"
+    return f"{cohens_h(accuracy, baseline_accuracy):+.3f}"
 
 
 def _holm_note(metrics: dict) -> str:
     """Family-wise Holm correction over the conditioning tiers' shuffled-label p-values."""
     pvals = {}
-    for cond in ("naive", "emotion", "affect"):
-        sc = (metrics.get(cond) or {}).get("shuffled_control")
-        if sc and sc.get("p_value") is not None:
-            pvals[cond] = sc["p_value"]
+    for tier in CONDITIONING_TIERS:
+        control = (metrics.get(tier) or {}).get("shuffled_control") or {}
+        if control.get("p_value") is not None:
+            pvals[tier] = control["p_value"]
     if not pvals:
         return ""
     adjusted = holm_bonferroni(pvals)
@@ -176,11 +184,11 @@ def main() -> None:
     parser.add_argument("--out", default="outputs/generated/tables.md")
     args = parser.parse_args()
 
-    results = json.loads(Path(args.results).read_text())
+    results = json.loads(Path(args.results).read_text(encoding="utf-8"))
     table = render(results)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(table)
+    out.write_text(table, encoding="utf-8")
     print(table)
 
 

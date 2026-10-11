@@ -1,4 +1,4 @@
-"Security helpers for the Flask API (`server.py`)."
+"""Authentication and request limits for the Flask API."""
 
 from __future__ import annotations
 
@@ -63,8 +63,13 @@ class RateLimiter:
         with self._lock:
             cutoff = now - self.window
             if len(self._hits) > self._gc_threshold:
-                for k in [k for k, h in self._hits.items() if not h or h[-1] <= cutoff]:
-                    del self._hits[k]
+                stale_keys = [
+                    client_key
+                    for client_key, requests in self._hits.items()
+                    if not requests or requests[-1] <= cutoff
+                ]
+                for client_key in stale_keys:
+                    del self._hits[client_key]
             hits = self._hits[key]
             while hits and hits[0] <= cutoff:
                 hits.popleft()
@@ -78,11 +83,10 @@ class ConcurrencyGuard:
     "A non-blocking concurrency cap: a fixed number of slots, no queueing."
 
     def __init__(self, max_concurrent: int):
-        self._sem = threading.BoundedSemaphore(max(1, max_concurrent))
+        self._semaphore = threading.BoundedSemaphore(max(1, max_concurrent))
 
     def acquire(self) -> bool:
-        return self._sem.acquire(blocking=False)
+        return self._semaphore.acquire(blocking=False)
 
     def release(self) -> None:
-
-        self._sem.release()
+        self._semaphore.release()

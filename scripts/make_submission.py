@@ -11,33 +11,33 @@ from novavision.experiments.run import ALL_CONDITIONS
 
 def build_submission(results: dict, system: str) -> dict:
     manifest = results["manifest"]
-    cfg = manifest["config"]
+    config = manifest["config"]
     metrics = results["metrics"]
 
     conditions = {}
     for tier in ALL_CONDITIONS:
-        m = metrics.get(tier)
-        if not m:
+        row = metrics.get(tier)
+        if not row:
             continue
-        sc = m.get("shuffled_control") or {}
+        control = row.get("shuffled_control") or {}
         conditions[tier] = {
-            "accuracy": m["accuracy"],
-            "accuracy_ci": m["accuracy_ci"],
-            "shuffled_p": sc.get("p_value"),
-            "n": m["n"],
+            "accuracy": row["accuracy"],
+            "accuracy_ci": row["accuracy_ci"],
+            "shuffled_p": control.get("p_value"),
+            "n": row["n"],
         }
 
     submission = {
         "system": system,
-        "track": cfg.get("track", "content"),
-        "generator": cfg.get("diffusion_model", "unknown"),
-        "probe": cfg.get("probe", "unknown"),
+        "track": config.get("track", "content"),
+        "generator": config.get("diffusion_model", "unknown"),
+        "probe": config.get("probe", "unknown"),
         "conditions": conditions,
         "provenance": {
             "git_sha": manifest.get("git_sha", "unknown"),
-            "seeds": cfg.get("seeds", 1),
-            "base_seed": cfg.get("base_seed", 0),
-            "benchmark_sha256": cfg.get("benchmark_sha256"),
+            "seeds": config.get("seeds", 1),
+            "base_seed": config.get("base_seed", 0),
+            "benchmark_sha256": config.get("benchmark_sha256"),
         },
     }
 
@@ -57,11 +57,11 @@ def main() -> None:
     parser.add_argument("--out", default="outputs/generated/submission.json")
     args = parser.parse_args()
 
-    results = json.loads(Path(args.results).read_text())
+    results = json.loads(Path(args.results).read_text(encoding="utf-8"))
     submission = build_submission(results, args.system)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(submission, indent=2))
+    out.write_text(json.dumps(submission, indent=2), encoding="utf-8")
     print(
         f"Wrote {args.out}. "
         "Validate against docs/benchmark/submission.schema.json before submitting."

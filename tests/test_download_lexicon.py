@@ -27,7 +27,6 @@ def test_verify_sha256_rejects_tampering():
 
 
 def test_verify_sha256_empty_expected_skips():
-
     assert dl.verify_sha256(b"anything", "")
 
 

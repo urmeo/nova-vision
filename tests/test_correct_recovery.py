@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import correct_recovery as cr
 import pytest
 
@@ -5,20 +8,19 @@ from novavision.taxonomy import EMOTIONS
 
 
 def _identity_confusion(n_per_class=10):
-
     return [
         [n_per_class if i == j else 0 for j in range(len(EMOTIONS))] for i in range(len(EMOTIONS))
     ]
 
 
 def _records(recovery_rate):
-
-    recs = []
-    for e in EMOTIONS:
-        for k in range(10):
-            pred = e if k < recovery_rate * 10 else "neutral" if e != "neutral" else "anger"
-            recs.append({"tier": "emotion", "intended": e, "predicted": pred})
-    return recs
+    records = []
+    for emotion in EMOTIONS:
+        incorrect = "neutral" if emotion != "neutral" else "anger"
+        for sample in range(10):
+            prediction = emotion if sample < recovery_rate * 10 else incorrect
+            records.append({"tier": "emotion", "intended": emotion, "predicted": prediction})
+    return records
 
 
 def test_perfect_probe_leaves_recovery_unchanged():
@@ -30,8 +32,6 @@ def test_perfect_probe_leaves_recovery_unchanged():
 
 
 def test_correction_cli_defaults_preserve_published_snapshot(tmp_path, monkeypatch):
-    import json
-
     monkeypatch.chdir(tmp_path)
     published = tmp_path / "outputs" / "results"
     published.mkdir(parents=True)
@@ -93,8 +93,6 @@ def test_correction_rejects_wrong_matrix_shape():
 
 
 def test_zero_support_class_serializes_null_not_nan():
-    import json
-
     n = len(EMOTIONS)
     conf = [[0] * n for _ in range(n)]
     for i, e in enumerate(EMOTIONS):
@@ -109,9 +107,6 @@ def test_zero_support_class_serializes_null_not_nan():
 
 
 def test_committed_pilot_correction_reports_partial_common_class_comparison():
-    import json
-    from pathlib import Path
-
     root = Path(cr.__file__).resolve().parents[1] / "outputs" / "results"
     results = json.loads((root / "results.json").read_text())
     validation = json.loads((root / "probe_validation_scene.json").read_text())

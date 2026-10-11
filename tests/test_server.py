@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 pytest.importorskip("flask")
@@ -29,10 +31,9 @@ class FakePipeline:
 def client(monkeypatch):
     from novavision import serving
 
-    server._pipeline = FakePipeline()
-
-    server._rate_limiter = serving.RateLimiter(max_requests=1000)
-    server._gen_guard = serving.ConcurrencyGuard(max_concurrent=4)
+    monkeypatch.setattr(server, "_pipeline", FakePipeline())
+    monkeypatch.setattr(server, "_rate_limiter", serving.RateLimiter(max_requests=1000))
+    monkeypatch.setattr(server, "_gen_guard", serving.ConcurrencyGuard(max_concurrent=4))
     monkeypatch.delenv("NOVA_API_TOKEN", raising=False)
     return server.app.test_client()
 
@@ -50,7 +51,6 @@ def test_analyze_short_text(client):
 
 
 def test_non_string_text_is_rejected(client):
-
     for bad in (123, ["a", "b"], True, None, {"k": 1}):
         for route in ("/api/analyze", "/api/generate"):
             assert client.post(route, json={"text": bad}).status_code == 400
@@ -88,7 +88,6 @@ def test_index_served(client):
 
 
 def test_repo_root_not_exposed(client):
-
     for leak in ("/server.py", "/config.py", "/.env", "/outputs/results/results.json"):
         assert client.get(leak).status_code == 404
 
@@ -102,7 +101,6 @@ def test_rate_limit_returns_429(client):
 
 
 def test_rotating_xff_does_not_bypass_rate_limit(client, monkeypatch):
-
     monkeypatch.delenv("NOVA_TRUST_PROXY", raising=False)
     from novavision import serving
 
@@ -153,16 +151,12 @@ def test_oversize_body_rejected(client):
 
 
 def test_worst_case_legal_body_fits_under_cap(client):
-
-    import json as _json
-
-    body = _json.dumps({"text": "\U0001f600" * 2000, "style": "artistic", "seed": 1})
+    body = json.dumps({"text": "\U0001f600" * 2000, "style": "artistic", "seed": 1})
     resp = client.post("/api/generate", data=body, content_type="application/json")
     assert resp.status_code == 200
 
 
 def test_nonstandard_json_seed_literals_rejected(client):
-
     for literal in ("Infinity", "-Infinity", "NaN", "true"):
         body = '{"text": "i feel great", "seed": ' + literal + "}"
         resp = client.post("/api/generate", data=body, content_type="application/json")
@@ -170,7 +164,6 @@ def test_nonstandard_json_seed_literals_rejected(client):
 
 
 def test_fractional_seed_rejected(client):
-
     bad = client.post("/api/generate", json={"text": "i feel great", "seed": 2.9})
     assert bad.status_code == 400
     ok = client.post("/api/generate", json={"text": "i feel great", "seed": 2.0})

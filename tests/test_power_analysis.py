@@ -1,8 +1,10 @@
+import json
+
+import numpy as np
 import power_analysis as pa
 
 
 def test_no_effect_is_unreachable():
-
     assert pa.min_n_for_power(pa.CHANCE, pa.CHANCE, _rng()) is None
 
 
@@ -33,8 +35,6 @@ def test_analyze_reports_every_effect():
 
 
 def test_power_cli_defaults_preserve_published_snapshot(tmp_path, monkeypatch):
-    import json
-
     monkeypatch.chdir(tmp_path)
     published = tmp_path / "outputs" / "results"
     published.mkdir(parents=True)
@@ -49,6 +49,4 @@ def test_power_cli_defaults_preserve_published_snapshot(tmp_path, monkeypatch):
 
 
 def _rng():
-    import numpy as np
-
     return np.random.default_rng(0)

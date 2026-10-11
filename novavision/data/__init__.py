@@ -21,17 +21,18 @@ def load_benchmark(path: str | Path) -> list[dict[str, str]]:
         raise FileNotFoundError(f"Benchmark not found: {path}")
 
     rows: list[dict[str, str]] = []
-    with open(path, encoding="utf-8-sig") as fh:
-        reader = csv.DictReader(fh)
+    with path.open(encoding="utf-8-sig", newline="") as source:
+        reader = csv.DictReader(source)
         if reader.fieldnames is None or {"text", "emotion"} - set(reader.fieldnames):
             raise ValueError(f"{path} must have 'text' and 'emotion' columns")
-        for i, row in enumerate(reader, start=2):
+        for row in reader:
+            line_number = reader.line_num
             text = (row.get("text") or "").strip()
             emotion = (row.get("emotion") or "").strip().lower()
             if not text:
-                raise ValueError(f"{path}:{i} has empty text")
+                raise ValueError(f"{path}:{line_number} has empty text")
             if emotion not in _EMOTIONS:
-                raise ValueError(f"{path}:{i} unknown emotion '{emotion}'")
+                raise ValueError(f"{path}:{line_number} unknown emotion '{emotion}'")
             rows.append({"text": text, "emotion": emotion})
     if not rows:
         raise ValueError(f"{path} is empty")
@@ -43,14 +44,14 @@ def load_content_bank(path: str | Path | None = None) -> list[str]:
     path = Path(path or CONTENT_BANK_PATH)
     items: list[str] = []
     seen: set[str] = set()
-    with open(path, encoding="utf-8") as fh:
-        for n, line in enumerate(fh, start=1):
+    with path.open(encoding="utf-8") as source:
+        for line_number, line in enumerate(source, start=1):
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
             key = " ".join(line.lower().split())
             if key in seen:
-                raise ValueError(f"{path}:{n} duplicate subject: '{line}'")
+                raise ValueError(f"{path}:{line_number} duplicate subject: '{line}'")
             seen.add(key)
             items.append(line)
     if not items:

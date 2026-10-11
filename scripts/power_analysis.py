@@ -41,14 +41,14 @@ def min_n_for_power(
 def analyze(ceiling: float, planned_n: int) -> dict:
     rng = np.random.default_rng(0)
     rows = []
-    for s in EFFECTS:
-        p1 = s * ceiling + (1 - s) * CHANCE
+    for effect_strength in EFFECTS:
+        recovery_accuracy = effect_strength * ceiling + (1 - effect_strength) * CHANCE
         rows.append(
             {
-                "effect_strength": s,
-                "recovery_accuracy": round(p1, 4),
-                "n_for_80pct_power": min_n_for_power(p1, CHANCE, rng),
-                "power_at_planned_n": round(power_at(planned_n, p1, CHANCE, rng), 3),
+                "effect_strength": effect_strength,
+                "recovery_accuracy": round(recovery_accuracy, 4),
+                "n_for_80pct_power": min_n_for_power(recovery_accuracy, CHANCE, rng),
+                "power_at_planned_n": round(power_at(planned_n, recovery_accuracy, CHANCE, rng), 3),
             }
         )
     return {
@@ -84,11 +84,12 @@ def _format(report: dict) -> str:
         ),
         "|---|---|---|---|",
     ]
-    for r in report["rows"]:
-        n = r["n_for_80pct_power"]
+    for row in report["rows"]:
+        sample_size = row["n_for_80pct_power"]
         lines.append(
-            f"| {r['effect_strength']:.1f} | {r['recovery_accuracy']:.3f} | "
-            f"{n if n is not None else 'unreachable'} | {r['power_at_planned_n']:.2f} |"
+            f"| {row['effect_strength']:.1f} | {row['recovery_accuracy']:.3f} | "
+            f"{sample_size if sample_size is not None else 'unreachable'} | "
+            f"{row['power_at_planned_n']:.2f} |"
         )
     return "\n".join(lines)
 
@@ -104,10 +105,11 @@ def main() -> None:
     parser.add_argument("--out", default="outputs/generated/power_analysis.json")
     args = parser.parse_args()
 
-    ceiling = json.loads(Path(args.probe_validation).read_text())["accuracy"]
+    ceiling = json.loads(Path(args.probe_validation).read_text(encoding="utf-8"))["accuracy"]
     report = analyze(ceiling, args.planned_n)
-    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.out).write_text(json.dumps(report, indent=2))
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(_format(report))
 
 

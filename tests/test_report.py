@@ -1,3 +1,4 @@
+import pytest
 import report
 
 
@@ -42,8 +43,15 @@ def test_nan_renders_as_placeholder():
     assert report._fmt(None) == "n/a"
 
 
-def test_shuffled_note_survives_partial_control_dict():
+@pytest.mark.parametrize(
+    "bounds", [[0.1, None], [None, 0.9], [0.1, float("nan")], [0.1, float("inf")]]
+)
+def test_rho_omits_incomplete_or_nonfinite_interval(bounds):
+    metrics = {"valence_rho": 0.5, "valence_rho_ci": bounds}
+    assert report._rho(metrics, "valence_rho") == "0.500"
 
+
+def test_shuffled_note_survives_partial_control_dict():
     metrics = {
         "emotion": {"shuffled_control": {}},
         "affect": {"shuffled_control": {"p_value": 0.14, "null_mean": 0.142}},
@@ -58,7 +66,6 @@ def test_shuffled_note_empty_when_no_pvalues():
 
 
 def test_tables_tolerate_null_bounds():
-
     metrics = {
         "raw": {
             "accuracy": 0.14,
@@ -79,7 +86,6 @@ def test_tables_tolerate_null_bounds():
 
 
 def test_rho_tolerates_null_ci():
-
     assert (
         report._rho({"valence_rho": None, "valence_rho_ci": [None, None]}, "valence_rho") == "n/a"
     )

@@ -7,6 +7,7 @@ import threading
 
 from PIL import Image
 
+from novavision.config import DIFFUSION_MODEL
 from novavision.generation.base import ImageBackend
 
 
@@ -15,19 +16,18 @@ class HFApiBackend(ImageBackend):
 
     name = "hf-api"
 
-    def __init__(self, model_id: str = "stabilityai/sd-turbo", token: str | None = None, **_):
-
+    def __init__(self, model_id: str = DIFFUSION_MODEL, token: str | None = None, **_):
         self.token = token or os.getenv("HF_TOKEN")
         if not self.token:
             raise ValueError("HF_TOKEN not set")
         self.model_id = model_id
         self._client = None
-        self._lock = threading.Lock()
+        self._load_lock = threading.Lock()
 
     @property
     def client(self):
         if self._client is None:
-            with self._lock:
+            with self._load_lock:
                 if self._client is None:
                     from huggingface_hub import InferenceClient
 
@@ -43,7 +43,6 @@ class HFApiBackend(ImageBackend):
         seed: int = 0,
         negative_prompt: str | None = None,
     ) -> Image.Image:
-
         turbo = "turbo" in self.model_id.lower()
         return self.client.text_to_image(
             prompt,

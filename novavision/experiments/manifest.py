@@ -73,7 +73,6 @@ def build_manifest(**config) -> dict:
     )
 
     def pin(key: str, default_id: str, revision: str) -> str | None:
-
         return default_revision(config.get(key) or default_id, default_id, revision)
 
     return {

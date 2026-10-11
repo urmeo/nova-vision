@@ -1,16 +1,18 @@
 import sys
+from pathlib import Path
 
 import pytest
 
-from novavision.data.build_benchmark import _curate, _drop_overlap, _interleave, _normalize
+from novavision.data import build_benchmark
+from novavision.data.build_benchmark import _curate, _drop_overlap, _interleave, _normalize, build
 from novavision.taxonomy import EMOTIONS
 
 
 def _examples():
     rows = []
-    for e in EMOTIONS:
-        for i in range(5):
-            rows.append((f"{e} sentence number {i}", e))
+    for emotion in EMOTIONS:
+        for index in range(5):
+            rows.append((f"{emotion} sentence number {index}", emotion))
     return rows
 
 
@@ -22,14 +24,14 @@ def test_curate_dedups_exact():
 
 def test_curate_balances_per_class():
     sampled = _curate(_examples(), n_per_class=3, seed=0)
-    assert all(len(sampled[e]) == 3 for e in EMOTIONS)
+    assert all(len(sampled[emotion]) == 3 for emotion in EMOTIONS)
 
 
 def test_interleave_prefix_is_stratified():
     sampled = _curate(_examples(), n_per_class=3, seed=0)
     rows = _interleave(sampled)
 
-    assert {e for _, e in rows[: len(EMOTIONS)]} == set(EMOTIONS)
+    assert {emotion for _, emotion in rows[: len(EMOTIONS)]} == set(EMOTIONS)
 
 
 def test_drop_overlap_removes_cross_split_leakage():
@@ -43,26 +45,19 @@ def test_drop_overlap_removes_cross_split_leakage():
 
 
 def test_cli_threads_revision_into_build(monkeypatch):
-
-    from novavision.data import build_benchmark as bb
-
     captured = {}
 
     def fake_build(n, out, seed, split, *, revision, drop_train_overlap):
         captured["revision"] = revision
-        from pathlib import Path
-
         return Path(out)
 
-    monkeypatch.setattr(bb, "build", fake_build)
+    monkeypatch.setattr(build_benchmark, "build", fake_build)
     monkeypatch.setattr(sys, "argv", ["build_benchmark", "--revision", "deadbeef"])
-    bb.main()
+    build_benchmark.main()
     assert captured["revision"] == "deadbeef"
 
 
 def test_build_rejects_nonpositive_n():
-    from novavision.data.build_benchmark import build
-
     for bad in (0, -5):
         with pytest.raises(ValueError, match="positive integer"):
             build(n_per_class=bad, out_path="/tmp/should_not_write.csv")

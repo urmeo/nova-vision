@@ -6,7 +6,7 @@ import make_submission
 _RESULTS = Path(__file__).resolve().parents[1] / "outputs" / "results" / "results.json"
 
 
-def test_submission_from_committed_results_matches_schema():
+def test_submission_from_committed_results_has_required_schema_fields():
     results = json.loads(_RESULTS.read_text())
     sub = make_submission.build_submission(results, "committed pilot")
 
@@ -29,7 +29,6 @@ def test_submission_from_committed_results_matches_schema():
 
 
 def test_submission_propagates_benchmark_sha256_from_config():
-
     results = {
         "manifest": {
             "git_sha": "abc",
@@ -42,7 +41,6 @@ def test_submission_propagates_benchmark_sha256_from_config():
 
 
 def test_submission_never_invents_a_condition():
-
     results = {
         "manifest": {"git_sha": "abc", "config": {"seeds": 1, "base_seed": 0}},
         "metrics": {"raw": {"accuracy": 0.1, "accuracy_ci": [0.0, 0.3], "n": 7}, "chance": 0.14},
@@ -52,7 +50,6 @@ def test_submission_never_invents_a_condition():
 
 
 def test_submission_omits_probe_health_when_degenerate():
-
     results = {
         "manifest": {"git_sha": "abc", "config": {"seeds": 1, "base_seed": 0}},
         "metrics": {

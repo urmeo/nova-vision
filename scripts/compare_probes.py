@@ -4,22 +4,25 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Sequence
 from math import comb
 from pathlib import Path
 
 
-def mcnemar_exact(gold, pred_a, pred_b) -> dict:
+def mcnemar_exact(gold: Sequence[str], pred_a: Sequence[str], pred_b: Sequence[str]) -> dict:
     """Two-sided exact McNemar on per-item correctness of two paired runs."""
+    if len(gold) != len(pred_a) or len(gold) != len(pred_b):
+        raise ValueError("Paired gold and prediction arrays must have equal lengths")
     correct_a = [g == p for g, p in zip(gold, pred_a)]
     correct_b = [g == p for g, p in zip(gold, pred_b)]
-    only_a = sum(1 for x, y in zip(correct_a, correct_b) if x and not y)
-    only_b = sum(1 for x, y in zip(correct_a, correct_b) if not x and y)
-    n = only_a + only_b
-    if n == 0:
+    only_a = sum(a and not b for a, b in zip(correct_a, correct_b))
+    only_b = sum(b and not a for a, b in zip(correct_a, correct_b))
+    discordant = only_a + only_b
+    if discordant == 0:
         return {"only_a_correct": 0, "only_b_correct": 0, "p_value": 1.0}
-    k = min(only_a, only_b)
-    p = min(1.0, 2 * sum(comb(n, i) for i in range(k + 1)) / 2**n)
-    return {"only_a_correct": only_a, "only_b_correct": only_b, "p_value": round(p, 4)}
+    tail_count = min(only_a, only_b)
+    p_value = min(1.0, 2 * sum(comb(discordant, i) for i in range(tail_count + 1)) / 2**discordant)
+    return {"only_a_correct": only_a, "only_b_correct": only_b, "p_value": round(p_value, 4)}
 
 
 def main() -> None:
@@ -28,18 +31,22 @@ def main() -> None:
     parser.add_argument("report_b", help="probe_validation JSON from the same sample")
     args = parser.parse_args()
 
-    a = json.loads(Path(args.report_a).read_text())
-    b = json.loads(Path(args.report_b).read_text())
-    if a["gold"] != b["gold"]:
+    report_a = json.loads(Path(args.report_a).read_text(encoding="utf-8"))
+    report_b = json.loads(Path(args.report_b).read_text(encoding="utf-8"))
+    if report_a["gold"] != report_b["gold"]:
         raise SystemExit("reports are not from the same sample; a paired test is invalid")
-    for r in (a, b):
-        if len(r["predictions"]) != len(r["gold"]):
+    for report in (report_a, report_b):
+        if len(report["predictions"]) != len(report["gold"]):
             raise SystemExit("report predictions/gold length mismatch; refusing a paired test")
+        if report["n"] != len(report["gold"]):
+            raise SystemExit(
+                "report sample count disagrees with gold labels; refusing a paired test"
+            )
     out = {
-        "a": {"probe": a["probe"], "accuracy": a["accuracy"]},
-        "b": {"probe": b["probe"], "accuracy": b["accuracy"]},
-        "n": a["n"],
-        **mcnemar_exact(a["gold"], a["predictions"], b["predictions"]),
+        "a": {"probe": report_a["probe"], "accuracy": report_a["accuracy"]},
+        "b": {"probe": report_b["probe"], "accuracy": report_b["accuracy"]},
+        "n": report_a["n"],
+        **mcnemar_exact(report_a["gold"], report_a["predictions"], report_b["predictions"]),
     }
     print(json.dumps(out, indent=2))
 

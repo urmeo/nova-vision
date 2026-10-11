@@ -23,21 +23,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("novavision.server")
 
 MIN_TEXT, MAX_TEXT = 3, 2000
-
-
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
 _STATIC = Path(__file__).resolve().parent / "static"
 
 app = Flask(__name__, static_folder=str(_STATIC), static_url_path="")
-
-
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024
-
 
 _origins = os.getenv("CORS_ORIGINS", "").strip()
 if _origins:
     from flask_cors import CORS
 
-    CORS(app, origins=[o.strip() for o in _origins.split(",")])
+    CORS(app, origins=[origin.strip() for origin in _origins.split(",")])
 
 
 _rate_limiter = RateLimiter(env_int("NOVA_RATE_LIMIT", 30))
@@ -67,11 +63,7 @@ def _analysis_payload(analysis: EmotionAnalysis) -> dict:
     }
 
 
-_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
-
-
 def _valid_text(data) -> tuple[str, str | None]:
-
     data = data if isinstance(data, dict) else {}
     raw = data.get("text", "")
 
@@ -85,7 +77,6 @@ def _valid_text(data) -> tuple[str, str | None]:
 
 
 def _client_ip() -> str:
-
     if os.getenv("NOVA_TRUST_PROXY", "").strip().lower() in {"1", "true", "yes", "on"}:
         xff = request.headers.get("X-Forwarded-For")
         if xff:
@@ -130,7 +121,6 @@ def analyze():
 
 @app.route("/api/generate", methods=["POST"])
 def generate():
-
     if (limited := _rate_limited()) is not None:
         return limited
     if not token_ok(_bearer_token()):

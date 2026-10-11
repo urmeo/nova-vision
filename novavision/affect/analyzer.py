@@ -26,8 +26,7 @@ class EmotionAnalysis:
     coverage: float
     scores: Mapping[str, float]
 
-    def __post_init__(self):
-
+    def __post_init__(self) -> None:
         object.__setattr__(self, "scores", MappingProxyType(dict(self.scores)))
 
 
@@ -50,13 +49,13 @@ class EmotionAnalyzer:
         self._lexicon = lexicon
         self._classifier = None
 
-        self._lex_lock = threading.Lock()
-        self._clf_lock = threading.Lock()
+        self._lexicon_lock = threading.Lock()
+        self._classifier_lock = threading.Lock()
 
     @property
     def lexicon(self) -> AffectLexicon:
         if self._lexicon is None:
-            with self._lex_lock:
+            with self._lexicon_lock:
                 if self._lexicon is None:
                     self._lexicon = AffectLexicon.load()
         return self._lexicon
@@ -64,7 +63,7 @@ class EmotionAnalyzer:
     @property
     def classifier(self):
         if self._classifier is None:
-            with self._clf_lock:
+            with self._classifier_lock:
                 if self._classifier is None:
                     from transformers import pipeline
 
@@ -81,8 +80,8 @@ class EmotionAnalyzer:
         if not text or not text.strip():
             raise ValueError("Input text cannot be empty")
 
-        raw = self.classifier(text, truncation=True)[0]
-        scores = {result["label"].lower(): float(result["score"]) for result in raw}
+        predictions = self.classifier(text, truncation=True)[0]
+        scores = {result["label"].lower(): float(result["score"]) for result in predictions}
         primary = max(scores, key=scores.__getitem__)
 
         affect = self.lexicon.score(text)

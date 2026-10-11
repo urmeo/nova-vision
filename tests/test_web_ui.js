@@ -5,7 +5,7 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const html = readFileSync(join(__dirname, '..', 'static', 'index.html'), 'utf8');
-const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const script = readFileSync(join(__dirname, '..', 'static', 'app.js'), 'utf8');
 
 function createApp(fetch) {
     const elements = new Map();
@@ -115,7 +115,7 @@ function createApp(fetch) {
         fetch,
         console: { error: (...args) => errors.push(args) }
     });
-    vm.runInContext(script, context, { filename: 'static/index.html' });
+    vm.runInContext(script, context, { filename: 'static/app.js' });
     const api = vm.runInContext('({ generateImage, analyzeLive, downloadImage, downloadReport })', context);
     return { api, getElementById, downloads, reportText, reportImages, reportDraws,
         reportCanvases, clipboard, errors, timers };

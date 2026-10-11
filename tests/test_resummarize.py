@@ -6,27 +6,25 @@ from novavision.taxonomy import EMOTIONS
 
 
 def _run_with_records(tmp_path):
-
     records = []
     for tier in ("raw", "emotion", "affect", "scene"):
-        for sk in range(1):
-            for emotion in EMOTIONS:
-                records.append(
-                    {
-                        "probe": "clip:test",
-                        "tier": tier,
-                        "content": "" if tier == "scene" else "a city street",
-                        "intended": emotion,
-                        "classified": None,
-                        "seed": sk,
-                        "predicted": "neutral",
-                        "intended_valence": 0.2,
-                        "intended_arousal": 0.6,
-                        "recovered_valence": 0.05,
-                        "recovered_arousal": 0.5,
-                        "clip_t": 0.25,
-                    }
-                )
+        for emotion in EMOTIONS:
+            records.append(
+                {
+                    "probe": "clip:test",
+                    "tier": tier,
+                    "content": "" if tier == "scene" else "a city street",
+                    "intended": emotion,
+                    "classified": None,
+                    "seed": 0,
+                    "predicted": "neutral",
+                    "intended_valence": 0.2,
+                    "intended_arousal": 0.6,
+                    "recovered_valence": 0.05,
+                    "recovered_arousal": 0.5,
+                    "clip_t": 0.25,
+                }
+            )
     path = tmp_path / "results.json"
     path.write_text(json.dumps({"manifest": {"git_sha": "old"}, "records": records}))
     return path

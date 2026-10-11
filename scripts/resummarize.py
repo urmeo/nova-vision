@@ -23,7 +23,7 @@ def resummarize(
     out: str | Path | None = None,
 ) -> dict:
     path = Path(results_path)
-    payload = json.loads(path.read_text())
+    payload = json.loads(path.read_text(encoding="utf-8"))
     records = payload["records"]
     conditions = _conditions_for(records)
 

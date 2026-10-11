@@ -168,6 +168,8 @@ def test_holm_bonferroni_orders_and_rejects():
     assert adj["c"]["reject"] is False
 
 
-def test_holm_ignores_non_finite():
-    adj = holm_bonferroni({"a": 0.01, "b": float("nan")})
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), float("-inf")])
+def test_holm_ignores_non_finite(invalid):
+    adj = holm_bonferroni({"a": 0.01, "b": invalid})
+    assert adj["a"] == {"p_adjusted": 0.01, "reject": True}
     assert adj["b"]["p_adjusted"] is None and adj["b"]["reject"] is False

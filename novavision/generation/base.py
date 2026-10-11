@@ -31,7 +31,7 @@ class NullBackend(ImageBackend):
 
     name = "null"
 
-    def __init__(self, **kwargs):
+    def __init__(self, **_):
         pass
 
     def generate(
@@ -48,5 +48,5 @@ class NullBackend(ImageBackend):
         rng = np.random.default_rng((seed ^ int.from_bytes(digest[:8], "big")) & (2**64 - 1))
         tint = np.frombuffer(digest[:3], dtype=np.uint8).astype(np.float32)
         noise = rng.integers(0, 64, size=(height, width, 3), dtype=np.uint8)
-        arr = (noise.astype(np.float32) + tint).clip(0, 255).astype(np.uint8)
-        return Image.fromarray(arr)
+        pixels = (noise.astype(np.float32) + tint).clip(0, 255).astype(np.uint8)
+        return Image.fromarray(pixels)

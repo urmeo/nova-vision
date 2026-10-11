@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -30,8 +31,6 @@ NEGATORS = frozenset(
     "weren't won't wouldn't couldn't shouldn't ain't without".split()
 )
 
-_DEFAULT_PATH = LEXICON_PATH
-
 
 @dataclass(frozen=True)
 class AffectScore:
@@ -40,7 +39,7 @@ class AffectScore:
     coverage: float
 
 
-def _variants(token: str):
+def _variants(token: str) -> Iterator[str]:
     "Candidate lemmas in priority order."
     yield token
     if token.endswith(("ies", "ied")) and len(token) > 4:
@@ -88,7 +87,6 @@ class AffectLexicon:
         return None
 
     def score(self, text: str) -> AffectScore:
-
         tokens = _TOKEN.findall(text.lower().replace("’", "'"))
         matched: list[tuple[float, float]] = []
         content_count = 0
@@ -96,10 +94,10 @@ class AffectLexicon:
             if token in STOPWORDS or token in NEGATORS:
                 continue
             content_count += 1
-            hit = self.lookup(token)
-            if hit is None:
+            affect = self.lookup(token)
+            if affect is None:
                 continue
-            valence, arousal = hit
+            valence, arousal = affect
 
             if any(previous in NEGATORS for previous in tokens[max(0, index - 2) : index]):
                 valence = -valence
@@ -114,22 +112,24 @@ class AffectLexicon:
 
     @classmethod
     def load(cls, path: str | os.PathLike | None = None) -> AffectLexicon:
-        path = Path(path or os.getenv("NOVAVISION_LEXICON") or _DEFAULT_PATH)
+        path = Path(path or os.getenv("NOVAVISION_LEXICON") or LEXICON_PATH)
         entries: dict[str, tuple[float, float]] = {}
-        with open(path, encoding="utf-8") as fh:
-            for n, line in enumerate(fh, start=1):
+        with path.open(encoding="utf-8") as source:
+            for line_number, line in enumerate(source, start=1):
                 line = line.strip()
                 if not line or line.startswith("#"):
                     continue
-                parts = [p.strip() for p in line.split("\t")]
+                parts = [field.strip() for field in line.split("\t")]
 
-                if [p.lower() for p in parts[:3]] == ["word", "valence", "arousal"]:
+                if [field.lower() for field in parts[:3]] == ["word", "valence", "arousal"]:
                     continue
                 if len(parts) < 3:
-                    raise ValueError(f"{path}:{n} has fewer than 3 tab-separated columns")
+                    raise ValueError(f"{path}:{line_number} has fewer than 3 tab-separated columns")
                 word, valence, arousal = parts[:3]
                 try:
                     entries[word.lower()] = (float(valence), float(arousal))
                 except ValueError:
-                    raise ValueError(f"{path}:{n} has non-numeric valence/arousal") from None
+                    raise ValueError(
+                        f"{path}:{line_number} has non-numeric valence/arousal"
+                    ) from None
         return cls(entries)

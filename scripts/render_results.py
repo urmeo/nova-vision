@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import font_manager
 
+from novavision.eval.metrics import accuracy, confusion_matrix
+
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = (
     ("Faces", "probe_validation.json", "probe_validation_l14.json"),
@@ -21,17 +23,14 @@ SOURCES = (
 )
 
 
-def checked_probe(report):
+def checked_probe(report: dict) -> tuple[float, np.ndarray]:
     labels, gold, predicted = (report[k] for k in ("labels", "gold", "predictions"))
     if not gold or len(gold) != len(predicted) or report["n"] != len(gold):
         raise ValueError("Saved prediction counts disagree")
     if len(set(labels)) != len(labels) or (set(gold) | set(predicted)) - set(labels):
         raise ValueError("Saved labels disagree")
-    index = {label: i for i, label in enumerate(labels)}
-    counts = np.zeros((len(labels), len(labels)), dtype=int)
-    for actual, prediction in zip(gold, predicted):
-        counts[index[actual], index[prediction]] += 1
-    score = sum(a == b for a, b in zip(gold, predicted)) / len(gold)
+    counts = confusion_matrix(gold, predicted, labels)
+    score = accuracy(gold, predicted)
     if not np.array_equal(counts, report["confusion"]):
         raise ValueError("Saved confusion counts disagree with predictions")
     if round(score, 4) != report["accuracy"]:
@@ -39,7 +38,7 @@ def checked_probe(report):
     return score, counts
 
 
-def _canvas(title, subtitle):
+def _canvas(title: str, subtitle: str):
     fig, ax = plt.subplots(figsize=(12, 7.6), dpi=100)
     fig.suptitle(title, fontsize=26, x=0.06, ha="left")
     fig.text(0.06, 0.88, subtitle, fontsize=16)
@@ -53,7 +52,7 @@ def _canvas(title, subtitle):
     return fig, ax
 
 
-def render(output_dir, font=None):
+def render(output_dir: str | Path, font: str | Path | None = None) -> None:
     if font is not None:
         font_manager.fontManager.addfont(str(font))
         plt.rcParams["font.family"] = font_manager.FontProperties(fname=str(font)).get_name()
@@ -65,7 +64,7 @@ def render(output_dir, font=None):
         pair = []
         for filename in filenames:
             path = ROOT / "outputs/results" / filename
-            report = json.loads(path.read_text())
+            report = json.loads(path.read_text(encoding="utf-8"))
             score, counts = checked_probe(report)
             pair.append((report, score, counts))
             sources[str(path.relative_to(ROOT))] = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -118,7 +117,7 @@ def render(output_dir, font=None):
     save(fig, "recorded-scene-confusion.png", ["gold", "predictions", "labels"])
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--font", type=Path, help="optional path to a font file")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "outputs/figures")

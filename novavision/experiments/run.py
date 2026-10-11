@@ -60,9 +60,9 @@ SEED_MAX_ITEMS = 1030
 SEED_MAX_SEEDS = 13
 
 
-def _seed(base: int, ci: int, ei: int, sk: int) -> int:
+def _seed(base: int, item_index: int, emotion_index: int, seed_index: int) -> int:
     "Shared per (content, emotion, seed) so tiers are paired on noise."
-    return base + ((ci * 97 + ei * 13 + sk) % 100_000)
+    return base + ((item_index * 97 + emotion_index * 13 + seed_index) % 100_000)
 
 
 def _check_seed_domain(n_items: int, seeds: int) -> None:
@@ -211,14 +211,6 @@ def run_experiment(
         raise ValueError("Seeds, width and height must be positive")
     if (contents is not None and contents < 0) or (limit is not None and limit < 0):
         raise ValueError("Contents and limit cannot be negative")
-    set_determinism(base_seed)
-    kwargs = {"model_id": diffusion_model}
-    if device:
-        kwargs["device"] = device
-    gen = get_backend(backend, **kwargs)
-    probe_obj = _make_probe(probe, probe_model, clip_model, device)
-    out_dir = Path(out)
-    out_dir.mkdir(parents=True, exist_ok=True)
     if track == "text":
         if not benchmark:
             raise ValueError("The text track requires --benchmark.")
@@ -233,6 +225,14 @@ def run_experiment(
         n_items = len(bank)
 
     _check_seed_domain(n_items, seeds)
+    set_determinism(base_seed)
+    kwargs = {"model_id": diffusion_model}
+    if device:
+        kwargs["device"] = device
+    gen = get_backend(backend, **kwargs)
+    probe_obj = _make_probe(probe, probe_model, clip_model, device)
+    out_dir = Path(out)
+    out_dir.mkdir(parents=True, exist_ok=True)
     lexicon_path = Path(os.getenv("NOVAVISION_LEXICON") or LEXICON_PATH)
     manifest = build_manifest(
         backend=backend,
@@ -294,67 +294,61 @@ def _content_records(bank, gen, probe, style, seeds, base_seed, width, height, c
     records: list[dict] = []
     total = len(bank) * len(EMOTIONS) * seeds
     step = 0
-    for ci, content in enumerate(bank):
-        for ei, emotion in enumerate(EMOTIONS):
-            pv, pa = prior(emotion)
-            for sk in range(seeds):
-                seed = _seed(base_seed, ci, ei, sk)
+    for content_index, content in enumerate(bank):
+        for emotion_index, emotion in enumerate(EMOTIONS):
+            valence, arousal = prior(emotion)
+            for seed_index in range(seeds):
+                seed = _seed(base_seed, content_index, emotion_index, seed_index)
                 step += 1
                 print(f"[{step}/{total}] {emotion} :: {content[:30]}", flush=True)
                 for tier in TIERS:
-                    done = ckpt.cached(tier, emotion, ci, sk)
+                    done = ckpt.cached(tier, emotion, content_index, seed_index)
                     if done is not None:
                         records.append(done)
                         continue
-                    image = _render(gen, content, emotion, pv, pa, style, tier, seed, width, height)
-                    rec = probe.recover(image)
-                    clip_t = probe.clip_t(image, content)
-                    records.append(
-                        ckpt.record(
-                            _record(
-                                probe.name,
-                                tier,
-                                content,
-                                emotion,
-                                sk,
-                                rec,
-                                pv,
-                                pa,
-                                clip_t,
-                                index=ci,
-                                image_pixel_sha256=_image_digest(image),
-                            ),
-                            image=image,
-                        )
+                    image = _render(
+                        gen, content, emotion, valence, arousal, style, tier, seed, width, height
                     )
+                    recovery = probe.recover(image)
+                    clip_t = probe.clip_t(image, content)
+                    record = _record(
+                        probe.name,
+                        tier,
+                        content,
+                        emotion,
+                        seed_index,
+                        recovery,
+                        valence,
+                        arousal,
+                        clip_t,
+                        index=content_index,
+                        image_pixel_sha256=_image_digest(image),
+                    )
+                    records.append(ckpt.record(record, image=image))
 
-    for ei, emotion in enumerate(EMOTIONS):
-        pv, pa = prior(emotion)
-        for sk in range(seeds):
-            done = ckpt.cached("scene", emotion, 0, sk)
+    for emotion_index, emotion in enumerate(EMOTIONS):
+        valence, arousal = prior(emotion)
+        for seed_index in range(seeds):
+            done = ckpt.cached("scene", emotion, 0, seed_index)
             if done is not None:
                 records.append(done)
                 continue
-            seed = _seed(base_seed, 0, ei, sk)
-            image = _render(gen, "", emotion, pv, pa, style, "scene", seed, width, height)
-            rec = probe.recover(image)
-            records.append(
-                ckpt.record(
-                    _record(
-                        probe.name,
-                        "scene",
-                        "",
-                        emotion,
-                        sk,
-                        rec,
-                        pv,
-                        pa,
-                        float("nan"),
-                        image_pixel_sha256=_image_digest(image),
-                    ),
-                    image=image,
-                )
+            seed = _seed(base_seed, 0, emotion_index, seed_index)
+            image = _render(gen, "", emotion, valence, arousal, style, "scene", seed, width, height)
+            recovery = probe.recover(image)
+            record = _record(
+                probe.name,
+                "scene",
+                "",
+                emotion,
+                seed_index,
+                recovery,
+                valence,
+                arousal,
+                float("nan"),
+                image_pixel_sha256=_image_digest(image),
             )
+            records.append(ckpt.record(record, image=image))
     return records
 
 
@@ -362,77 +356,82 @@ def _text_records(rows, gen, probe, analyzer, style, seeds, base_seed, width, he
     records: list[dict] = []
     total = len(rows) * seeds
     step = 0
-    for ri, row in enumerate(rows):
+    for row_index, row in enumerate(rows):
         text, gold = row["text"], row["emotion"]
-        a = analyzer.analyze(text)
-        iv, ia = a.valence, a.arousal
-        gi = EMOTIONS.index(gold)
-        for sk in range(seeds):
+        analysis = analyzer.analyze(text)
+        valence, arousal = analysis.valence, analysis.arousal
+        emotion_index = EMOTIONS.index(gold)
+        for seed_index in range(seeds):
             step += 1
             print(f"[{step}/{total}] {gold} :: {text[:30]}", flush=True)
-            seed = _seed(base_seed, ri, gi, sk)
+            seed = _seed(base_seed, row_index, emotion_index, seed_index)
             for tier in TIERS:
-                done = ckpt.cached(tier, gold, ri, sk)
+                done = ckpt.cached(tier, gold, row_index, seed_index)
                 if done is not None:
                     records.append(done)
                     continue
-                image = _render(gen, text, gold, iv, ia, style, tier, seed, width, height)
-                rec = probe.recover(image)
+                image = _render(gen, text, gold, valence, arousal, style, tier, seed, width, height)
+                recovery = probe.recover(image)
                 clip_t = probe.clip_t(image, text)
-                records.append(
-                    ckpt.record(
-                        _record(
-                            probe.name,
-                            tier,
-                            text,
-                            gold,
-                            sk,
-                            rec,
-                            iv,
-                            ia,
-                            clip_t,
-                            a.primary,
-                            index=ri,
-                            image_pixel_sha256=_image_digest(image),
-                        ),
-                        image=image,
-                    )
+                record = _record(
+                    probe.name,
+                    tier,
+                    text,
+                    gold,
+                    seed_index,
+                    recovery,
+                    valence,
+                    arousal,
+                    clip_t,
+                    classified=analysis.primary,
+                    index=row_index,
+                    image_pixel_sha256=_image_digest(image),
                 )
+                records.append(ckpt.record(record, image=image))
 
             wrong = _shuffle_emotion(gold, seed)
-            done = ckpt.cached("shuffled", wrong, ri, sk)
+            done = ckpt.cached("shuffled", wrong, row_index, seed_index)
             if done is not None:
                 records.append(done)
                 continue
-            wv, wa = prior(wrong)
-            wseed = _seed(base_seed, ri, EMOTIONS.index(wrong), sk)
-            image = _render(gen, text, wrong, wv, wa, style, "emotion", wseed, width, height)
-            rec = probe.recover(image)
-            clip_t = probe.clip_t(image, text)
-            records.append(
-                ckpt.record(
-                    _record(
-                        probe.name,
-                        "shuffled",
-                        text,
-                        wrong,
-                        sk,
-                        rec,
-                        wv,
-                        wa,
-                        clip_t,
-                        a.primary,
-                        index=ri,
-                        image_pixel_sha256=_image_digest(image),
-                    ),
-                    image=image,
-                )
+            wrong_valence, wrong_arousal = prior(wrong)
+            wrong_seed = _seed(base_seed, row_index, EMOTIONS.index(wrong), seed_index)
+            image = _render(
+                gen,
+                text,
+                wrong,
+                wrong_valence,
+                wrong_arousal,
+                style,
+                "emotion",
+                wrong_seed,
+                width,
+                height,
             )
+            recovery = probe.recover(image)
+            clip_t = probe.clip_t(image, text)
+            record = _record(
+                probe.name,
+                "shuffled",
+                text,
+                wrong,
+                seed_index,
+                recovery,
+                wrong_valence,
+                wrong_arousal,
+                clip_t,
+                classified=analysis.primary,
+                index=row_index,
+                image_pixel_sha256=_image_digest(image),
+            )
+            records.append(ckpt.record(record, image=image))
     return records
 
 
-def _render(gen, content, emotion, v, a, style, tier, seed, width, height):
-    prompt = build_prompt(content, emotion=emotion, valence=v, arousal=a, style=style, tier=tier)
+def _render(gen, content, emotion, valence, arousal, style, tier, seed, width, height):
+    prompt = build_prompt(
+        content, emotion=emotion, valence=valence, arousal=arousal, style=style, tier=tier
+    )
     return gen.generate(
         prompt, width=width, height=height, seed=seed, negative_prompt=NEGATIVE_PROMPT
     )
@@ -443,125 +442,134 @@ def _record(
     tier,
     content,
     emotion,
-    sk,
-    rec,
-    pv,
-    pa,
+    seed_index,
+    recovery,
+    valence,
+    arousal,
     clip_t,
+    *,
     classified=None,
     index=0,
-    image_pixel_sha256=None,
+    image_pixel_sha256,
 ) -> dict:
-    record = {
+    return {
         "probe": probe,
         "tier": tier,
         "content": content,
         "index": index,
         "intended": emotion,
         "classified": classified,
-        "seed": sk,
-        "predicted": rec.emotion,
-        "intended_valence": pv,
-        "intended_arousal": pa,
-        "recovered_valence": rec.valence,
-        "recovered_arousal": rec.arousal,
+        "seed": seed_index,
+        "predicted": recovery.emotion,
+        "intended_valence": valence,
+        "intended_arousal": arousal,
+        "recovered_valence": recovery.valence,
+        "recovered_arousal": recovery.arousal,
         "clip_t": clip_t,
+        "image_pixel_sha256": image_pixel_sha256,
     }
-    if image_pixel_sha256 is not None:
-        record["image_pixel_sha256"] = image_pixel_sha256
-    return record
 
 
 def _summarize(records, conditions) -> dict:
     summary: dict = {}
     for tier in conditions:
-        sub = [r for r in records if r["tier"] == tier]
-        if not sub:
+        tier_records = [record for record in records if record["tier"] == tier]
+        if not tier_records:
             continue
-        y_true = [r["intended"] for r in sub]
-        y_pred = [r["predicted"] for r in sub]
+        y_true = [record["intended"] for record in tier_records]
+        y_pred = [record["predicted"] for record in tier_records]
         correct = [int(t == p) for t, p in zip(y_true, y_pred)]
         lo, hi = bootstrap_ci(correct)
-        iv, rv = _col(sub, "intended_valence"), _col(sub, "recovered_valence")
-        ia, ra = _col(sub, "intended_arousal"), _col(sub, "recovered_arousal")
+        intended_valence, recovered_valence = (
+            _col(tier_records, "intended_valence"),
+            _col(tier_records, "recovered_valence"),
+        )
+        intended_arousal, recovered_arousal = (
+            _col(tier_records, "intended_arousal"),
+            _col(tier_records, "recovered_arousal"),
+        )
 
-        clip = [r["clip_t"] for r in sub if _finite(r["clip_t"])]
-        vlo, vhi = bootstrap_corr_ci(iv, rv)
-        alo, ahi = bootstrap_corr_ci(ia, ra)
+        clip = [record["clip_t"] for record in tier_records if _finite(record["clip_t"])]
+        valence_low, valence_high = bootstrap_corr_ci(intended_valence, recovered_valence)
+        arousal_low, arousal_high = bootstrap_corr_ci(intended_arousal, recovered_arousal)
         summary[tier] = {
             "accuracy": round(accuracy(y_true, y_pred), 4),
             "accuracy_ci": [round(lo, 4), round(hi, 4)],
             "macro_f1": round(macro_f1(y_true, y_pred, EMOTIONS), 4),
-            "valence_r": round(pearson(iv, rv), 4),
-            "valence_rho": round(spearman(iv, rv), 4),
-            "valence_rho_ci": [round(vlo, 4), round(vhi, 4)],
-            "valence_mae": round(mae(iv, rv), 4),
-            "arousal_r": round(pearson(ia, ra), 4),
-            "arousal_rho": round(spearman(ia, ra), 4),
-            "arousal_rho_ci": [round(alo, 4), round(ahi, 4)],
-            "arousal_mae": round(mae(ia, ra), 4),
+            "valence_r": round(pearson(intended_valence, recovered_valence), 4),
+            "valence_rho": round(spearman(intended_valence, recovered_valence), 4),
+            "valence_rho_ci": [round(valence_low, 4), round(valence_high, 4)],
+            "valence_mae": round(mae(intended_valence, recovered_valence), 4),
+            "arousal_r": round(pearson(intended_arousal, recovered_arousal), 4),
+            "arousal_rho": round(spearman(intended_arousal, recovered_arousal), 4),
+            "arousal_rho_ci": [round(arousal_low, 4), round(arousal_high, 4)],
+            "arousal_mae": round(mae(intended_arousal, recovered_arousal), 4),
             "clip_t": round(sum(clip) / len(clip), 4) if clip else float("nan"),
             "majority_baseline": round(majority_baseline(y_true), 4),
             "collapse": _round_collapse(prediction_collapse(y_pred)),
             "shuffled_control": permutation_test(y_true, y_pred),
-            "n": len(sub),
+            "n": len(tier_records),
         }
     summary["chance"] = round(1 / len(EMOTIONS), 4)
     summary["probe_health"] = _probe_health(records)
-    cls = _classification_accuracy(records)
-    if cls is not None:
-        summary["classification_accuracy"] = cls
+    classification_accuracy = _classification_accuracy(records)
+    if classification_accuracy is not None:
+        summary["classification_accuracy"] = classification_accuracy
     return summary
 
 
-def _round_collapse(c: dict) -> dict:
-    return {"label": c["label"], "rate": round(float(c["rate"]), 4), "distinct": c["distinct"]}
+def _round_collapse(collapse: dict) -> dict:
+    return {
+        "label": collapse["label"],
+        "rate": round(float(collapse["rate"]), 4),
+        "distinct": collapse["distinct"],
+    }
 
 
 def _probe_health(records) -> dict:
     "Probe-degeneracy diagnostic over the conditioning tiers (floors excluded)."
-    preds = [r["predicted"] for r in records if r["tier"] in TIERS]
-    c = prediction_collapse(preds)
+    predictions = [record["predicted"] for record in records if record["tier"] in TIERS]
+    collapse = prediction_collapse(predictions)
     return {
-        "majority_label": c["label"],
-        "majority_rate": round(float(c["rate"]), 4),
-        "distinct_labels": c["distinct"],
+        "majority_label": collapse["label"],
+        "majority_rate": round(float(collapse["rate"]), 4),
+        "distinct_labels": collapse["distinct"],
         "n_labels": len(EMOTIONS),
     }
 
 
 def _classification_accuracy(records) -> float | None:
     """Upstream classifier vs gold, once per input (text track only)."""
-    seen, true, pred = set(), [], []
-    for r in records:
-        item = r.get("index", r["content"])
-        if r.get("classified") is None or item in seen:
+    seen, intended, classified = set(), [], []
+    for record in records:
+        item = record.get("index", record["content"])
+        if record.get("classified") is None or item in seen:
             continue
         seen.add(item)
-        true.append(r["intended"])
-        pred.append(r["classified"])
-    return round(accuracy(true, pred), 4) if true else None
+        intended.append(record["intended"])
+        classified.append(record["classified"])
+    return round(accuracy(intended, classified), 4) if intended else None
 
 
 def _contrasts(records) -> dict:
     """Paired bootstrap on per-item recovery correctness between tiers."""
 
     by_key: dict[tuple, dict[str, int]] = {}
-    for r in records:
-        key = (r.get("index", r["content"]), r["intended"], r["seed"])
-        by_key.setdefault(key, {})[r["tier"]] = int(r["intended"] == r["predicted"])
+    for record in records:
+        key = (record.get("index", record["content"]), record["intended"], record["seed"])
+        by_key.setdefault(key, {})[record["tier"]] = int(record["intended"] == record["predicted"])
 
-    out = {}
-    for hi, lo in CONTRASTS:
-        a, b = [], []
+    contrasts = {}
+    for higher, lower in CONTRASTS:
+        higher_scores, lower_scores = [], []
         for tiers in by_key.values():
-            if hi in tiers and lo in tiers:
-                a.append(tiers[hi])
-                b.append(tiers[lo])
-        if a:
-            res = paired_bootstrap_test(a, b)
-            out[f"{hi}_vs_{lo}"] = {k: round(v, 4) for k, v in res.items()}
-    return out
+            if higher in tiers and lower in tiers:
+                higher_scores.append(tiers[higher])
+                lower_scores.append(tiers[lower])
+        if higher_scores:
+            result = paired_bootstrap_test(higher_scores, lower_scores)
+            contrasts[f"{higher}_vs_{lower}"] = {k: round(v, 4) for k, v in result.items()}
+    return contrasts
 
 
 def _col(rows, key):
@@ -605,20 +613,22 @@ def _write_figures(out_dir, records, metrics, conditions, *, figures_dir=None) -
     "Render the accuracy, per-tier confusion, and VA-scatter figures."
     fig_dir = Path(figures_dir) if figures_dir is not None else Path(out_dir) / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
-    acc = {t: metrics[t]["accuracy"] for t in conditions if t in metrics}
+    accuracies = {tier: metrics[tier]["accuracy"] for tier in conditions if tier in metrics}
     figures.plot_accuracy(
-        acc,
+        accuracies,
         fig_dir / "accuracy.png",
         chance=metrics["chance"],
-        accuracy_ci={t: metrics[t]["accuracy_ci"] for t in acc},
+        accuracy_ci={tier: metrics[tier]["accuracy_ci"] for tier in accuracies},
     )
     for tier in conditions:
-        sub = [r for r in records if r["tier"] == tier]
-        if not sub:
+        tier_records = [record for record in records if record["tier"] == tier]
+        if not tier_records:
             continue
-        cm = confusion_matrix(_col(sub, "intended"), _col(sub, "predicted"), EMOTIONS)
-        figures.plot_confusion(cm, EMOTIONS, fig_dir / f"confusion_{tier}.png", title=tier)
-    if any(r["tier"] == "affect" for r in records):
+        matrix = confusion_matrix(
+            _col(tier_records, "intended"), _col(tier_records, "predicted"), EMOTIONS
+        )
+        figures.plot_confusion(matrix, EMOTIONS, fig_dir / f"confusion_{tier}.png", title=tier)
+    if any(record["tier"] == "affect" for record in records):
         figures.plot_va_scatter(records, "affect", fig_dir / "va_affect.png")
 
 

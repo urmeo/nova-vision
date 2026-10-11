@@ -84,7 +84,8 @@ def macro_f1(y_true: Sequence[str], y_pred: Sequence[str], labels: Sequence[str]
     """Macro-F1 averaged over the labels actually present in y_true."""
     _check(y_true, y_pred)
     _check_labels(y_true, y_pred, labels)
-    present = [label for label in labels if label in set(y_true)]
+    observed = set(y_true)
+    present = [label for label in labels if label in observed]
     if not present:
         return float("nan")
     scores = []
@@ -105,46 +106,50 @@ def cohen_kappa(a: Sequence[str], b: Sequence[str], labels: Sequence[str]) -> fl
     _check_labels(a, b, labels)
     if not a:
         return float("nan")
-    n = len(a)
-    po = sum(x == y for x, y in zip(a, b)) / n
-    pe = sum((a.count(c) / n) * (b.count(c) / n) for c in labels)
-    if pe == 1.0:
+    size = len(a)
+    observed = sum(x == y for x, y in zip(a, b)) / size
+    counts_a, counts_b = Counter(a), Counter(b)
+    expected = sum((counts_a[label] / size) * (counts_b[label] / size) for label in labels)
+    if expected == 1.0:
         return float("nan")
-    return float((po - pe) / (1 - pe))
+    return float((observed - expected) / (1 - expected))
 
 
 def rogan_gladen(apparent: float, sensitivity: float, specificity: float) -> float:
     "Prevalence corrected for an imperfect test (Rogan & Gladen, 1978)."
-    denom = sensitivity + specificity - 1.0
+    denominator = sensitivity + specificity - 1.0
 
-    if not np.isfinite(denom) or denom <= 0 or not np.isfinite(apparent):
+    if not np.isfinite(denominator) or denominator <= 0 or not np.isfinite(apparent):
         return float("nan")
-    return float(np.clip((apparent + specificity - 1.0) / denom, 0.0, 1.0))
+    return float(np.clip((apparent + specificity - 1.0) / denominator, 0.0, 1.0))
 
 
 def cohens_h(p1: float, p2: float) -> float:
     """Effect size for two proportions (arcsine-transformed difference)."""
     if not (np.isfinite(p1) and np.isfinite(p2)):
         return float("nan")
-    phi = lambda p: 2.0 * np.arcsin(np.sqrt(np.clip(p, 0.0, 1.0)))  # noqa: E731
-    return float(phi(p1) - phi(p2))
+    transformed = 2.0 * np.arcsin(np.sqrt(np.clip([p1, p2], 0.0, 1.0)))
+    return float(transformed[0] - transformed[1])
 
 
 def holm_bonferroni(pvalues: dict[str, float], alpha: float = 0.05) -> dict[str, dict]:
     "Family-wise correction over a set of named p-values (Holm, 1979)."
-    finite = {k: v for k, v in pvalues.items() if isinstance(v, (int, float)) and v == v}
-    ordered = sorted(finite, key=lambda k: finite[k])
-    m = len(ordered)
-    out: dict[str, dict] = {}
+    finite = {
+        name: value
+        for name, value in pvalues.items()
+        if isinstance(value, (int, float)) and np.isfinite(value)
+    }
+    ordered = sorted(finite, key=finite.__getitem__)
+    count = len(ordered)
+    adjusted: dict[str, dict] = {}
     running = 0.0
     for i, name in enumerate(ordered):
-        adj = min(1.0, (m - i) * finite[name])
-        running = max(running, adj)
-        out[name] = {"p_adjusted": round(running, 4), "reject": running <= alpha}
+        running = max(running, min(1.0, (count - i) * finite[name]))
+        adjusted[name] = {"p_adjusted": round(running, 4), "reject": running <= alpha}
     for name in pvalues:
-        if name not in out:
-            out[name] = {"p_adjusted": None, "reject": False}
-    return out
+        if name not in adjusted:
+            adjusted[name] = {"p_adjusted": None, "reject": False}
+    return adjusted
 
 
 def mae(x: Sequence[float], y: Sequence[float]) -> float:
@@ -206,15 +211,15 @@ def bootstrap_corr_ci(
     if len(xa) < 3:
         return float("nan"), float("nan")
     rng = np.random.default_rng(seed)
-    vals = []
+    correlations = []
     for _ in range(n):
-        idx = rng.integers(0, len(xa), size=len(xa))
-        r = corr(xa[idx].tolist(), ya[idx].tolist())
-        if r == r:
-            vals.append(r)
-    if len(vals) < 2:
+        indices = rng.integers(0, len(xa), size=len(xa))
+        correlation = corr(xa[indices].tolist(), ya[indices].tolist())
+        if np.isfinite(correlation):
+            correlations.append(correlation)
+    if len(correlations) < 2:
         return float("nan"), float("nan")
-    lo, hi = np.quantile(vals, [alpha / 2, 1 - alpha / 2])
+    lo, hi = np.quantile(correlations, [alpha / 2, 1 - alpha / 2])
     return float(lo), float(hi)
 
 
