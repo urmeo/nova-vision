@@ -73,4 +73,18 @@ On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerS
 
 [![Illustrative sample-size curve connecting the saved binomial simulation points](docs/assets/results/planning-curve.png)](docs/assets/results/planning-curve.png)
 
-Sole contributor: [urme](https://github.com/urmeo). Project code: [MIT](LICENSE).
+Sole contributor: [urme](https://github.com/urmeo).
+
+## References
+
+Demszky, D., Movshovitz-Attias, D., Ko, J., Cowen, A., Nemade, G., & Ravi, S. (2020). GoEmotions: A dataset of fine-grained emotions. In D. Jurafsky, J. Chai, N. Schluter, & J. Tetreault (Eds.), *Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics* (pp. 4040–4054). Association for Computational Linguistics. [https://doi.org/10.18653/v1/2020.acl-main.372](https://doi.org/10.18653/v1/2020.acl-main.372)
+
+Radford, A., Kim, J. W., Hallacy, C., Ramesh, A., Goh, G., Agarwal, S., Sastry, G., Askell, A., Mishkin, P., Clark, J., Krueger, G., & Sutskever, I. (2021). Learning transferable visual models from natural language supervision. In M. Meila & T. Zhang (Eds.), *Proceedings of the 38th International Conference on Machine Learning* (Vol. 139, pp. 8748–8763). PMLR. [https://proceedings.mlr.press/v139/radford21a.html](https://proceedings.mlr.press/v139/radford21a.html)
+
+Sauer, A., Lorenz, D., Blattmann, A., & Rombach, R. (2023). *Adversarial diffusion distillation* [Preprint]. arXiv. [https://doi.org/10.48550/arXiv.2311.17042](https://doi.org/10.48550/arXiv.2311.17042)
+
+Yang, J., Huang, Q., Ding, T., Lischinski, D., Cohen-Or, D., & Huang, H. (2023). *EmoSet: A large-scale visual emotion dataset with rich attributes* [Preprint]. arXiv. [https://doi.org/10.48550/arXiv.2307.07961](https://doi.org/10.48550/arXiv.2307.07961)
+
+## License
+
+[MIT](LICENSE)
