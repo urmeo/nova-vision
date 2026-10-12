@@ -128,6 +128,23 @@ def test_missing_pilot_leaves_existing_pilot_charts_unchanged(tmp_path, source_d
         assert path not in paths
 
 
+def test_cli_default_table_preserves_archived_results(tmp_path, source_dir, monkeypatch):
+    archived_table = tmp_path / "docs/results-tables.md"
+    archived_table.parent.mkdir()
+    archived_table.write_bytes(b"archived pilot table")
+    monkeypatch.setattr(visualize, "ROOT", tmp_path)
+    monkeypatch.setattr("sys.argv", ["visualize.py", "--source-dir", str(source_dir)])
+
+    visualize.main()
+
+    assert archived_table.read_bytes() == b"archived pilot table"
+    generated_table = tmp_path / "outputs/generated/results-tables.md"
+    content = generated_table.read_text()
+    assert "40.25%" in content
+    assert "16.51%" in content
+    assert "Pilot records (`results.json`) are unavailable" in content
+
+
 def test_explicit_pilot_source_regenerates_pilot_charts(tmp_path, source_dir, pilot):
     (source_dir / "results.json").write_text(json.dumps(pilot))
     destination, table = tmp_path / "charts", tmp_path / "tables.md"

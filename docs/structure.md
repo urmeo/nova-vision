@@ -18,3 +18,29 @@
 
 Run commands from the repository root. Keep saved records in `outputs/results/`;
 write new experiments and temporary reports to `outputs/generated/`.
+
+## Local use
+
+Use Python 3.9 or later. Browser tests use Node.js 22 in CI.
+Models download when missing from the local cache. Set `NOVA_BACKEND` for the app:
+
+- `diffusers`: runs SD-Turbo locally; CPU generation can be slow.
+- `null` (app default): makes test images. Text analysis still needs its classifier.
+- `hf-api`: sends prompts to Hugging Face and requires `HF_TOKEN`.
+
+## Experiments and reports
+
+Run a small experiment and summarize its measurements:
+
+```bash
+python -m pip install -e ".[ml,research]"
+python -m novavision.experiments.run --contents 1 --seeds 1 --width 256 --height 256 --save-images
+python scripts/report.py
+```
+
+The run saves records, its manifest, and original images in `outputs/generated/run/`.
+The summary goes to `outputs/generated/tables.md`.
+
+`python scripts/visualize.py` rebuilds the available saved charts and writes
+`outputs/generated/results-tables.md`. Archived pilot charts and the
+[published table](results-tables.md) stay intact; raw pilot records are no longer bundled.

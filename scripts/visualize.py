@@ -453,7 +453,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-dir", type=Path, default=ROOT / "outputs/results")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "docs/assets/results")
-    parser.add_argument("--tables", type=Path, default=ROOT / "docs/results-tables.md")
+    parser.add_argument("--tables", type=Path, default=ROOT / "outputs/generated/results-tables.md")
     args = parser.parse_args()
     try:
         paths = render(args.source_dir, args.output_dir, args.tables)

@@ -68,34 +68,24 @@ fixed affect priors. The text track uses benchmark gold labels for prompt
 conditioning; analyzer estimates supply affect targets. The saved pilot covers
 only the content track.
 
-## Saved pilot evidence
+## Saved evidence
 
-The saved run used SD-Turbo, CLIP ViT-B/32, CPU inference, 256 × 256 images,
-two neutral subjects, seven intended labels, and one seed. Recovery is the
-fraction of probe predictions matching intended labels.
+The [archived pilot table](results-tables.md#pilot-recovery) records the run settings,
+recovery rates, and item-bootstrap 95% confidence intervals. Raw pilot records
+are no longer bundled; the published charts and table remain.
+The intervals describe uncertainty within this small pilot, not variation across
+independent runs or human judgments.
 
-| Condition | Correct / images | Recovery | Item-bootstrap 95% CI |
-|---|---:|---:|---:|
-| `raw` | 2 / 14 | 14.29% | 0–35.71% |
-| `emotion` | 3 / 14 | 21.43% | 0–42.86% |
-| `affect` | 3 / 14 | 21.43% | 0–42.86% |
-
-The values above come from the saved `metrics` entries. The intervals
-resample per-image correctness values. They describe uncertainty within this
-small pilot, not variation across independent runs or human judgments. Uniform
-chance agreement is 14.29% (1/7).
-
-Across these 42 images, the probe predicted neutral 38 times (90.5%) and used
+Across the 42 conditioning-tier images, the probe predicted neutral 38 times (90.5%) and used
 only two of seven labels. No measured condition exceeds the label-permutation
 null at p < .05. The saved paired difference between `emotion` and `raw` is
 +7.14 percentage points (p=.2554); `affect` and `emotion` have equal recovery
 (p=1). The pilot does not establish emotion controllability.
 
 `naive` has no saved measurement. The seven-image fixed-scene diagnostic is
-separate from subject pairing and is excluded from the table above.
+separate from subject pairing.
 Historical model pins, source commits, and original generated images are
-incomplete, so exact image replay is unverified. See the [saved metric
-tables](results-tables.md).
+incomplete, so exact image replay is unverified.
 
 ## Captions and text equivalents
 
