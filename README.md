@@ -45,13 +45,9 @@ On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerS
 |:---:|:---:|
 | <a href="docs/assets/interface.png"><img src="docs/assets/interface.png" alt="Current NovaVision interface with text input, style selection, and an empty image panel" width="420"></a> | <a href="outputs/figures/emotion_analysis.png"><img src="outputs/figures/emotion_analysis.png" alt="Earlier interface showing text emotion scores, affect estimates, and a generation prompt" width="420"></a> |
 
-These screenshots show interface states, not benchmark measurements. The gallery includes archived examples alongside the current local interface.
-
 | Earlier prompt details | Earlier displayed image |
 |:---:|:---:|
 | <a href="docs/assets/prompt-example.png"><img src="docs/assets/prompt-example.png" alt="Earlier interface showing the New adventure input and the longer prompt assembled from it" width="420"></a> | <a href="docs/assets/generation-example.png"><img src="docs/assets/generation-example.png" alt="Earlier interface showing the New adventure input, text emotion scores, and a sunlit meadow image" width="420"></a> |
-
-These archived examples use older prompt wording. Their original model and run settings are unavailable. Open any gallery image to inspect it at full size.
 
 ## Results
 
@@ -63,8 +59,6 @@ These archived examples use older prompt wording. Their original model and run s
 | `emotion` | 14 | 21.43% | 0–42.86% | .2259 |
 | `affect` | 14 | 21.43% | 0–42.86% | .1369 |
 | `scene` | 7 | 28.57% | 0–57.50% | .1449 |
-
-**Chance agreement: 14.29% (1/7). The pilot does not establish emotion controllability.** No saved condition exceeds the shuffled-label control at p < .05. Neither conditioning tier is significant after Holm correction. The scene diagnostic uses fixed emotion scenes and is separate from the paired tiers; `naive` is unmeasured.
 
 | Recovery and 95% confidence intervals | Raw-tier confusion |
 |:---:|:---:|
@@ -78,20 +72,9 @@ These archived examples use older prompt wording. Their original model and run s
 |:---:|:---:|
 | <a href="outputs/figures/confusion_scene.png"><img src="outputs/figures/confusion_scene.png" alt="Confusion matrix for the seven fixed-scene diagnostic images" width="420"></a> | <a href="outputs/figures/va_affect.png"><img src="outputs/figures/va_affect.png" alt="Intended prior values versus image-probe estimates of valence and arousal in the affect tier" width="420"></a> |
 
-The matrices show row-normalized predictions. Across the three conditioning tiers, the probe uses only two of seven labels and predicts neutral for 90.5% of images. The affect plot compares intended prior values with image-probe estimates; it does not measure human ratings.
-
 ### Probe checks
 
 [![Saved CLIP accuracy on labelled face and scene samples](docs/assets/results/probe-comparison.png)](docs/assets/results/probe-comparison.png)
-
-| Probe | Faces, n=200 | Scenes, n=400 |
-|---|---:|---:|
-| CLIP ViT-B/32 | 29.00% | 40.25% |
-| CLIP ViT-L/14 | 37.50% | 45.50% |
-
-These checks use the training splits of `FastJobs/Visual_Emotional_Analysis` and `xodhks/EmoSet118K`, with seed 0. The scene sample has no neutral examples. Transfer of these accuracies to generated images is unmeasured. Original image IDs and dataset revisions are missing, so historical paired comparisons are unverified. New probe comparisons require matching decoded-image fingerprints.
-
-The recovery correction covers five of seven classes: 10.0% apparent recovery becomes 16.5% corrected recovery within that subset. A seven-class correction and its uncertainty are unavailable.
 
 ### Planning curve
 
