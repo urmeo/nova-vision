@@ -22,37 +22,22 @@ The [public website](https://urmeo.github.io/nova-vision/) is a static preview. 
 
 ## Run
 
-Use Python 3.9 or newer. CI checks Python 3.9–3.12.
-
 ```bash
 git clone https://github.com/urmeo/nova-vision.git
 cd nova-vision
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[app,ml]"
-NOVA_BACKEND=diffusers python server.py
-```
-
-On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerShell, then set `$env:NOVA_BACKEND = "diffusers"` before running `python server.py`.
-
-Open [http://127.0.0.1:8000](http://127.0.0.1:8000). The first analysis and generation requests download their models. Local generation selects CUDA, Apple MPS, or CPU when available; CPU generation can be slow.
-
-| Backend | What it does |
-|---|---|
-| `diffusers` | Generates images locally with PyTorch and SD-Turbo. |
-| `null` — default when unset | Creates deterministic synthetic test images. Text analysis still loads its classifier. |
-| `hf-api` | Sends generation prompts to Hugging Face. Requires `HF_TOKEN` and access to a supported model. |
-
-Model and dataset terms apply separately from the code license. See [development and deployment](CONTRIBUTING.md) for request limits, tokens, and research commands.
-
-Check the code and rebuild the saved charts without model downloads. Browser-script tests use Node 22 in CI.
-
-```bash
 python -m pip install -e ".[dev]"
 python -m pytest
 node --test tests/test_web_ui.js
 python scripts/visualize.py
+NOVA_BACKEND=diffusers python server.py
 ```
+
+[http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerShell, then set `$env:NOVA_BACKEND = "diffusers"` before running `python server.py`.
 
 ## Interface
 
