@@ -23,7 +23,7 @@ Experiments compare `raw`, `naive`, `emotion`, and `affect` with the same seed f
 
 [Interface preview](https://urmeo.github.io/nova-vision/) · [Videos](#videos) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
 
-**Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask**
+Keywords: **Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask**
 
 The [public website](https://urmeo.github.io/nova-vision/) is a static preview. Run the Python server for text analysis and image generation.
 
