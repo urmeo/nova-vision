@@ -6,29 +6,21 @@ A Python prototype for turning English text into image prompts with emotion, pal
 
 [Editable Figma source](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=20-2) · [Figure sources and captions](docs/pipeline-figures.md).
 
-[https://urmeo.github.io/nova-vision/](https://urmeo.github.io/nova-vision/) · [Videos](#videos) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
+[https://urmeo.github.io/nova-vision/](https://urmeo.github.io/nova-vision/) · [Video](#video) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
 
 Keywords: **Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask**
 
 The [public website](https://urmeo.github.io/nova-vision/) is a static preview. Run the Python server for text analysis and image generation.
 
-## Videos
+## Video
 
-| Current interface and pipeline · 0:28 | Earlier generation demo · 2:05 |
-|:---:|:---:|
-| <a href="https://urmeo.github.io/nova-vision/assets/videos.html#pipeline-tour"><img src="docs/assets/pipeline-interface.png" alt="Watch the current interface tour: four pipeline stages and separate research details" width="420"></a> | <a href="https://urmeo.github.io/nova-vision/assets/videos.html#recorded-demo"><img src="docs/assets/demo-poster.png" alt="Watch the earlier recording showing a coffee-shop description, text scores, and a displayed cafe image" width="420"></a> |
-| [Watch tour](https://urmeo.github.io/nova-vision/assets/videos.html#pipeline-tour) · [MP4 file](docs/assets/pipeline-tour.mp4) | [Watch full recording](https://urmeo.github.io/nova-vision/assets/videos.html#recorded-demo) · [MP4 file](docs/assets/demo.mp4) |
+**Interface and pipeline · 0:28**
 
-The current tour shows the preview, pipeline, and saved charts. The earlier recording uses an older interface; its model and run settings are unavailable. Both videos are silent and have text descriptions. Neither is a benchmark result.
+<a href="https://urmeo.github.io/nova-vision/assets/videos.html#pipeline-tour"><img src="docs/assets/pipeline-interface.png" alt="Watch the interface tour showing the static preview, pipeline, and saved charts" width="960"></a>
 
-<details>
-<summary>10-second excerpt from the earlier recording</summary>
+[Watch video](https://urmeo.github.io/nova-vision/assets/videos.html#pipeline-tour) · [Download MP4](docs/assets/pipeline-tour.mp4)
 
-<p align="center">
-  <a href="https://urmeo.github.io/nova-vision/assets/videos.html#recorded-demo"><img src="outputs/figures/demo.gif" alt="Short animated excerpt of the earlier NovaVision interface; open the full recording" width="640"></a>
-</p>
-
-</details>
+Silent tour of the static preview, pipeline, and saved charts, with text descriptions. Run the Python server for text analysis and image generation.
 
 ## Run
 
