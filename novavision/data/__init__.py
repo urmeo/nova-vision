@@ -25,8 +25,12 @@ def load_benchmark(path: str | Path) -> list[dict[str, str]]:
         reader = csv.DictReader(source)
         if reader.fieldnames is None or {"text", "emotion"} - set(reader.fieldnames):
             raise ValueError(f"{path} must have 'text' and 'emotion' columns")
+        if len(reader.fieldnames) != len(set(reader.fieldnames)):
+            raise ValueError(f"{path} has duplicate column names")
         for row in reader:
             line_number = reader.line_num
+            if None in row:
+                raise ValueError(f"{path}:{line_number} has more fields than columns")
             text = (row.get("text") or "").strip()
             emotion = (row.get("emotion") or "").strip().lower()
             if not text:

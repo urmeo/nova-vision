@@ -12,7 +12,7 @@
 </head>
 <body>
 
-    <nav id="navbar">
+    <nav id="navbar" aria-label="Main navigation">
         <div class="nav-container">
             <span class="nav-logo">NovaVision</span>
             <div class="nav-links">
@@ -80,7 +80,7 @@
                         <div class="live-emotions" id="liveEmotions">
                             <div class="live-emotions-header">
                                 <span class="live-emotions-title">Text emotion scores</span>
-                                <span class="live-emotions-status" id="liveStatus">
+                                <span class="live-emotions-status" id="liveStatus" role="status">
                                     <span class="dot"></span>
                                     <span id="liveStatusText">Ready</span>
                                 </span>
@@ -146,7 +146,7 @@
                         </div>
                     </div>
                     <div class="advanced-settings">
-                        <button class="advanced-toggle" id="advancedToggle">
+                        <button class="advanced-toggle" id="advancedToggle" aria-expanded="false" aria-controls="advancedContent">
                             <span>Advanced settings</span>
                             <svg viewBox="0 0 16 16" fill="none">
                                 <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -156,7 +156,7 @@
                             <div class="seed-control">
                                 <label class="seed-label" for="seedInput">Seed:</label>
                                 <input type="text" class="seed-input" id="seedInput" placeholder="Random (leave empty)">
-                                <button class="copy-seed-btn" id="copySeedBtn">Copy seed</button>
+                                <button class="copy-seed-btn" id="copySeedBtn" aria-live="polite">Copy seed</button>
                             </div>
                             <div class="seed-control">
                                 <label class="seed-label" for="tokenInput">API token:</label>
@@ -171,7 +171,7 @@
                         <span class="btn-text">Generate image</span>
                     </button>
 
-                    <div class="error-display" id="errorDisplay">
+                    <div class="error-display" id="errorDisplay" role="alert">
                         <div class="error-message">
                             <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"/>

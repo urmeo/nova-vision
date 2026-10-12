@@ -2,7 +2,7 @@
 
 ![NovaVision pipeline](assets/pipeline.svg)
 
-## App flow
+## App: text to image
 
 English text supplies two kinds of information: the subject to draw and estimates
 of emotion and affect. The [analyzer](../novavision/affect/analyzer.py) scores
@@ -15,7 +15,7 @@ feelings or human ratings.
 |---|---|
 | Classify text | Text → seven scores and the leading emotion |
 | Estimate affect | Matched word values + leading emotion's priors → valence and arousal |
-| Build prompt | Text + selected style + optional mood, palette, and lighting cues → prompt |
+| Build prompt | Text + selected style + optional mood, palette, lighting, and composition cues → prompt |
 | Render image | Prompt + seed + image dimensions → image |
 
 ![Classifier and word-lexicon branches, coverage-weighted affect blend, and automatic prompt selection](assets/analysis.svg)
@@ -45,7 +45,7 @@ preview displays the interface and saved charts; analysis and generation require
 the Flask server. The app does not run image-recovery evaluation or feed the
 generated image back into the text analyzer.
 
-## Experiment flow
+## Experiments: image to measurement
 
 The [runner](../novavision/experiments/run.py) defines targets before generation,
 builds each prompt tier, generates images, reads them with a probe, and compares
@@ -67,7 +67,7 @@ results.
 | `raw` | Subject/text + style | No emotion conditioning |
 | `naive` | Subject/text + bare emotion label + style | Minimal label baseline |
 | `emotion` | Subject/text + mood cues + style | Mood wording |
-| `affect` | Subject/text + mood, palette, lighting, and style | Added affect cues |
+| `affect` | Subject/text + mood, palette, lighting, composition, and style | Added affect cues |
 
 For each input, intended emotion, and seed index, the four main tiers share the
 same generator seed. Model, style, dimensions, and other run settings stay fixed.
@@ -90,7 +90,10 @@ The scene and wrong-label conditions are not additional stages of the app.
 | Supplied image classifier | Map model labels to the seven emotions. Affect values come from priors for the predicted label, not independent affect measurements. CLIP-T is unavailable. |
 
 These [probe outputs](../novavision/eval/probes.py) are model estimates, not human
-judgments. Evaluation records recovery accuracy, macro-F1, confusion matrices,
+judgments. New [probe-validation reports](../novavision/eval/validate_probe.py)
+record SHA-256 fingerprints of decoded RGB pixels and image dimensions. The [paired comparison
+command](../scripts/compare_probes.py) requires matching fingerprints in the same
+order; shared labels alone do not establish image identity. Evaluation records recovery accuracy, macro-F1, confusion matrices,
 affect errors and correlations, bootstrap intervals, and paired tier differences.
 Majority baselines and prediction-collapse counts help reveal an uninformative
 probe. The [report](../scripts/report.py) also applies Holm correction to the

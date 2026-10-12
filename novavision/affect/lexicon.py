@@ -10,7 +10,8 @@ from pathlib import Path
 
 from novavision.data import LEXICON_PATH
 
-_TOKEN = re.compile(r"[a-z][a-z']+")
+# Keep contractions intact without consuming surrounding quotation marks.
+_TOKEN = re.compile(r"[a-z][a-z']*[a-z]")
 
 
 STOPWORDS = frozenset(
@@ -114,7 +115,7 @@ class AffectLexicon:
     def load(cls, path: str | os.PathLike | None = None) -> AffectLexicon:
         path = Path(path or os.getenv("NOVAVISION_LEXICON") or LEXICON_PATH)
         entries: dict[str, tuple[float, float]] = {}
-        with path.open(encoding="utf-8") as source:
+        with path.open(encoding="utf-8-sig") as source:
             for line_number, line in enumerate(source, start=1):
                 line = line.strip()
                 if not line or line.startswith("#"):

@@ -34,6 +34,7 @@ def _sample_records(records: list[dict], n: int, seed: int) -> list[dict]:
             if index < len(by_emotion[emotion]) and len(picked) < limit:
                 picked.append(by_emotion[emotion][index])
         index += 1
+    rng.shuffle(picked)
     return picked
 
 
@@ -208,7 +209,8 @@ def analyze(ratings_csv: str | Path, key_csv: str | Path) -> dict:
     from novavision.eval.validate_probe import EKMAN_ALIASES
 
     raw = {
-        int(record["id"]): record["emotion"].strip().lower() for record in _read_csv(ratings_csv)
+        image_id: record["emotion"].strip().lower()
+        for image_id, record in _read_by_id(ratings_csv).items()
     }
 
     ratings = {
@@ -216,7 +218,10 @@ def analyze(ratings_csv: str | Path, key_csv: str | Path) -> dict:
         for image_id, emotion in raw.items()
         if emotion
     }
-    key = {int(record["id"]): record for record in _read_csv(key_csv)}
+    key = _read_by_id(key_csv)
+    unknown_ids = set(ratings) - set(key)
+    if unknown_ids:
+        raise ValueError(f"Ratings contain image IDs absent from the key: {sorted(unknown_ids)}")
     known = set(EMOTIONS)
 
     ids = [image_id for image_id in key if ratings.get(image_id) in known]
@@ -246,6 +251,16 @@ def _write_csv(path, fields, rows):
 def _read_csv(path):
     with open(path, encoding="utf-8", newline="") as fh:
         return list(csv.DictReader(fh))
+
+
+def _read_by_id(path) -> dict[int, dict]:
+    records = {}
+    for record in _read_csv(path):
+        image_id = int(record["id"])
+        if image_id in records:
+            raise ValueError(f"Duplicate image ID {image_id} in {path}")
+        records[image_id] = record
+    return records
 
 
 def main() -> None:

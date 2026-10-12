@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -26,6 +27,13 @@ class Recovery:
     valence: float
     arousal: float
     scores: dict[str, float]
+
+
+def image_digest(image: Image.Image) -> str:
+    """Hash decoded RGB pixels and dimensions, independent of the image file format."""
+    rgb = image.convert("RGB")
+    header = f"RGB:{rgb.width}:{rgb.height}:".encode("ascii")
+    return hashlib.sha256(header + rgb.tobytes()).hexdigest()
 
 
 class Probe(ABC):
@@ -66,7 +74,7 @@ class HFImageClassifierProbe(Probe):
                 "image-classification",
                 model=self.model_id,
                 revision=self.revision,
-                device=0 if self.device == "cuda" else -1,
+                device=self.device if self.device is not None else -1,
             )
 
             self._check_label_coverage(pipe.model.config.id2label)
@@ -161,9 +169,9 @@ class CLIPProbe(Probe):
         import torch
 
         self._load()
-        inputs = self._processor(text=list(texts), return_tensors="pt", padding=True).to(
-            self._device
-        )
+        inputs = self._processor(
+            text=list(texts), return_tensors="pt", padding=True, truncation=True
+        ).to(self._device)
         with torch.no_grad():
             pooled = self._model.text_model(
                 input_ids=inputs["input_ids"], attention_mask=inputs.get("attention_mask")

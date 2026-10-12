@@ -1,11 +1,13 @@
 import math
 import sys
+from contextlib import nullcontext
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
 from PIL import Image
 
-from novavision.eval.probes import CLIPProbe, HFImageClassifierProbe
+from novavision.eval.probes import CLIPProbe, HFImageClassifierProbe, image_digest
 from novavision.taxonomy import EMOTIONS
 
 
@@ -55,6 +57,60 @@ def test_hf_probe_label_coverage_check():
     assert probe._check_label_coverage({0: "happy", 1: "cat"}) == ["joy"]
     with pytest.raises(ValueError):
         HFImageClassifierProbe("fake/model")._check_label_coverage({0: "cat"})
+
+
+@pytest.mark.parametrize("device", ["cpu", "cuda", "cuda:1", "mps", None])
+def test_hf_probe_preserves_requested_device(monkeypatch, device):
+    received = []
+
+    def pipeline(*args, **kwargs):
+        received.append(kwargs["device"])
+        return SimpleNamespace(
+            model=SimpleNamespace(config=SimpleNamespace(id2label={0: "joy"}, num_labels=1))
+        )
+
+    monkeypatch.setitem(sys.modules, "transformers", SimpleNamespace(pipeline=pipeline))
+    HFImageClassifierProbe("fake/model", device=device)._load()
+    assert received == [device if device is not None else -1]
+
+
+def test_image_digest_tracks_pixels_and_dimensions(tmp_path):
+    image = _img()
+    source = tmp_path / "image.png"
+    image.save(source)
+    with Image.open(source) as decoded:
+        assert image_digest(decoded) == image_digest(image)
+    assert image_digest(image.convert("RGBA")) == image_digest(image)
+    assert image_digest(image.resize((4, 16))) != image_digest(image)
+    assert image_digest(Image.new("RGB", image.size, "red")) != image_digest(image)
+
+
+def test_clip_long_text_is_truncated_to_the_model_context(monkeypatch):
+    class Inputs(dict):
+        def to(self, device):
+            return self
+
+    class Features(np.ndarray):
+        def norm(self, dim, keepdim):
+            return np.linalg.norm(self, axis=dim, keepdims=keepdim)
+
+    def processor(*, text, truncation=False, **kwargs):
+        tokens = text[0].split()
+        if truncation:
+            tokens = tokens[:77]
+        return Inputs(input_ids=tokens)
+
+    def text_model(*, input_ids, **kwargs):
+        if len(input_ids) > 77:
+            raise ValueError("Text exceeds the model context")
+        return SimpleNamespace(pooler_output=np.ones((1, 2)).view(Features))
+
+    monkeypatch.setitem(sys.modules, "torch", SimpleNamespace(no_grad=nullcontext))
+    probe = CLIPProbe("fake/model", device="cpu")
+    probe._model = SimpleNamespace(text_model=text_model, text_projection=lambda features: features)
+    probe._processor = processor
+    features = probe._text_features(["word " * 300])
+    assert np.allclose(features, [[1 / np.sqrt(2), 1 / np.sqrt(2)]])
 
 
 def test_clip_load_retries_after_processor_failure(monkeypatch):

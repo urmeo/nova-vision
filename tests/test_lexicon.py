@@ -118,6 +118,24 @@ def test_smart_quote_negation_still_flips():
     assert lex.score("i can’t be happy").valence == -0.8
 
 
+@pytest.mark.parametrize("text", ["'happy'", "‘happy’", '"happy"'])
+def test_quoted_words_are_scored(text):
+    lex = AffectLexicon({"happy": (0.8, 0.7)})
+    assert lex.score(text) == lex.score("happy")
+
+
+@pytest.mark.parametrize("text", ["not 'happy'", "not ‘happy’", "I don't feel 'happy'"])
+def test_negation_survives_quoted_words(text):
+    lex = AffectLexicon({"happy": (0.8, 0.7)})
+    assert lex.score(text).valence == -0.8
+
+
+def test_load_tolerates_utf8_bom(tmp_path):
+    path = tmp_path / "lexicon.tsv"
+    path.write_text("word\tvalence\tarousal\nhappy\t0.8\t0.7\n", encoding="utf-8-sig")
+    assert AffectLexicon.load(path).lookup("happy") == (0.8, 0.7)
+
+
 def test_inflection_cannot_stem_into_a_function_word():
     lex = AffectLexicon({"will": (0.5, 0.5), "happy": (0.8, 0.7)})
     assert lex.lookup("wills") is None

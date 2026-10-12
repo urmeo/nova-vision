@@ -8,6 +8,7 @@ from pathlib import Path
 
 from novavision.config import CLIP_MODEL, CLIP_REVISION, default_revision
 from novavision.eval.metrics import accuracy, confusion_matrix, macro_f1
+from novavision.eval.probes import image_digest
 from novavision.taxonomy import EMOTIONS
 
 _EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
@@ -42,6 +43,8 @@ def load_hf_dataset(
     label_key: str = "label",
 ):
     "Sample (image, ekman_label) pairs from a labelled HF image dataset."
+    if n < 1:
+        raise ValueError("Sample size must be positive")
     import random
 
     from datasets import load_dataset
@@ -94,14 +97,17 @@ def validate(probe, pairs: list) -> dict:
     """pairs are (image-or-path, ekman_label)."""
     from PIL import Image
 
-    y_true, y_pred = [], []
+    if not pairs:
+        raise ValueError("Probe validation requires at least one labelled image")
+    y_true, y_pred, image_digests = [], [], []
     for item, label in pairs:
         if isinstance(item, Image.Image):
-            image = item
+            image = item.convert("RGB")
         else:
             with Image.open(item) as source:
                 image = source.convert("RGB")
         recovery = probe.recover(image)
+        image_digests.append(image_digest(image))
         y_true.append(label)
         y_pred.append(recovery.emotion)
 
@@ -115,6 +121,7 @@ def validate(probe, pairs: list) -> dict:
         "confusion": cm.tolist(),
         "gold": y_true,
         "predictions": y_pred,
+        "image_digests": image_digests,
     }
 
 

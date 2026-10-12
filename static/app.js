@@ -381,20 +381,25 @@ const usedSeedDisplay = document.getElementById('usedSeedDisplay');
 const lastSeedValue = document.getElementById('lastSeedValue');
 
 advancedToggle.addEventListener('click', () => {
-    advancedToggle.classList.toggle('open');
-    advancedContent.classList.toggle('open');
+    const expanded = advancedContent.classList.toggle('open');
+    advancedToggle.classList.toggle('open', expanded);
+    advancedToggle.setAttribute('aria-expanded', String(expanded));
 });
 
-copySeedBtn.addEventListener('click', () => {
+copySeedBtn.addEventListener('click', async () => {
     if (!currentGenerationData) return;
-    navigator.clipboard.writeText(String(currentGenerationData.seed)).then(() => {
+    try {
+        await navigator.clipboard.writeText(String(currentGenerationData.seed));
         copySeedBtn.textContent = 'Copied';
         copySeedBtn.classList.add('copied');
+    } catch {
+        copySeedBtn.textContent = 'Copy unavailable';
+    } finally {
         setTimeout(() => {
             copySeedBtn.textContent = 'Copy seed';
             copySeedBtn.classList.remove('copied');
         }, 2000);
-    });
+    }
 });
 
 const imageHistory = [];
@@ -417,21 +422,23 @@ function renderHistory() {
     historyCount.textContent = `${imageHistory.length} of ${maxHistoryItems}`;
 
     imageHistory.forEach(item => {
-        const thumbnail = document.createElement('div');
+        const thumbnail = document.createElement('button');
+        thumbnail.type = 'button';
         thumbnail.className = 'history-thumbnail' + (item === currentGenerationData ? ' active' : '');
+        thumbnail.title = item.original_text;
+        thumbnail.setAttribute('aria-label', `Restore image: ${item.original_text}`);
+        thumbnail.setAttribute('aria-pressed', String(item === currentGenerationData));
         const image = document.createElement('img');
         image.src = item.image;
-        image.alt = 'Previous generation';
-        const tooltip = document.createElement('div');
-        tooltip.className = 'history-tooltip';
-        tooltip.textContent = item.original_text;
-        thumbnail.append(image, tooltip);
+        image.alt = '';
+        thumbnail.appendChild(image);
         thumbnail.addEventListener('click', () => {
             displayGeneration(item);
             document.querySelectorAll('.history-thumbnail').forEach(previous => {
-                previous.classList.remove('active');
+                const selected = previous === thumbnail;
+                previous.classList.toggle('active', selected);
+                previous.setAttribute('aria-pressed', String(selected));
             });
-            thumbnail.classList.add('active');
         });
         historyThumbnails.appendChild(thumbnail);
     });
@@ -576,7 +583,7 @@ function displayGeneration(data) {
 }
 
 async function generateImage() {
-    if (isPreview) return;
+    if (isPreview || generateBtn.disabled) return;
     const text = emotionInput.value.trim();
     if (!text) {
         emotionInput.focus();
@@ -686,16 +693,3 @@ if (isPreview) {
         value.textContent = '—';
     });
 }
-
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: reducedMotion?.matches ? 'auto' : 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});

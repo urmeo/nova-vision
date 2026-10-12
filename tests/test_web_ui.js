@@ -42,6 +42,11 @@ function createApp(fetch, preview = false) {
         }
         set className(value) { this.classes = new Set(value.split(/\s+/)); }
         get className() { return [...this.classes].join(' '); }
+        setAttribute(name, value) {
+            this.attributes ||= new Map();
+            this.attributes.set(name, String(value));
+        }
+        getAttribute(name) { return this.attributes?.get(name) ?? null; }
         set textContent(value) { this.text = String(value); }
         get textContent() { return this.text || ''; }
         set innerHTML(value) { this.html = value; this.children = []; }
@@ -147,7 +152,8 @@ function createApp(fetch, preview = false) {
     vm.runInContext(script, context, { filename: 'static/app.js' });
     const api = vm.runInContext('({ generateImage, analyzeLive, downloadImage, downloadReport })', context);
     return { api, getElementById, downloads, reportText, reportImages, reportDraws,
-        reportCanvases, clipboard, errors, timers, exampleChips, previewImages, controls };
+        reportCanvases, clipboard, errors, timers, exampleChips, previewImages, controls,
+        navigator: context.navigator };
 }
 
 function generation(text, seed, emotion = 'joy', backend = 'null') {
@@ -236,7 +242,12 @@ test('history selection restores analysis, seed, image and report downloads', as
     await app.api.generateImage();
     assert.equal(app.getElementById('generationBackend').textContent, 'Hosted generation · hf-api backend');
 
-    app.getElementById('historyThumbnails').children[1].click();
+    const thumbnails = app.getElementById('historyThumbnails').children.slice(0, 2);
+    assert(thumbnails.every(thumbnail => thumbnail.tag === 'button'));
+    assert.equal(thumbnails[1].getAttribute('aria-label'), 'Restore image: older');
+    thumbnails[1].click();
+    assert.equal(thumbnails[0].getAttribute('aria-pressed'), 'false');
+    assert.equal(thumbnails[1].getAttribute('aria-pressed'), 'true');
 
     assert.equal(app.getElementById('generatedImage').src, 'data:image/png;base64,older');
     assert.equal(app.getElementById('primaryEmotion').textContent, 'Sadness');
@@ -493,5 +504,53 @@ test('failed generation keeps the previous result and clears the loading state',
     assert.equal(app.getElementById('generateBtn').querySelector('.btn-text').textContent, 'Generate image');
     app.api.downloadImage();
     assert.equal(app.downloads[0].href, 'data:image/png;base64,first image');
+    assert.deepEqual(app.errors, []);
+});
+
+test('repeated clicks submit one generation while a request is pending', async () => {
+    let resolve;
+    let requests = 0;
+    const app = createApp(() => {
+        requests += 1;
+        return new Promise(done => { resolve = done; });
+    });
+    app.getElementById('emotionInput').value = 'a quiet garden';
+    const pending = app.api.generateImage();
+
+    await app.api.generateImage();
+    await app.getElementById('retryBtn').click();
+    assert.equal(requests, 1);
+    assert(app.getElementById('generateBtn').disabled);
+
+    resolve({ json: async () => generation('a quiet garden', 1) });
+    await pending;
+    assert(!app.getElementById('generateBtn').disabled);
+    assert.equal(app.getElementById('historyCount').textContent, '1 of 4');
+});
+
+test('advanced settings announce their expanded state', async () => {
+    const app = createApp(async () => {});
+    const toggle = app.getElementById('advancedToggle');
+    const content = app.getElementById('advancedContent');
+
+    await toggle.click();
+    assert.equal(toggle.getAttribute('aria-expanded'), 'true');
+    assert(content.classList.contains('open'));
+    await toggle.click();
+    assert.equal(toggle.getAttribute('aria-expanded'), 'false');
+    assert(!content.classList.contains('open'));
+});
+
+test('clipboard denial gives feedback without an unhandled rejection', async () => {
+    const app = createApp(async () => ({ json: async () => generation('a quiet garden', 123) }));
+    app.getElementById('emotionInput').value = 'a quiet garden';
+    await app.api.generateImage();
+    app.navigator.clipboard.writeText = async () => { throw new Error('Permission denied'); };
+
+    const button = app.getElementById('copySeedBtn');
+    await button.click();
+    assert.equal(button.textContent, 'Copy unavailable');
+    for (const callback of app.timers.values()) await callback();
+    assert.equal(button.textContent, 'Copy seed');
     assert.deepEqual(app.errors, []);
 });

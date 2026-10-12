@@ -155,6 +155,30 @@ def test_analyze_skips_out_of_vocab_rating(tmp_path):
     assert res["n_rated"] == 1 and res["n_unscored"] == 1 and res["unscored_ids"] == [1]
 
 
+@pytest.mark.parametrize("duplicate_file", ["ratings", "key"])
+def test_analyze_rejects_duplicate_image_ids(tmp_path, duplicate_file):
+    ratings = [{"id": 0, "emotion": "joy"}]
+    key = [{"id": 0, "intended": "joy", "probe": "joy"}]
+    (ratings if duplicate_file == "ratings" else key).append(
+        {"id": 0, "emotion": "anger"} if duplicate_file == "ratings" else key[0]
+    )
+    ratings_path, key_path = tmp_path / "ratings.csv", tmp_path / "key.csv"
+    human_study._write_csv(ratings_path, ["id", "emotion"], ratings)
+    human_study._write_csv(key_path, ["id", "intended", "probe"], key)
+    with pytest.raises(ValueError, match="Duplicate image ID 0"):
+        human_study.analyze(ratings_path, key_path)
+
+
+def test_analyze_rejects_rated_image_absent_from_the_key(tmp_path):
+    ratings_path, key_path = tmp_path / "ratings.csv", tmp_path / "key.csv"
+    human_study._write_csv(ratings_path, ["id", "emotion"], [{"id": 1, "emotion": "joy"}])
+    human_study._write_csv(
+        key_path, ["id", "intended", "probe"], [{"id": 0, "intended": "joy", "probe": "joy"}]
+    )
+    with pytest.raises(ValueError, match="image IDs absent from the key: \\[1\\]"):
+        human_study.analyze(ratings_path, key_path)
+
+
 def test_build_sheet_refuses_nondeterministic_backend(tmp_path):
     d = _fake_results(tmp_path)
     payload = json.loads((d / "results.json").read_text())
@@ -170,6 +194,18 @@ def test_build_sheet_reports_per_class_counts(tmp_path):
     assert {r["emotion"] for r in counts} == set(EMOTIONS)
     assert sum(int(r["n"]) for r in counts) == 4
     assert not (study / "README.md").exists()
+
+
+def test_stratified_sample_hides_canonical_emotion_order_and_is_repeatable():
+    records = [
+        {"tier": "affect", "intended": emotion, "seed": seed}
+        for seed in range(2)
+        for emotion in EMOTIONS
+    ]
+    sample = human_study._sample_records(records, n=14, seed=0)
+    assert sample == human_study._sample_records(records, n=14, seed=0)
+    assert sorted(record["intended"] for record in sample) == sorted(list(EMOTIONS) * 2)
+    assert [record["intended"] for record in sample] != list(EMOTIONS) * 2
 
 
 def test_historical_pilot_fails_before_backend_initialization(tmp_path, monkeypatch):

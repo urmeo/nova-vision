@@ -176,7 +176,7 @@ def spearman(x: Sequence[float], y: Sequence[float]) -> float:
     _check(x, y)
     xa = np.asarray(x, dtype=float)
     ya = np.asarray(y, dtype=float)
-    if len(xa) < 2:
+    if len(xa) < 2 or not (np.isfinite(xa).all() and np.isfinite(ya).all()):
         return float("nan")
     return pearson(_rank(xa).tolist(), _rank(ya).tolist())
 
@@ -208,7 +208,7 @@ def bootstrap_corr_ci(
     _check(x, y)
     xa = np.asarray(x, dtype=float)
     ya = np.asarray(y, dtype=float)
-    if len(xa) < 3:
+    if len(xa) < 3 or not (np.isfinite(xa).all() and np.isfinite(ya).all()):
         return float("nan"), float("nan")
     rng = np.random.default_rng(seed)
     correlations = []

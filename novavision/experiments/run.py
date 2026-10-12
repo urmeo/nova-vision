@@ -35,6 +35,7 @@ from novavision.eval.metrics import (
     spearman,
 )
 from novavision.eval.probes import CLIPProbe, HFImageClassifierProbe
+from novavision.eval.probes import image_digest as _image_digest
 from novavision.experiments.manifest import build_manifest, package_version
 from novavision.generation import get_backend
 from novavision.prompting import NEGATIVE_PROMPT, TIERS, build_prompt
@@ -160,13 +161,6 @@ def _source_fingerprint() -> str:
         digest.update(path.relative_to(package).as_posix().encode("utf-8") + b"\0")
         digest.update(path.read_bytes() + b"\0")
     return digest.hexdigest()
-
-
-def _image_digest(image) -> str:
-    """Digest decoded RGB pixels plus dimensions; this is not a file-byte digest."""
-    rgb = image.convert("RGB")
-    header = f"RGB:{rgb.width}:{rgb.height}:".encode("ascii")
-    return hashlib.sha256(header + rgb.tobytes()).hexdigest()
 
 
 def _make_probe(kind: str, probe_model: str | None, clip_model: str, device: str | None):
@@ -543,7 +537,7 @@ def _classification_accuracy(records) -> float | None:
     seen, intended, classified = set(), [], []
     for record in records:
         item = record.get("index", record["content"])
-        if record.get("classified") is None or item in seen:
+        if record["tier"] not in TIERS or record.get("classified") is None or item in seen:
             continue
         seen.add(item)
         intended.append(record["intended"])

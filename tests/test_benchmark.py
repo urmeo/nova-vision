@@ -58,6 +58,20 @@ def test_load_benchmark_reports_physical_line_after_multiline_text(tmp_path):
         load_benchmark(benchmark)
 
 
+def test_load_benchmark_rejects_extra_unquoted_fields(tmp_path):
+    benchmark = tmp_path / "extra.csv"
+    benchmark.write_text("text,emotion\na tree,joy,unexpected field\n")
+    with pytest.raises(ValueError, match=r"extra\.csv:2 has more fields than columns"):
+        load_benchmark(benchmark)
+
+
+def test_load_benchmark_rejects_duplicate_headers(tmp_path):
+    benchmark = tmp_path / "duplicate.csv"
+    benchmark.write_text("text,text,emotion\na tree,a car,joy\n")
+    with pytest.raises(ValueError, match="duplicate column names"):
+        load_benchmark(benchmark)
+
+
 def test_content_bank_rejects_duplicates(tmp_path):
     bank = tmp_path / "bank.txt"
     bank.write_text("a tree\na house\nA  tree\n")

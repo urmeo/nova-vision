@@ -116,6 +116,14 @@ def test_shuffle_emotion_avoids_gold():
         assert run._shuffle_emotion(e, 3) != e
 
 
+def test_classifier_accuracy_ignores_wrong_label_floor_regardless_of_record_order():
+    record = {"index": 0, "content": "happy text", "classified": "joy"}
+    shuffled = {**record, "tier": "shuffled", "intended": "sadness"}
+    raw = {**record, "tier": "raw", "intended": "joy"}
+    assert run._classification_accuracy([shuffled, raw]) == 1.0
+    assert run._classification_accuracy([raw, shuffled]) == 1.0
+
+
 class FakeProbe:
     name = "clip:fake"
 

@@ -108,12 +108,3 @@ and arousal (0 to 1); no matches means the priors supply the values. A separate
 annotation explains prompt selection: the leading label selects `raw` for
 neutral or `affect` otherwise. Affect estimates determine palette and lighting
 cues. Text scores do not verify a person's feelings.
-
-The presentation keeps one main flow, highlights its relevant mechanism, and
-places limitations beside the evidence. This follows the figure guidance on
-message, captions, and selective color in [Rougier et al., *Ten Simple Rules for
-Better Figures*](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003833).
-The explicit conditions, uncertainty, and limits follow the reporting concerns
-in the [NeurIPS Paper Checklist](https://neurips.cc/public/guides/PaperChecklist).
-These are presentation and reporting choices; their effect on reader
-understanding has not been measured.

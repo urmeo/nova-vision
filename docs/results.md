@@ -24,12 +24,17 @@ neutral for 90.5% of images. The pilot does not establish emotion controllabilit
 
 The saved checks used `FastJobs/Visual_Emotional_Analysis` (faces, n=200) and
 `xodhks/EmoSet118K` (scenes, n=400), with `split=train` and `seed=0`. The scene sample
-has no neutral examples. These are validation-set accuracies; their transfer to
+has no neutral examples. These checks use training-split samples. Transfer to
 generated images is unmeasured.
 
-The saved label arrays give McNemar p=.040 for faces and p=.038 for scenes.
-Original image IDs and dataset revisions are missing, so the paired comparisons
-assume the saved order represents the same images.
+The saved label arrays give McNemar p=.040 for faces and p=.038 for scenes if
+positions in each pair refer to the same images. Original image IDs and dataset
+revisions are missing, so this pairing is unverified. The p-values are conditional
+calculations, not verified evidence that one probe performs better.
+
+New probe-validation reports include decoded-image fingerprints. The comparison
+command requires matching fingerprints in the same order before computing a
+paired test. Historical reports remain readable but cannot pass this check.
 
 ## Illustrative planning curve
 

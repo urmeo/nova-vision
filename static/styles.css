@@ -8,6 +8,12 @@ html {
     scroll-behavior: smooth;
 }
 
+section[id],
+.analysis-section[id],
+.prompt-engineering-section[id] {
+    scroll-margin-top: 88px;
+}
+
 ::selection {
     background: rgba(124, 58, 237, 0.2);
     color: #0f172a;
@@ -109,7 +115,6 @@ nav.scrolled {
 .nav-links a:hover,
 .nav-links a:focus {
     color: #7C3AED;
-    outline: none;
 }
 
 .nav-links a:hover::after,
@@ -358,7 +363,6 @@ textarea:focus::placeholder {
 }
 
 textarea:focus {
-    outline: none;
     border-color: #7C3AED;
     box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
 }
@@ -388,7 +392,6 @@ select:hover {
 }
 
 select:focus {
-    outline: none;
     border-color: #7C3AED;
     box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06);
 }
@@ -1231,6 +1234,7 @@ select:focus + .select-arrow {
 
 .seed-input {
     flex: 1;
+    min-width: 0;
     padding: 8px 12px;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
@@ -1245,7 +1249,6 @@ select:focus + .select-arrow {
 }
 
 .seed-input:focus {
-    outline: none;
     border-color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
@@ -1261,7 +1264,7 @@ select:focus + .select-arrow {
     color: #64748b;
     cursor: pointer;
     transition: all 0.3s ease;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .copy-seed-btn:hover {
@@ -1423,6 +1426,8 @@ select:focus + .select-arrow {
     overflow: hidden;
     cursor: pointer;
     border: 2px solid transparent;
+    padding: 0;
+    background: transparent;
     transition: all 0.3s ease;
     position: relative;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
@@ -1441,45 +1446,10 @@ select:focus + .select-arrow {
 }
 
 .history-thumbnail img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-
-.history-tooltip {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 8px 12px;
-    background: #0f172a;
-    color: #fff;
-    font-size: 11px;
-    border-radius: 6px;
-    white-space: nowrap;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease;
-    z-index: 100;
-    pointer-events: none;
-}
-
-.history-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: #0f172a;
-}
-
-.history-thumbnail:hover .history-tooltip {
-    opacity: 1;
-    visibility: visible;
 }
 
 .download-btn {
@@ -1709,7 +1679,6 @@ select:focus + .select-arrow {
     --pipeline-validation: #0f766e;
     padding: 48px;
     background: #f8fafc;
-    scroll-margin-top: 72px;
 }
 
 #how-it-works .section-container {
@@ -2185,12 +2154,7 @@ footer::before {
     will-change: transform;
 }
 
-*:focus-visible,
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
+*:focus-visible {
     outline: 2px solid rgba(124, 58, 237, 0.5);
     outline-offset: 2px;
 }

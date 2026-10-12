@@ -1,10 +1,12 @@
 # NovaVision
 
-Generate images from English text and emotion labels. Compare intended and recovered emotion in separate research experiments.
+A Python prototype for turning English text into image prompts with emotion, palette, and lighting cues. Separate experiments test whether an image probe recovers the intended emotion.
 
 [Interface preview](https://urmeo.github.io/nova-vision/) · [Videos](#videos) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
 
 **Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask**
+
+The [public website](https://urmeo.github.io/nova-vision/) is a static preview. Run the Python server for text analysis and image generation.
 
 ## Videos
 
@@ -13,7 +15,7 @@ Generate images from English text and emotion labels. Compare intended and recov
 | <a href="https://urmeo.github.io/nova-vision/assets/videos.html#pipeline-tour"><img src="docs/assets/pipeline-interface.png" alt="Watch the current interface tour: four pipeline stages and separate research details" width="420"></a> | <a href="https://urmeo.github.io/nova-vision/assets/videos.html#recorded-demo"><img src="docs/assets/demo-poster.png" alt="Watch the earlier recording showing a coffee-shop description, text scores, and a displayed cafe image" width="420"></a> |
 | [Watch tour](https://urmeo.github.io/nova-vision/assets/videos.html#pipeline-tour) · [MP4 file](docs/assets/pipeline-tour.mp4) | [Watch full recording](https://urmeo.github.io/nova-vision/assets/videos.html#recorded-demo) · [MP4 file](docs/assets/demo.mp4) |
 
-The current tour shows the static preview, its pipeline, and saved charts. Analysis and generation require the Python server. The earlier recording uses an older interface; its wording and timings are historical, and its model and run settings are unavailable. Neither video is a benchmark result. Both are silent, with text descriptions on the video page.
+The current tour shows the preview, pipeline, and saved charts. The earlier recording uses an older interface; its model and run settings are unavailable. Both videos are silent and have text descriptions. Neither is a benchmark result.
 
 <details>
 <summary>10-second excerpt from the earlier recording</summary>
@@ -28,9 +30,9 @@ The current tour shows the static preview, its pipeline, and saved charts. Analy
 
 [![NovaVision pipeline: write text, estimate emotion, shape the prompt, and render an image. Separate validation compares shared-seed prompt tiers with known targets. Saved pilot recovery is 14.29 percent for raw and 21.43 percent for emotion and affect; the probe predicts neutral for 90.5 percent of measured tier images.](docs/assets/pipeline.svg)](docs/assets/pipeline.svg)
 
-Four steps connect text to an image. The app scores seven emotion labels and blends word values with label priors to estimate valence and arousal. The highlighted prompt stage adds mood, palette, lighting, and composition cues. Neutral uses `raw`; other leading labels use `affect`. Every tier retains style and fixed quality terms. The default backend creates synthetic test images; diffusion generation needs a configured local or hosted backend.
+The app scores seven emotion labels. It blends matched word values with priors for the leading label to estimate valence (pleasantness) and arousal (activation). The prompt adds mood, palette, lighting, and composition cues for non-neutral text. Neutral uses `raw`; other leading labels use `affect`. Both retain the selected style and fixed quality terms.
 
-Validation is separate. Experiments compare `raw`, `naive`, `emotion`, and `affect` with the same seed for each input and intended label. An independent image probe supplies predictions for recovery and affect metrics. The app does not use those predictions to revise its images. The evidence strip shows saved pilot accuracy and item-bootstrap 95% intervals, not human ratings; the pilot does not establish emotion controllability.
+Experiments compare `raw`, `naive`, `emotion`, and `affect` using the same seed for each input and intended label. A separate image probe supplies recovery and affect estimates. Its predictions do not revise the app's images. The diagram reports saved pilot accuracy and item-bootstrap 95% intervals; no human ratings were collected.
 
 [Edit pipeline in Figma](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=2-2) · [Figure sources and captions](docs/pipeline-figures.md)
 
@@ -45,13 +47,47 @@ The default lexicon weight is `min(coverage, 0.8)`. With no matched words, the e
 
 </details>
 
+## Run
+
+Use Python 3.9 or newer. CI checks Python 3.9–3.12.
+
+```bash
+git clone https://github.com/urmeo/nova-vision.git
+cd nova-vision
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[app,ml]"
+NOVA_BACKEND=diffusers python server.py
+```
+
+On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerShell, then set `$env:NOVA_BACKEND = "diffusers"` before running `python server.py`.
+
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). The first analysis and generation requests download their models. Local generation selects CUDA, Apple MPS, or CPU when available; CPU generation can be slow.
+
+| Backend | What it does |
+|---|---|
+| `diffusers` | Generates images locally with PyTorch and SD-Turbo. |
+| `null` — default when unset | Creates deterministic synthetic test images. Text analysis still loads its classifier. |
+| `hf-api` | Sends generation prompts to Hugging Face. Requires `HF_TOKEN` and access to a supported model. |
+
+Model and dataset terms apply separately from the code license. See [development and deployment](CONTRIBUTING.md) for request limits, tokens, and research commands.
+
+Check the code and rebuild the saved charts without model downloads. Browser-script tests use Node 22 in CI.
+
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest
+node --test tests/test_web_ui.js
+python scripts/visualize.py
+```
+
 ## Interface
 
 | Current local interface | Earlier text-analysis example |
 |:---:|:---:|
 | <a href="docs/assets/interface.png"><img src="docs/assets/interface.png" alt="Current NovaVision interface with text input, style selection, and an empty image panel" width="420"></a> | <a href="outputs/figures/emotion_analysis.png"><img src="outputs/figures/emotion_analysis.png" alt="Earlier interface showing text emotion scores, affect estimates, and a generation prompt" width="420"></a> |
 
-The screenshots show interface states, not benchmark measurements. The [public preview](https://urmeo.github.io/nova-vision/) displays the interface and saved charts. Analysis and generation require the Flask server below.
+These screenshots show interface states, not benchmark measurements. The gallery includes archived examples alongside the current local interface.
 
 | Earlier prompt details | Earlier displayed image |
 |:---:|:---:|
@@ -95,7 +131,7 @@ The matrices show row-normalized predictions. Across the three conditioning tier
 | CLIP ViT-B/32 | 29.00% | 40.25% |
 | CLIP ViT-L/14 | 37.50% | 45.50% |
 
-These checks use the training splits of `FastJobs/Visual_Emotional_Analysis` and `xodhks/EmoSet118K`, with seed 0. The scene sample has no neutral examples. Transfer of these accuracies to generated images is unmeasured. Original image IDs and dataset revisions are missing, so paired comparisons depend on the saved ordering.
+These checks use the training splits of `FastJobs/Visual_Emotional_Analysis` and `xodhks/EmoSet118K`, with seed 0. The scene sample has no neutral examples. Transfer of these accuracies to generated images is unmeasured. Original image IDs and dataset revisions are missing, so historical paired comparisons are unverified. New probe comparisons require matching decoded-image fingerprints.
 
 The recovery correction covers five of seven classes: 10.0% apparent recovery becomes 16.5% corrected recovery within that subset. A seven-class correction and its uncertainty are unavailable.
 
@@ -108,29 +144,6 @@ This is a saved planning simulation. It assumes independent binomial trials and 
 [Full results and limitations](docs/results.md) · [Metric tables](docs/results-tables.md) · [Saved records](outputs/results/results.json) · [Original figures](outputs/figures/)
 
 Historical source commits, complete model pins, and original generated images are missing. Exact image replay is unverified. New runs write to `outputs/generated/`.
-
-## Run
-
-Python 3.9 or newer; CI checks 3.9–3.12.
-
-```bash
-git clone https://github.com/urmeo/nova-vision.git
-cd nova-vision
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e ".[app,ml]"
-NOVA_BACKEND=diffusers python server.py
-```
-
-Open [http://127.0.0.1:8000](http://127.0.0.1:8000). Models download on first use. CPU generation can be slow. The default backend, `null`, creates synthetic test images; text analysis still needs its classifier. Hosted generation uses `NOVA_BACKEND=hf-api` and `HF_TOKEN` and sends prompts to the provider. Model and dataset terms apply separately from the code license.
-
-Check the code and regenerate the charts without model downloads:
-
-```bash
-python -m pip install -e ".[dev,research]"
-python -m pytest
-python scripts/visualize.py
-```
 
 ## Repository
 
@@ -146,4 +159,4 @@ python scripts/visualize.py
 
 [Development](CONTRIBUTING.md) · [Folder guide](docs/structure.md) · [Method and data](docs/method.md)
 
-Sole contributor: [urmeo](https://github.com/urmeo). Project code: [MIT](LICENSE).
+Sole contributor: [urme](https://github.com/urmeo). Project code: [MIT](LICENSE).

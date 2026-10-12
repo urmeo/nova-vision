@@ -55,6 +55,30 @@ def test_validate_accepts_pil_images():
     assert report["accuracy"] == 0.5
 
 
+def test_validate_records_ordered_decoded_image_fingerprints(tmp_path):
+    first = Image.new("RGB", (8, 8), "blue")
+    second = Image.new("RGB", (8, 8), "red")
+    path = tmp_path / "first.png"
+    first.save(path)
+    in_memory = validate_probe.validate(FakeProbe(), [(first, "joy"), (second, "fear")])
+    from_file = validate_probe.validate(FakeProbe(), [(path, "joy"), (second, "fear")])
+    assert in_memory["image_digests"] == from_file["image_digests"]
+    assert len(set(in_memory["image_digests"])) == 2
+    reversed_report = validate_probe.validate(FakeProbe(), [(second, "fear"), (first, "joy")])
+    assert reversed_report["image_digests"] == in_memory["image_digests"][::-1]
+
+
+def test_validate_rejects_empty_sample():
+    with pytest.raises(ValueError, match="at least one labelled image"):
+        validate_probe.validate(FakeProbe(), [])
+
+
+@pytest.mark.parametrize("n", [0, -1])
+def test_load_hf_dataset_rejects_invalid_sample_size_before_loading(n):
+    with pytest.raises(ValueError, match="Sample size must be positive"):
+        validate_probe.load_hf_dataset("unused", n=n)
+
+
 def test_ekman_aliases_cover_common_labels():
     aliases = validate_probe.EKMAN_ALIASES
     assert aliases["happy"] == "joy" and aliases["happiness"] == "joy"

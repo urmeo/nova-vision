@@ -8,6 +8,8 @@ from collections.abc import Sequence
 from math import comb
 from pathlib import Path
 
+from novavision.eval.metrics import accuracy
+
 
 def mcnemar_exact(gold: Sequence[str], pred_a: Sequence[str], pred_b: Sequence[str]) -> dict:
     """Two-sided exact McNemar on per-item correctness of two paired runs."""
@@ -42,9 +44,32 @@ def main() -> None:
             raise SystemExit(
                 "report sample count disagrees with gold labels; refusing a paired test"
             )
+        digests = report.get("image_digests")
+        if (
+            not isinstance(digests, list)
+            or len(digests) != report["n"]
+            or not digests
+            or any(
+                not isinstance(digest, str)
+                or len(digest) != 64
+                or any(char not in "0123456789abcdef" for char in digest)
+                for digest in digests
+            )
+        ):
+            raise SystemExit(
+                "report lacks valid image fingerprints; rerun validation before a paired test"
+            )
+    if report_a["image_digests"] != report_b["image_digests"]:
+        raise SystemExit("reports use different images or image order; a paired test is invalid")
     out = {
-        "a": {"probe": report_a["probe"], "accuracy": report_a["accuracy"]},
-        "b": {"probe": report_b["probe"], "accuracy": report_b["accuracy"]},
+        "a": {
+            "probe": report_a["probe"],
+            "accuracy": round(accuracy(report_a["gold"], report_a["predictions"]), 4),
+        },
+        "b": {
+            "probe": report_b["probe"],
+            "accuracy": round(accuracy(report_b["gold"], report_b["predictions"]), 4),
+        },
         "n": report_a["n"],
         **mcnemar_exact(report_a["gold"], report_a["predictions"], report_b["predictions"]),
     }
