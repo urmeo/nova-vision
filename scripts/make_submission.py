@@ -52,7 +52,7 @@ def build_submission(results: dict, system: str) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build a benchmark submission from a run")
-    parser.add_argument("--results", default="outputs/results/results.json")
+    parser.add_argument("--results", default="outputs/generated/run/results.json")
     parser.add_argument("--system", required=True, help="name of the submitted system")
     parser.add_argument("--out", default="outputs/generated/submission.json")
     args = parser.parse_args()

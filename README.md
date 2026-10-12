@@ -82,7 +82,7 @@ On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerS
 
 This is a saved planning simulation. It assumes independent binomial trials and transfer of real-image probe accuracy to generated images. It does not estimate power for the paired benchmark. A 420-images-per-tier run and a study with at least three independent human raters remain future work.
 
-[Full results and limitations](docs/results.md) · [Metric tables](docs/results-tables.md) · [Saved records](outputs/results/results.json) · [Original figures](outputs/figures/)
+[Full results and limitations](docs/results.md) · [Metric tables](docs/results-tables.md) · [Original figures](outputs/figures/)
 
 Historical source commits, complete model pins, and original generated images are missing. Exact image replay is unverified. New runs write to `outputs/generated/`.
 

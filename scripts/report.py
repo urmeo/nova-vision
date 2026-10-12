@@ -180,7 +180,7 @@ def render(results: dict) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Render results as markdown tables")
-    parser.add_argument("--results", default="outputs/results/results.json")
+    parser.add_argument("--results", default="outputs/generated/run/results.json")
     parser.add_argument("--out", default="outputs/generated/tables.md")
     args = parser.parse_args()
 

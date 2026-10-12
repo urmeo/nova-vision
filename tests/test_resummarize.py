@@ -57,11 +57,11 @@ def test_resummarize_writes_figures_to_explicit_directory(tmp_path):
     assert not (tmp_path / "figures").exists()
 
 
-def test_resummarize_cli_keeps_published_records_and_figures(tmp_path, monkeypatch):
+def test_resummarize_cli_keeps_source_records_and_published_figures(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    published = tmp_path / "outputs" / "results"
-    published.mkdir(parents=True)
-    source = _run_with_records(published)
+    run_dir = tmp_path / "outputs" / "generated" / "run"
+    run_dir.mkdir(parents=True)
+    source = _run_with_records(run_dir)
     before = source.read_bytes()
     figure = tmp_path / "outputs" / "figures" / "accuracy.png"
     figure.parent.mkdir()

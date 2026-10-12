@@ -7,11 +7,11 @@
 | `server.py` | Flask entry point for the local web interface. |
 | `static/` | Browser interface and its text, styles, and scripts. |
 | `scripts/` | Commands for summaries, charts, probe comparisons, submissions, and the static preview. |
-| `notebooks/` | Notebook for checking saved results and running an optional new pilot. |
+| `notebooks/` | Notebook for checking saved probe and planning reports and running an optional new pilot. |
 | `docs/` | Project documentation and the benchmark submission schema. |
 | `docs/assets/` | Pipeline diagrams, screenshots, result charts, and videos with their viewing page and captions. |
 | `tests/` | Python and browser-script tests, plus small test fixtures. |
-| `outputs/results/` | Saved pilot records and probe predictions. |
+| `outputs/results/` | Saved probe predictions, recovery correction, and planning simulation. |
 | `outputs/figures/` | Figures and interface examples included with the project. |
 | `outputs/generated/` | New runs and regenerated summaries; ignored by Git. |
 | `.github/workflows/` | CI checks and GitHub Pages preview publishing. |

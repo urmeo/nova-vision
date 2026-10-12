@@ -61,7 +61,7 @@ not update prompts or regenerate images.
 | Mood, palette, lighting, and tier definitions | [Prompt templates](../novavision/prompting.py) |
 | Shared seeds, probe calls, and paired comparisons | [Experiment runner](../novavision/experiments/run.py) |
 | Recovery, bootstrap intervals, and permutation tests | [Metrics](../novavision/eval/metrics.py) |
-| Saved pilot measurements | [Saved results JSON](../outputs/results/results.json) |
+| Saved pilot measurements | [Pilot measurements and limitations](results.md#pilot-recovery) |
 
 The content track crosses neutral subjects with supplied emotion labels and uses
 fixed affect priors. The text track uses benchmark gold labels for prompt

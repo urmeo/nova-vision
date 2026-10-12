@@ -52,18 +52,20 @@ estimate and correction uncertainty are unavailable.
 
 ## Records and regeneration
 
-[Generated tables](results-tables.md) contain values and source details.
-[Original records](../outputs/results/results.json) and
-[original figures](../outputs/figures/) remain intact. Historical source commits,
-complete model pins, and original generated images are missing. Exact image
-replay is unverified. New runs write to `outputs/generated/`.
+[Archived tables](results-tables.md) and [original figures](../outputs/figures/)
+retain the published measurements. Raw pilot records are no longer bundled.
+Historical source commits, complete model pins, and original generated images
+are missing. Exact image replay is unverified. New runs write to
+`outputs/generated/`.
 
-Regenerate this visual report from the saved JSON files:
+Regenerate probe and planning charts from the remaining saved JSON files:
 
 ```bash
 python -m pip install -e ".[research]"
 python scripts/visualize.py
 ```
 
-The script creates PNG and SVG charts in `docs/assets/results/` and a Markdown
-table report. It does not download models or overwrite the saved records.
+The script creates PNG and SVG charts in `docs/assets/results/` and replaces the
+Markdown table report with tables for the available sources. Archived pilot
+figures remain unchanged when raw records are absent. It does not download models
+or overwrite saved records.

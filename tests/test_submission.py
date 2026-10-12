@@ -3,12 +3,25 @@ from pathlib import Path
 
 import make_submission
 
-_RESULTS = Path(__file__).resolve().parents[1] / "outputs" / "results" / "results.json"
 
-
-def test_submission_from_committed_results_has_required_schema_fields():
-    results = json.loads(_RESULTS.read_text())
-    sub = make_submission.build_submission(results, "committed pilot")
+def test_submission_has_required_schema_fields():
+    results = {
+        "manifest": {
+            "git_sha": "a" * 40,
+            "config": {
+                "track": "content",
+                "diffusion_model": "test-renderer",
+                "probe": "clip:test",
+                "seeds": 1,
+                "base_seed": 0,
+            },
+        },
+        "metrics": {
+            "raw": {"accuracy": 0.5, "accuracy_ci": [0.25, 0.75], "n": 4},
+            "affect": {"accuracy": 0.75, "accuracy_ci": [0.5, 1.0], "n": 4},
+        },
+    }
+    sub = make_submission.build_submission(results, "synthetic test")
 
     schema = json.loads(
         (
@@ -20,7 +33,7 @@ def test_submission_from_committed_results_has_required_schema_fields():
     )
     for key in schema["required"]:
         assert key in sub
-    assert len(sub["conditions"]) >= 2
+    assert set(sub["conditions"]) == {"raw", "affect"}
     for cond in sub["conditions"].values():
         assert 0.0 <= cond["accuracy"] <= 1.0
         assert len(cond["accuracy_ci"]) == 2

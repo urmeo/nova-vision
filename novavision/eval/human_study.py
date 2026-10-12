@@ -268,7 +268,7 @@ def main() -> None:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     build_parser = sub.add_parser("build")
-    build_parser.add_argument("--results", default="outputs/results")
+    build_parser.add_argument("--results", default="outputs/generated/run")
     build_parser.add_argument("--n", type=int, default=60)
     build_parser.add_argument("--seed", type=int, default=0)
     build_parser.add_argument(

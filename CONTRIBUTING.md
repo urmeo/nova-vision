@@ -59,21 +59,22 @@ The publishing workflow can also be run manually from GitHub Actions.
 
 ## Research commands
 
-Regenerate the visual report from saved records. This writes charts and tables to
-`docs/` without model downloads or new simulations:
+Regenerate probe and planning charts and tables from saved reports without model
+downloads or new simulations. Archived pilot charts stay unchanged because their
+raw records are no longer bundled:
 
 ```bash
 python scripts/visualize.py
 ```
 
-Recompute summaries and the partial correction from saved records, or create a
-submission:
+After generating a run in `outputs/generated/pilot/`, recompute its summaries and
+partial correction, or create a submission:
 
 ```bash
-python scripts/resummarize.py
+python scripts/resummarize.py --results outputs/generated/pilot/results.json
 python scripts/report.py --results outputs/generated/reanalysis/results.json
-python scripts/correct_recovery.py
-python scripts/make_submission.py --system "system name"
+python scripts/correct_recovery.py --results outputs/generated/pilot/results.json
+python scripts/make_submission.py --results outputs/generated/pilot/results.json --system "system name"
 ```
 
 These commands write to `outputs/generated/` and leave the saved results unchanged.

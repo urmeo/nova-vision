@@ -45,7 +45,7 @@ def resummarize(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Recompute summary from existing records")
-    parser.add_argument("--results", default="outputs/results/results.json")
+    parser.add_argument("--results", default="outputs/generated/run/results.json")
     parser.add_argument("--out", default="outputs/generated/reanalysis/results.json")
     parser.add_argument("--figures", default=None, help="override the figure directory")
     args = parser.parse_args()

@@ -113,7 +113,7 @@ def _round(value: float) -> float | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Rogan-Gladen recovery correction")
-    parser.add_argument("--results", default="outputs/results/results.json")
+    parser.add_argument("--results", default="outputs/generated/run/results.json")
     parser.add_argument("--probe-validation", default="outputs/results/probe_validation_scene.json")
     parser.add_argument("--tier", default="emotion")
     parser.add_argument("--out", default="outputs/generated/corrected_recovery.json")

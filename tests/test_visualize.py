@@ -13,19 +13,50 @@ SOURCES = Path(__file__).resolve().parents[1] / "outputs/results"
 
 
 @pytest.fixture
-def reports():
-    return visualize.load_saved_results(SOURCES)
+def source_dir(tmp_path):
+    source = tmp_path / "sources"
+    source.mkdir()
+    for path in SOURCES.glob("*.json"):
+        if path.name != "results.json":
+            (source / path.name).write_bytes(path.read_bytes())
+    return source
+
+
+@pytest.fixture
+def reports(source_dir):
+    return visualize.load_saved_results(source_dir)
+
+
+@pytest.fixture
+def pilot():
+    records = [
+        {"tier": tier, "intended": "anger", "predicted": prediction}
+        for tier in ("raw", "emotion", "affect")
+        for prediction in ("anger", "joy")
+    ]
+    metrics = {
+        tier: {
+            "n": 2,
+            "accuracy": 0.5,
+            "accuracy_ci": [0, 1],
+            "macro_f1": 0.5,
+            "shuffled_control": {"p_value": 0.5},
+        }
+        for tier in ("raw", "emotion", "affect")
+    }
+    metrics["chance"] = round(1 / 7, 4)
+    return {"records": records, "metrics": metrics}
 
 
 @pytest.mark.parametrize("field", ["accuracy", "n", "accuracy_ci"])
-def test_disconnected_pilot_data_is_rejected(reports, field):
-    report = deepcopy(reports["results.json"])
+def test_disconnected_pilot_data_is_rejected(reports, pilot, field):
+    report = deepcopy(pilot)
     if field == "accuracy":
         report["metrics"]["emotion"][field] = 0.99
     elif field == "n":
         report["metrics"]["emotion"][field] += 1
     else:
-        report["metrics"]["emotion"][field] = [0.5, 0.9]
+        report["metrics"]["emotion"][field] = [0.6, 0.9]
     labels = reports["probe_validation.json"]["labels"]
     with pytest.raises(ValueError, match="disagree|confidence bounds"):
         visualize.checked_pilot(report, labels)
@@ -60,20 +91,55 @@ def test_missing_or_invalid_json_has_a_useful_error(tmp_path):
         visualize.read_report(path)
 
 
-def test_exports_are_traceable_and_leave_sources_unchanged(tmp_path):
-    original = {path.name: path.read_bytes() for path in SOURCES.glob("*.json")}
+def test_exports_are_traceable_and_leave_sources_unchanged(tmp_path, source_dir):
+    original = {path.name: path.read_bytes() for path in source_dir.glob("*.json")}
     destination, table = tmp_path / "charts", tmp_path / "tables.md"
-    paths = visualize.render(SOURCES, destination, table)
-    assert len([path for path in paths if path.suffix == ".svg"]) == 4
-    assert len([path for path in paths if path.suffix == ".png"]) == 4
+    paths = visualize.render(source_dir, destination, table)
+    assert len([path for path in paths if path.suffix == ".svg"]) == 2
+    assert len([path for path in paths if path.suffix == ".png"]) == 2
     assert all(path.stat().st_size > 0 for path in paths)
     provenance = json.loads((destination / "sources.json").read_text())["sources_sha256"]
-    assert len(provenance) == 7
+    assert len(provenance) == 6
     for name, digest in provenance.items():
         assert digest == hashlib.sha256(original[name]).hexdigest()
-        assert (SOURCES / name).read_bytes() == original[name]
+        assert (source_dir / name).read_bytes() == original[name]
     content = table.read_text()
     assert "40.25%" in content
     assert "16.51%" in content
     assert "Full seven-class corrected recovery is unavailable" in content
     assert "permutation null" in content
+    assert "Pilot records (`results.json`) are unavailable" in content
+    assert "## Pilot recovery" not in content
+
+
+def test_missing_pilot_leaves_existing_pilot_charts_unchanged(tmp_path, source_dir):
+    destination = tmp_path / "charts"
+    destination.mkdir()
+    originals = {
+        destination / f"{chart}.{extension}": b"archived pilot chart"
+        for chart in ("recovery", "confusion")
+        for extension in ("svg", "png")
+    }
+    for path, content in originals.items():
+        path.write_bytes(content)
+    paths = visualize.render(source_dir, destination, tmp_path / "tables.md")
+    for path, content in originals.items():
+        assert path.read_bytes() == content
+        assert path not in paths
+
+
+def test_explicit_pilot_source_regenerates_pilot_charts(tmp_path, source_dir, pilot):
+    (source_dir / "results.json").write_text(json.dumps(pilot))
+    destination, table = tmp_path / "charts", tmp_path / "tables.md"
+    paths = visualize.render(source_dir, destination, table)
+    assert len([path for path in paths if path.suffix == ".svg"]) == 4
+    assert len([path for path in paths if path.suffix == ".png"]) == 4
+    assert "## Pilot recovery" in table.read_text()
+    provenance = json.loads((destination / "sources.json").read_text())["sources_sha256"]
+    assert "results.json" in provenance
+
+
+def test_invalid_optional_pilot_is_rejected(source_dir):
+    (source_dir / "results.json").write_text("{broken")
+    with pytest.raises(ValueError, match="Invalid JSON.*results.json"):
+        visualize.load_saved_results(source_dir)

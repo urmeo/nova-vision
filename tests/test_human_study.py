@@ -208,11 +208,12 @@ def test_stratified_sample_hides_canonical_emotion_order_and_is_repeatable():
     assert [record["intended"] for record in sample] != list(EMOTIONS) * 2
 
 
-def test_historical_pilot_fails_before_backend_initialization(tmp_path, monkeypatch):
-    from pathlib import Path
-
-    pilot = Path(__file__).resolve().parents[1] / "outputs" / "results" / "results.json"
-    (tmp_path / "results.json").write_bytes(pilot.read_bytes())
+def test_missing_pixel_digest_fails_before_backend_initialization(tmp_path, monkeypatch):
+    payload = {
+        "manifest": {"config": {"backend": "null"}},
+        "records": [_text_record(with_index=True)],
+    }
+    (tmp_path / "results.json").write_text(json.dumps(payload))
     monkeypatch.setattr(
         human_study, "get_backend", lambda *a, **kw: pytest.fail("backend initialized")
     )

@@ -35,7 +35,9 @@ def test_correction_cli_defaults_preserve_published_snapshot(tmp_path, monkeypat
     monkeypatch.chdir(tmp_path)
     published = tmp_path / "outputs" / "results"
     published.mkdir(parents=True)
-    (published / "results.json").write_text(json.dumps({"records": _records(0.5)}))
+    run_dir = tmp_path / "outputs" / "generated" / "run"
+    run_dir.mkdir(parents=True)
+    (run_dir / "results.json").write_text(json.dumps({"records": _records(0.5)}))
     (published / "probe_validation_scene.json").write_text(
         json.dumps({"confusion": _identity_confusion()})
     )
@@ -106,11 +108,9 @@ def test_zero_support_class_serializes_null_not_nan():
     json.dumps(out, allow_nan=False)
 
 
-def test_committed_pilot_correction_reports_partial_common_class_comparison():
+def test_saved_correction_reports_partial_common_class_comparison():
     root = Path(cr.__file__).resolve().parents[1] / "outputs" / "results"
-    results = json.loads((root / "results.json").read_text())
-    validation = json.loads((root / "probe_validation_scene.json").read_text())
-    out = cr.correct(results, validation, "emotion")
+    out = json.loads((root / "corrected_recovery.json").read_text())
 
     assert out["corrected_recovery"] is None
     assert out["apparent_recovery"] == 0.2143
