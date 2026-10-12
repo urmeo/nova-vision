@@ -2,11 +2,24 @@
 
 A Python prototype for turning English text into image prompts with emotion, palette, and lighting cues. Separate experiments test whether an image probe recovers the intended emotion.
 
-[![NovaVision signal flow: text branches into emotion classification and word scoring. Their estimates shape a prompt alongside the original text and style. A rendering backend returns an image and metadata. Separate validation compares prompt tiers with known targets and shared seeds; probe predictions do not feed back into generation.](docs/assets/pipeline.svg)](docs/assets/pipeline.svg)
+[![NovaVision pipeline: write text, analyze emotion and affect, build a prompt, and render an image. The app returns an image and metadata. Experiments supply known targets to paired prompt tiers, reuse the prompt builder and renderer, then compare image-probe estimates with targets. Probe predictions do not feed back into generation.](docs/assets/pipeline.svg)](docs/assets/pipeline.svg)
 
-Text analysis shapes the generation prompt. Separate experiments compare prompt tiers with fixed targets and shared seeds; probe predictions do not feed back into generation.
+The app builds an image prompt from analyzed text. Experiments reuse the prompt builder and renderer with known targets and shared seeds, then compare image-probe estimates with those targets. [Editable Figma source](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=20-2) · [Figure sources and captions](docs/pipeline-figures.md).
 
-[Edit pipeline in Figma](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=14-2) · [Figure sources and captions](docs/pipeline-figures.md)
+<details>
+<summary>Pipeline details</summary>
+
+[![Two sources feed the affect blend: priors for the leading emotion label and mean values of matched words. Word coverage sets the blend weight, producing valence and arousal estimates. A separate annotation explains the app's neutral-to-raw prompt selection.](docs/assets/analysis.svg)](docs/assets/analysis.svg)
+
+The app scores seven emotion labels. It blends matched word values with priors for the leading label to estimate valence (pleasantness) and arousal (activation). The default word weight is `min(coverage, 0.8)`; no matches means the estimate comes from the label prior. The bundled word values are demonstrations, not empirical norms. Text scores do not verify a person's feelings.
+
+Neutral uses `raw`; other leading labels use `affect`, adding mood, palette, lighting, and composition cues. Both retain the original text, selected style, and fixed quality terms.
+
+Experiments compare `raw`, `naive`, `emotion`, and `affect` with the same seed for each input, intended label, and seed index. Their prompts use known labels. The content track uses fixed affect priors; the text track uses analyzer estimates as affect targets. An image probe supplies estimates for comparison. The saved pilot has no `naive` measurement or human ratings.
+
+[Pipeline details, controls, and code](docs/method.md)
+
+</details>
 
 [Interface preview](https://urmeo.github.io/nova-vision/) · [Videos](#videos) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
 
@@ -29,21 +42,6 @@ The current tour shows the preview, pipeline, and saved charts. The earlier reco
 <p align="center">
   <a href="https://urmeo.github.io/nova-vision/assets/videos.html#recorded-demo"><img src="outputs/figures/demo.gif" alt="Short animated excerpt of the earlier NovaVision interface; open the full recording" width="640"></a>
 </p>
-
-</details>
-
-<details>
-<summary>Pipeline details</summary>
-
-[![Two sources feed the affect blend: priors for the leading emotion label and mean values of matched words. Word coverage sets the blend weight, producing valence and arousal estimates. A separate annotation explains the app's neutral-to-raw prompt selection.](docs/assets/analysis.svg)](docs/assets/analysis.svg)
-
-The app scores seven emotion labels. It blends matched word values with priors for the leading label to estimate valence (pleasantness) and arousal (activation). The default word weight is `min(coverage, 0.8)`; no matches means the estimate comes from the label prior. The bundled word values are demonstrations, not empirical norms. Text scores do not verify a person's feelings.
-
-Neutral uses `raw`; other leading labels use `affect`, adding mood, palette, lighting, and composition cues. Both retain the original text, selected style, and fixed quality terms.
-
-Experiments compare `raw`, `naive`, `emotion`, and `affect` with the same seed for each input, intended label, and seed index. An image probe supplies emotion and affect estimates for comparison with known targets. The saved pilot has no `naive` measurement or human ratings.
-
-[Pipeline details, controls, and code](docs/method.md)
 
 </details>
 

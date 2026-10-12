@@ -9,7 +9,7 @@ is listed separately below.
 
 | Figure | Editable source | Repository exports |
 |---|---|---|
-| Pipeline signal flow | [Figma, frame 14:2](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=14-2) | [SVG](assets/pipeline.svg) · [PNG](assets/pipeline.png) |
+| Integrated pipeline | [Figma, frame 20:2](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=20-2) | [SVG](assets/pipeline.svg) · [PNG](assets/pipeline.png) |
 | Text analysis | [Figma, frame 5:2](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=5-2) | [SVG](assets/analysis.svg) · [PNG](assets/analysis.png) |
 
 Edit the Figma frames and export both formats when the method or labels change.
@@ -21,10 +21,11 @@ replacing an export; the text equivalents below supply the full explanation.
 
 ## Method shown
 
-English text branches into emotion classification and word scoring. The
-classifier scores seven emotion labels and selects the highest-scoring label.
-A word lexicon supplies valence and arousal values for matched words. The
-analyzer blends those values with priors for the leading label:
+The app follows **Write text → Analyze text → Build prompt → Render image**.
+Within text analysis, the classifier scores seven emotion labels and selects
+the highest-scoring label. A word lexicon supplies valence and arousal values
+for matched words. The analyzer blends those values with priors for the leading
+label:
 
 `estimate = w × word value + (1 − w) × label prior`, with
 `w = min(matched content words / content words, 0.8)` by default.
@@ -44,13 +45,14 @@ terms. Seed and image dimensions enter the rendering backend. The app returns
 an image and metadata. The default `null` backend creates synthetic test images;
 local Diffusers and hosted inference are optional generation backends.
 
-Separate validation begins with known targets, generates the prompt conditions,
-reads each image with a probe, and compares predictions with targets. The four
-main conditions—`raw`, `naive`, `emotion`, and `affect`—share a generator seed for
-each input, intended label, and seed index. Other generation settings stay fixed.
-The dashed target line carries the known labels and affect targets directly to
-comparison. It is not feedback. The probe does not update prompts or regenerate
-images.
+Experiments enter the same prompt builder and renderer with known targets and
+paired prompt tiers. The four main conditions—`raw`, `naive`, `emotion`, and
+`affect`—share a generator seed for each input, intended label, and seed index.
+Other generation settings stay fixed. The app returns its image and metadata;
+the experiment branch sends generated images to a probe and compares the
+estimates with the targets. The default probe is CLIP. The target line carries
+known labels and affect targets directly to comparison. Probe predictions do
+not update prompts or regenerate images.
 
 | Method or evidence | Implementation or record |
 |---|---|
@@ -98,16 +100,16 @@ limitations](results.md).
 
 ## Captions and text equivalents
 
-**Pipeline signal flow.** English text branches into seven-label classification
-and word scoring. The leading label supplies affect priors; matched word values
-and their coverage supply the other side of the blend. The prompt receives the
-original text and style, the leading label, and blended valence and arousal.
-Neutral selects `raw`; other labels select `affect`. Seed and dimensions enter
-the rendering backend, which returns an image and metadata. A separate
-validation flow sets known targets, pairs prompt tiers with shared seeds and
-settings, renders images, probes them, and compares predictions with the
-targets. The dashed target line marks that comparison input. Probe predictions
-are model estimates, not human ratings, and do not feed back into app generation.
+**Integrated pipeline.** The app analyzes English text, builds a prompt, and
+renders an image. The prompt receives the original text and style, the leading
+emotion label, and blended valence and arousal. Neutral selects `raw`; other
+labels select `affect`. Seed and dimensions enter the renderer. One output
+branch returns the app's image and metadata. Experiments supply known targets
+to paired prompt tiers, use the same prompt builder and renderer, then send
+their images to a probe. The probe estimates emotion and affect. Comparison
+uses these estimates and the known targets to save recovery and affect results,
+records, and charts. Probe estimates are not human ratings and do not feed back
+into generation.
 
 **Text analysis.** Two sources feed the affect calculation: fixed priors for the
 highest-scoring emotion label and mean values from matched words. Word coverage
