@@ -6,7 +6,7 @@ A Python prototype for turning English text into image prompts with emotion, pal
 
 [Editable Figma source](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=20-2) · [Figure sources and captions](docs/pipeline-figures.md).
 
-[Interface preview](https://urmeo.github.io/nova-vision/) · [Videos](#videos) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
+[https://urmeo.github.io/nova-vision/](https://urmeo.github.io/nova-vision/) · [Videos](#videos) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
 
 Keywords: **Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask**
 
