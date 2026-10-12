@@ -4,7 +4,7 @@ A Python prototype for turning English text into image prompts with emotion, pal
 
 [![NovaVision pipeline: write text, analyze emotion and affect, build a prompt, and render an image. The app returns an image and metadata. Experiments supply known targets to paired prompt tiers, reuse the prompt builder and renderer, then compare image-probe estimates with targets. Probe predictions do not feed back into generation.](docs/assets/pipeline.svg)](docs/assets/pipeline.svg)
 
-The app builds an image prompt from analyzed text. Experiments reuse the prompt builder and renderer with known targets and shared seeds, then compare image-probe estimates with those targets. [Editable Figma source](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=20-2) · [Figure sources and captions](docs/pipeline-figures.md).
+[Editable Figma source](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=20-2) · [Figure sources and captions](docs/pipeline-figures.md).
 
 <details>
 <summary>Pipeline details</summary>
