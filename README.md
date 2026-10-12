@@ -6,7 +6,7 @@ A Python prototype for turning English text into image prompts with emotion, pal
 
 [Editable Figma source](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=20-2) · [Figure sources and captions](docs/pipeline-figures.md).
 
-[https://urmeo.github.io/nova-vision/](https://urmeo.github.io/nova-vision/) · [Video](#video) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
+[https://urmeo.github.io/nova-vision/](https://urmeo.github.io/nova-vision/) · [Video](#video) · [Run locally](#run) · [Notebook](notebooks/reproduce.ipynb)
 
 Keywords: **Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask**
 
@@ -72,19 +72,5 @@ On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerS
 ### Planning curve
 
 [![Illustrative sample-size curve connecting the saved binomial simulation points](docs/assets/results/planning-curve.png)](docs/assets/results/planning-curve.png)
-
-## Repository
-
-| Path | Contents |
-|---|---|
-| `novavision/` | Text analysis, prompts, image generation, probes, and experiments |
-| `static/` | Web interface served by `server.py` |
-| `scripts/` | Research commands, charts, and static preview build |
-| `notebooks/` | Saved-result checks and optional model runs |
-| `docs/` | Method, results, visual assets, and submission schema |
-| `tests/` | Regression tests and synthetic fixtures |
-| `outputs/` | Saved records, original figures, and new runs |
-
-[Development](CONTRIBUTING.md) · [Folder guide](docs/structure.md) · [Method and data](docs/method.md)
 
 Sole contributor: [urme](https://github.com/urmeo). Project code: [MIT](LICENSE).

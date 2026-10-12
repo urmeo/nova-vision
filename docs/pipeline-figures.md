@@ -65,9 +65,8 @@ not update prompts or regenerate images.
 
 The content track crosses neutral subjects with supplied emotion labels and uses
 fixed affect priors. The text track uses benchmark gold labels for prompt
-conditioning; analyzer estimates supply affect targets. This distinction is
-explained in the [method](method.md). The saved pilot covers only the content
-track.
+conditioning; analyzer estimates supply affect targets. The saved pilot covers
+only the content track.
 
 ## Saved pilot evidence
 
