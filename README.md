@@ -2,6 +2,12 @@
 
 A Python prototype for turning English text into image prompts with emotion, palette, and lighting cues. Separate experiments test whether an image probe recovers the intended emotion.
 
+[![NovaVision signal flow: text branches into emotion classification and word scoring. Their estimates shape a prompt alongside the original text and style. A rendering backend returns an image and metadata. Separate validation compares prompt tiers with known targets and shared seeds; probe predictions do not feed back into generation.](docs/assets/pipeline.svg)](docs/assets/pipeline.svg)
+
+Text analysis shapes the generation prompt. Separate experiments compare prompt tiers with fixed targets and shared seeds; probe predictions do not feed back into generation.
+
+[Edit pipeline in Figma](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=14-2) · [Figure sources and captions](docs/pipeline-figures.md)
+
 [Interface preview](https://urmeo.github.io/nova-vision/) · [Videos](#videos) · [Run locally](#run) · [Method and data](docs/method.md) · [Notebook](notebooks/reproduce.ipynb)
 
 **Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask**
@@ -26,22 +32,16 @@ The current tour shows the preview, pipeline, and saved charts. The earlier reco
 
 </details>
 
-## Pipeline
-
-[![NovaVision pipeline: write text, estimate emotion, shape the prompt, and render an image. Separate validation compares shared-seed prompt tiers with known targets. Saved pilot recovery is 14.29 percent for raw and 21.43 percent for emotion and affect; the probe predicts neutral for 90.5 percent of measured tier images.](docs/assets/pipeline.svg)](docs/assets/pipeline.svg)
-
-The app scores seven emotion labels. It blends matched word values with priors for the leading label to estimate valence (pleasantness) and arousal (activation). The prompt adds mood, palette, lighting, and composition cues for non-neutral text. Neutral uses `raw`; other leading labels use `affect`. Both retain the selected style and fixed quality terms.
-
-Experiments compare `raw`, `naive`, `emotion`, and `affect` using the same seed for each input and intended label. A separate image probe supplies recovery and affect estimates. Its predictions do not revise the app's images. The diagram reports saved pilot accuracy and item-bootstrap 95% intervals; no human ratings were collected.
-
-[Edit pipeline in Figma](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=2-2) · [Figure sources and captions](docs/pipeline-figures.md)
-
 <details>
-<summary>How text analysis and affect estimates work</summary>
+<summary>Pipeline details</summary>
 
 [![Two sources feed the affect blend: priors for the leading emotion label and mean values of matched words. Word coverage sets the blend weight, producing valence and arousal estimates. A separate annotation explains the app's neutral-to-raw prompt selection.](docs/assets/analysis.svg)](docs/assets/analysis.svg)
 
-The default lexicon weight is `min(coverage, 0.8)`. With no matched words, the estimate comes from the leading label's prior. Text scores do not verify a person's feelings. The bundled lexicon contains demonstration values, not empirical norms.
+The app scores seven emotion labels. It blends matched word values with priors for the leading label to estimate valence (pleasantness) and arousal (activation). The default word weight is `min(coverage, 0.8)`; no matches means the estimate comes from the label prior. The bundled word values are demonstrations, not empirical norms. Text scores do not verify a person's feelings.
+
+Neutral uses `raw`; other leading labels use `affect`, adding mood, palette, lighting, and composition cues. Both retain the original text, selected style, and fixed quality terms.
+
+Experiments compare `raw`, `naive`, `emotion`, and `affect` with the same seed for each input, intended label, and seed index. An image probe supplies emotion and affect estimates for comparison with known targets. The saved pilot has no `naive` measurement or human ratings.
 
 [Pipeline details, controls, and code](docs/method.md)
 
