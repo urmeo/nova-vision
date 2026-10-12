@@ -20,8 +20,6 @@ The [public website](https://urmeo.github.io/nova-vision/) is a static preview. 
 
 [Watch video](https://urmeo.github.io/nova-vision/assets/videos.html#pipeline-tour) · [Download MP4](docs/assets/pipeline-tour.mp4)
 
-Silent tour of the static preview, pipeline, and saved charts, with text descriptions. Run the Python server for text analysis and image generation.
-
 ## Run
 
 Use Python 3.9 or newer. CI checks Python 3.9–3.12.
