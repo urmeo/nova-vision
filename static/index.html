@@ -402,55 +402,85 @@
 
     <section id="how-it-works" aria-labelledby="pipelineTitle">
         <div class="section-container">
-            <div class="section-header fade-in">
-                <h2 class="section-title" id="pipelineTitle">Text to image</h2>
-                <p class="section-subtitle">Follow the text, the analysis, and the prompt that creates the image</p>
-            </div>
-            <ol class="pipeline">
-                <li class="pipeline-step fade-in" data-delay="1">
-                    <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <rect x="5" y="6" width="30" height="28" rx="4"/>
-                        <path d="M11 14h18M11 20h18M11 26h10"/>
-                    </svg>
-                    <h3 class="pipeline-title">Input</h3>
-                    <p class="pipeline-detail">Write an English description. Choose a visual style and, optionally, a seed.</p>
+            <header class="pipeline-header">
+                <p class="pipeline-eyebrow">NovaVision / text to image</p>
+                <h2 id="pipelineTitle">From text to an image</h2>
+                <p>Test whether prompt cues preserve the intended emotion.</p>
+            </header>
+
+            <h3 class="pipeline-label" id="appPipelineTitle">App / one description at a time</h3>
+            <ol class="pipeline" aria-labelledby="appPipelineTitle" role="list">
+                <li class="pipeline-step">
+                    <span class="pipeline-number" aria-hidden="true">01</span>
+                    <h4 class="pipeline-title">Write text</h4>
+                    <p class="pipeline-detail">English text<br>+ visual style</p>
                 </li>
-                <li class="pipeline-step fade-in" data-delay="2">
-                    <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path d="M5 34h30M10 28V18M20 28V8M30 28V14"/>
-                    </svg>
-                    <h3 class="pipeline-title">Analyze</h3>
-                    <p class="pipeline-detail">Score seven emotion labels. Blend matched word values with the leading label's preset to estimate valence and arousal.</p>
+                <li class="pipeline-step">
+                    <span class="pipeline-number" aria-hidden="true">02</span>
+                    <h4 class="pipeline-title">Estimate emotion</h4>
+                    <p class="pipeline-detail">7 emotion scores<br>+ pleasantness<br>+ activation</p>
                 </li>
-                <li class="pipeline-step fade-in" data-delay="3">
-                    <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path d="M6 11h28M6 20h28M6 29h28"/>
-                        <circle cx="14" cy="11" r="3" fill="white"/>
-                        <circle cx="26" cy="20" r="3" fill="white"/>
-                        <circle cx="18" cy="29" r="3" fill="white"/>
-                    </svg>
-                    <h3 class="pipeline-title">Build prompt</h3>
-                    <p class="pipeline-detail">Keep your text and style. Neutral uses <code>raw</code>; other labels use <code>affect</code> to add mood, palette, and lighting cues.</p>
+                <li class="pipeline-step pipeline-prompt">
+                    <span class="pipeline-number"><span aria-hidden="true">03 / </span>Prompt mechanism</span>
+                    <h4 class="pipeline-title">Shape the prompt</h4>
+                    <p class="pipeline-detail">Emotion + affect → visual cues</p>
+                    <p class="pipeline-cues">Mood · palette · lighting · composition</p>
+                    <p class="pipeline-policy"><span>Neutral → <code>raw</code></span><span>Other labels → <code>affect</code></span></p>
                 </li>
-                <li class="pipeline-step fade-in" data-delay="4">
-                    <svg class="pipeline-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <rect x="5" y="6" width="30" height="28" rx="4"/>
-                        <circle cx="27" cy="14" r="3"/>
-                        <path d="m6 29 10-11 8 9 5-5 6 7"/>
-                    </svg>
-                    <h3 class="pipeline-title">Render</h3>
-                    <p class="pipeline-detail">The selected backend renders the prompt. Keep the image, full prompt, and seed.</p>
+                <li class="pipeline-step">
+                    <span class="pipeline-number" aria-hidden="true">04</span>
+                    <h4 class="pipeline-title">Render image</h4>
+                    <p class="pipeline-detail">Backend + seed<br>+ image size</p>
                 </li>
             </ol>
-            <details class="pipeline-research">
-                <summary>Separate research experiments</summary>
-                <ol>
-                    <li><strong>Set known targets.</strong> Use intended emotion labels and shared seeds to compare <code>raw</code>, <code>naive</code>, <code>emotion</code>, and <code>affect</code> prompts.</li>
-                    <li><strong>Probe the images.</strong> An independent image model estimates the recovered emotion and affect. This step runs in the experiment runner.</li>
-                    <li><strong>Compare with targets.</strong> Report recovery accuracy, confusion, affect estimates, uncertainty, and shuffled-label controls. Fixed scenes form a separate diagnostic.</li>
-                </ol>
-            </details>
-            <p class="pipeline-note">Text and image scores have not been validated against human feelings. The bundled word values are demonstration data.</p>
+            <p class="pipeline-output">Returns an image and run details. Default backend: synthetic test images.</p>
+
+            <h3 class="pipeline-label pipeline-validation-label" id="validationPipelineTitle">Validation / separate experiment</h3>
+            <ol class="pipeline-validation" aria-labelledby="validationPipelineTitle" role="list">
+                <li class="pipeline-step">
+                    <h4 class="pipeline-title">Known targets</h4>
+                    <p class="pipeline-detail">Subjects + labels<br>or labelled text</p>
+                </li>
+                <li class="pipeline-step">
+                    <h4 class="pipeline-title">Paired conditions</h4>
+                    <p class="pipeline-detail"><code>raw</code> · <code>naive</code> · <code>emotion</code> · <code>affect</code><br>Same seed per input + label</p>
+                </li>
+                <li class="pipeline-step">
+                    <h4 class="pipeline-title">Generate images</h4>
+                    <p class="pipeline-detail">Same model, style,<br>and image settings</p>
+                </li>
+                <li class="pipeline-step">
+                    <h4 class="pipeline-title">Probe + compare</h4>
+                    <p class="pipeline-detail">Recover emotion; compare with the intended target</p>
+                </li>
+            </ol>
+            <p class="pipeline-validation-note">The image probe runs in the experiment runner. Its predictions do not feed back into app generation.</p>
+
+            <aside class="pipeline-evidence" aria-labelledby="pipelineEvidenceTitle">
+                <h3 id="pipelineEvidenceTitle">Saved pilot / no demonstrated improvement</h3>
+                <p class="pipeline-settings">SD-Turbo + CLIP ViT-B/32 · CPU · 256 × 256 · 2 subjects · 1 seed</p>
+                <dl class="pipeline-results">
+                    <div>
+                        <dt><code>raw</code></dt>
+                        <dd><strong>14.29% recovery</strong><span>2/14 images · 95% CI 0–35.71%</span></dd>
+                    </div>
+                    <div>
+                        <dt><code>emotion</code></dt>
+                        <dd><strong>21.43% recovery</strong><span>3/14 images · 95% CI 0–42.86%</span></dd>
+                    </div>
+                    <div>
+                        <dt><code>affect</code></dt>
+                        <dd><strong>21.43% recovery</strong><span>3/14 images · 95% CI 0–42.86%</span></dd>
+                    </div>
+                </dl>
+                <p class="pipeline-limitations">Chance: 14.29% · Neutral predictions: 38/42 (90.5%) · <code>naive</code>: unmeasured</p>
+                <p class="pipeline-evidence-note">Item-bootstrap 95% confidence intervals. These are model predictions, not human ratings.</p>
+            </aside>
+            <div class="pipeline-links">
+                <a href="https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=2-2">Figma pipeline</a>
+                <a href="https://github.com/urmeo/nova-vision/blob/main/docs/method.md">Method and data</a>
+                <a href="https://github.com/urmeo/nova-vision/blob/main/docs/results.md">Results and limitations</a>
+            </div>
         </div>
     </section>
 

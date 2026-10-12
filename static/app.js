@@ -1,4 +1,5 @@
 const isPreview = document.documentElement.dataset.preview === 'true';
+const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
 const navbar = document.getElementById('navbar');
 const heroTitle = document.querySelector('.app-header-title');
 const heroSubtitle = document.querySelector('.app-header-subtitle');
@@ -27,7 +28,7 @@ window.addEventListener('scroll', () => {
 
     navbar.classList.toggle('scrolled', scrollY > 50);
 
-    if (scrollY < 400) {
+    if (!reducedMotion?.matches && scrollY < 400) {
         const parallaxAmount = scrollY * 0.15;
         const opacityAmount = Math.max(0, 1 - (scrollY / 300));
         if (heroTitle) {
@@ -692,7 +693,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         const target = document.querySelector(this.getAttribute('href'));
         if (target) {
             target.scrollIntoView({
-                behavior: 'smooth',
+                behavior: reducedMotion?.matches ? 'auto' : 'smooth',
                 block: 'start'
             });
         }
