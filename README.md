@@ -26,16 +26,18 @@ The current tour shows the static preview, its pipeline, and saved charts. Analy
 
 ## Pipeline
 
-[![Four app stages: input, analyze, build prompt, render. Separate experiments use known targets, paired tiers, generation, an image probe, and comparison.](docs/assets/pipeline.svg)](docs/assets/pipeline.svg)
+[![NovaVision pipeline: write text, estimate emotion, shape the prompt, and render an image. Separate validation compares shared-seed prompt tiers with known targets. Saved pilot recovery is 14.29 percent for raw and 21.43 percent for emotion and affect; the probe predicts neutral for 90.5 percent of measured tier images.](docs/assets/pipeline.svg)](docs/assets/pipeline.svg)
 
-The app scores seven emotion labels and blends word values with label priors to estimate valence and arousal. The leading label selects the prompt: neutral uses `raw`; other labels use `affect`, which adds mood, palette, and lighting cues. Every tier retains style and fixed quality terms.
+Four steps connect text to an image. The app scores seven emotion labels and blends word values with label priors to estimate valence and arousal. The highlighted prompt stage adds mood, palette, lighting, and composition cues. Neutral uses `raw`; other leading labels use `affect`. Every tier retains style and fixed quality terms. The default backend creates synthetic test images; diffusion generation needs a configured local or hosted backend.
 
-Experiments compare `raw`, `naive`, `emotion`, and `affect` with the same seed for each input and intended label. An independent image probe supplies predictions for recovery and affect metrics. The app does not use those predictions to revise its images.
+Validation is separate. Experiments compare `raw`, `naive`, `emotion`, and `affect` with the same seed for each input and intended label. An independent image probe supplies predictions for recovery and affect metrics. The app does not use those predictions to revise its images. The evidence strip shows saved pilot accuracy and item-bootstrap 95% intervals, not human ratings; the pilot does not establish emotion controllability.
+
+[Edit pipeline in Figma](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=2-2) · [Figure sources and captions](docs/pipeline-figures.md)
 
 <details>
 <summary>How text analysis and affect estimates work</summary>
 
-[![Text branches into a seven-label classifier and a word lexicon; the leading label chooses the prompt tier, and coverage controls the blend of word values and label priors.](docs/assets/analysis.svg)](docs/assets/analysis.svg)
+[![Two sources feed the affect blend: priors for the leading emotion label and mean values of matched words. Word coverage sets the blend weight, producing valence and arousal estimates. A separate annotation explains the app's neutral-to-raw prompt selection.](docs/assets/analysis.svg)](docs/assets/analysis.svg)
 
 The default lexicon weight is `min(coverage, 0.8)`. With no matched words, the estimate comes from the leading label's prior. Text scores do not verify a person's feelings. The bundled lexicon contains demonstration values, not empirical norms.
 
