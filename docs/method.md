@@ -113,7 +113,7 @@ The saved pilot measured only `raw`, `emotion`, and `affect` at 14 images each,
 plus seven fixed-scene images: SD-Turbo, CLIP ViT-B/32, CPU, 256 × 256, two neutral
 subjects, and one seed. `naive` and the text track are unmeasured. Probe collapse,
 small samples, and incomplete historical provenance limit these results; the
-pilot does not establish emotion controllability. See [saved results](results.md).
+pilot does not establish emotion controllability. See the [saved metric tables](results-tables.md).
 
 ## Data
 

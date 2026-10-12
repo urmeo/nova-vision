@@ -51,15 +51,6 @@ On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerS
 
 ## Results
 
-**Saved pilot: SD-Turbo · CLIP ViT-B/32 · CPU · 256 × 256 images · two neutral subjects · one seed**
-
-| Condition | Images | Recovery | Bootstrap 95% CI | Shuffled-label p |
-|---|---:|---:|---:|---:|
-| `raw` | 14 | 14.29% | 0–35.71% | .8566 |
-| `emotion` | 14 | 21.43% | 0–42.86% | .2259 |
-| `affect` | 14 | 21.43% | 0–42.86% | .1369 |
-| `scene` | 7 | 28.57% | 0–57.50% | .1449 |
-
 | Recovery and 95% confidence intervals | Raw-tier confusion |
 |:---:|:---:|
 | <a href="docs/assets/results/recovery.png"><img src="docs/assets/results/recovery.png" alt="Saved pilot recovery accuracy with item-bootstrap 95 percent confidence intervals and chance reference" width="420"></a> | <a href="outputs/figures/confusion_raw.png"><img src="outputs/figures/confusion_raw.png" alt="Raw-tier confusion matrix comparing intended and recovered emotion labels" width="420"></a> |
@@ -67,6 +58,8 @@ On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerS
 | Emotion-tier confusion | Affect-tier confusion |
 |:---:|:---:|
 | <a href="outputs/figures/confusion_emotion.png"><img src="outputs/figures/confusion_emotion.png" alt="Emotion-tier confusion matrix from the saved pilot" width="420"></a> | <a href="outputs/figures/confusion_affect.png"><img src="outputs/figures/confusion_affect.png" alt="Affect-tier confusion matrix from the saved pilot" width="420"></a> |
+
+[![Emotion-tier confusion counts](docs/assets/results/confusion.png)](docs/assets/results/confusion.png)
 
 | Separate scene diagnostic | Affect-tier valence and arousal |
 |:---:|:---:|
@@ -79,12 +72,6 @@ On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in PowerS
 ### Planning curve
 
 [![Illustrative sample-size curve connecting the saved binomial simulation points](docs/assets/results/planning-curve.png)](docs/assets/results/planning-curve.png)
-
-This is a saved planning simulation. It assumes independent binomial trials and transfer of real-image probe accuracy to generated images. It does not estimate power for the paired benchmark. A 420-images-per-tier run and a study with at least three independent human raters remain future work.
-
-[Full results and limitations](docs/results.md) · [Metric tables](docs/results-tables.md) · [Original figures](outputs/figures/)
-
-Historical source commits, complete model pins, and original generated images are missing. Exact image replay is unverified. New runs write to `outputs/generated/`.
 
 ## Repository
 

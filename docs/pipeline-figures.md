@@ -61,7 +61,7 @@ not update prompts or regenerate images.
 | Mood, palette, lighting, and tier definitions | [Prompt templates](../novavision/prompting.py) |
 | Shared seeds, probe calls, and paired comparisons | [Experiment runner](../novavision/experiments/run.py) |
 | Recovery, bootstrap intervals, and permutation tests | [Metrics](../novavision/eval/metrics.py) |
-| Saved pilot measurements | [Pilot measurements and limitations](results.md#pilot-recovery) |
+| Saved pilot measurements | [Archived pilot table](results-tables.md#pilot-recovery) |
 
 The content track crosses neutral subjects with supplied emotion labels and uses
 fixed affect priors. The text track uses benchmark gold labels for prompt
@@ -95,8 +95,8 @@ null at p < .05. The saved paired difference between `emotion` and `raw` is
 `naive` has no saved measurement. The seven-image fixed-scene diagnostic is
 separate from subject pairing and is excluded from the table above.
 Historical model pins, source commits, and original generated images are
-incomplete, so exact image replay is unverified. See the [full results and
-limitations](results.md).
+incomplete, so exact image replay is unverified. See the [saved metric
+tables](results-tables.md).
 
 ## Captions and text equivalents
 

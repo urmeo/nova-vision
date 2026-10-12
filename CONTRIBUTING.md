@@ -82,7 +82,7 @@ Submissions follow [the benchmark schema](docs/benchmark/submission.schema.json)
 
 Run a new illustrative binomial simulation with `python scripts/power_analysis.py`.
 Its output also goes to `outputs/generated/`. It does not estimate power for the
-paired benchmark; see [the assumptions and saved curve](docs/results.md#illustrative-planning-curve).
+paired benchmark; see [the assumptions and saved points](docs/results-tables.md#illustrative-planning-simulation).
 
 Generate new images or evaluate new data with these commands:
 
