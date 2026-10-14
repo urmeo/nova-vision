@@ -90,26 +90,47 @@ class _Checkpoint:
         self.images_dir = images_dir
         self.done: dict = {}
         if path and path.exists():
-            lines = path.read_text().splitlines()
-            try:
-                matches = bool(lines) and json.loads(lines[0]) == {"manifest": manifest}
-            except json.JSONDecodeError:
-                matches = False
-            if not matches:
-                raise ValueError(
-                    "Resume checkpoint does not match this run's provenance; "
-                    "use a fresh output directory."
-                )
-            for line in lines[1:]:
-                if line.strip():
-                    r = json.loads(line)
-                    key = (r["tier"], r["intended"], r["index"], r["seed"])
-                    if key in self.done and self.done[key] != r:
+            truncate_at = None
+            with path.open("rb") as fh:
+                header = fh.readline()
+                try:
+                    matches = json.loads(header.decode("utf-8")) == {"manifest": manifest}
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    matches = False
+                if not matches:
+                    raise ValueError(
+                        "Resume checkpoint does not match this run's provenance; "
+                        "use a fresh output directory."
+                    )
+                last_line = header
+                for line_number, line in enumerate(fh, start=2):
+                    if not line.strip():
+                        last_line = line
+                        continue
+                    try:
+                        record = json.loads(line.decode("utf-8"))
+                    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                        if line.endswith(b"\n"):
+                            raise ValueError(
+                                f"Resume checkpoint contains invalid JSON on line {line_number}"
+                            ) from exc
+                        truncate_at = fh.tell() - len(line)
+                        break
+                    key = (record["tier"], record["intended"], record["index"], record["seed"])
+                    if key in self.done and self.done[key] != record:
                         raise ValueError("Resume checkpoint contains conflicting records")
-                    self.done[key] = r
+                    self.done[key] = record
+                    last_line = line
             if images_dir is not None:
-                for r in self.done.values():
-                    self._verify_original(r)
+                for record in self.done.values():
+                    self._verify_original(record)
+            if truncate_at is not None or not last_line.endswith(b"\n"):
+                with path.open("r+b") as fh:
+                    if truncate_at is not None:
+                        fh.truncate(truncate_at)
+                    if not last_line.endswith(b"\n"):
+                        fh.seek(0, os.SEEK_END)
+                        fh.write(b"\n")
         elif path:
             with path.open("x", encoding="utf-8") as fh:
                 fh.write(json.dumps({"manifest": manifest}, allow_nan=False) + "\n")
