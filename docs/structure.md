@@ -30,6 +30,12 @@ Models download when missing from the local cache. Set `NOVA_BACKEND` for the ap
 - `null` (app default): makes test images. Text analysis still needs its classifier.
 - `hf-api`: sends prompts to Hugging Face. It requires `HF_TOKEN` and a
   provider-supported model set through `NOVA_DIFFUSION_MODEL`.
+  `NOVA_HF_TIMEOUT` sets its deadline in seconds (default: 120). A timed-out
+  request stops its worker, releases the generation slot, and returns HTTP 504.
+
+Hosted calls use a worker process. In scripts that call the Python API, put the
+entry point under `if __name__ == "__main__":`. Worker shutdown can add up to two
+seconds after the deadline. A provider may continue a job it already accepted.
 
 ## Experiments and reports
 
@@ -43,6 +49,18 @@ python scripts/report.py
 
 The run saves records, its manifest, and original images in `outputs/generated/run/`.
 The summary goes to `outputs/generated/tables.md`.
+
+Use `--diffusion-revision`, `--emotion-revision`, and `--probe-revision` to select
+Hub commits, tags, or branches. `--clip-revision` also selects a CLIP probe revision.
+Known defaults use pinned commits. Custom references resolve to full commit hashes
+before loading; the manifest records those hashes and the requested references.
+Pass full commit hashes for offline runs, or use an existing cached snapshot.
+Local model directories are not supported by revision-pinned experiments.
+`--emotion-model` and `--emotion-revision` apply to the text track.
+
+Hosted inference cannot select a generator revision, so its diffusion revision
+stays unknown and `--diffusion-revision` requires the local `diffusers` backend.
+`--hf-timeout` sets the hosted experiment deadline in seconds (default: 120).
 
 `python scripts/visualize.py` rebuilds the available saved charts and writes
 `outputs/generated/results-tables.md`. Archived pilot charts and the
