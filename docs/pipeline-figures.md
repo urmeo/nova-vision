@@ -26,8 +26,11 @@ label:
 `estimate = w × word value + (1 − w) × label prior`, with
 `w = min(matched content words / content words, 0.8)` by default.
 
-The lexicon takes the arithmetic mean of matched word values, adjusting valence
-for nearby negation. Coverage weights that mean in the later blend. No matches
+The lexicon takes the arithmetic mean of matched word values. A two-word
+negation window adjusts valence and stops at sentence punctuation, commas,
+semicolons, colons, line breaks, clause dashes, and contrast markers such as
+`but`. Quotes and grouping parentheses do not end the window.
+Coverage weights that mean in the later blend. No matches
 means the estimate comes from the label prior. The bundled word values are
 demonstrations, not empirical norms. Valence ranges from −1 to 1; arousal ranges
 from 0 to 1. These are text estimates, not measured responses to the generated

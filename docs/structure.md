@@ -37,6 +37,11 @@ Hosted calls use a worker process. In scripts that call the Python API, put the
 entry point under `if __name__ == "__main__":`. Worker shutdown can add up to two
 seconds after the deadline. A provider may continue a job it already accepted.
 
+Text classifiers must declare all seven emotion labels: anger, disgust, fear,
+joy, neutral, sadness, and surprise. Label names are case-insensitive.
+Incompatible models, including positive/negative sentiment classifiers, are
+rejected when loaded.
+
 ## Experiments and reports
 
 Run a small experiment and summarize its measurements:
@@ -65,3 +70,27 @@ stays unknown and `--diffusion-revision` requires the local `diffusers` backend.
 `python scripts/visualize.py` rebuilds the available saved charts and writes
 `outputs/generated/results-tables.md`. Archived pilot charts and the
 [published table](results-tables.md) stay intact; raw pilot records are no longer bundled.
+
+## Human ratings
+
+Build each study in a new directory:
+
+```bash
+python -m novavision.eval.human_study build \
+  --results outputs/generated/run --out outputs/generated/study-001
+```
+
+Copy `ratings_template.csv` to `ratings.csv` and fill only `emotion`.
+Keep `id`, `study_id`, `image`, and `image_pixel_sha256` unchanged. Give raters
+the template and images; keep `key.csv` separate.
+
+```bash
+python -m novavision.eval.human_study analyze \
+  --ratings outputs/generated/study-001/ratings.csv \
+  --key outputs/generated/study-001/key.csv
+```
+
+Existing study directories are refused. Each new study has unique IDs, and both
+CSVs bind each item to its image hash. Analysis verifies the pixels when the
+images directory is present; detached CSV pairs still require matching bindings.
+Older CSVs without these bindings are refused.
