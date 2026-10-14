@@ -153,7 +153,7 @@ def holm_bonferroni(pvalues: dict[str, float], alpha: float = 0.05) -> dict[str,
 
 
 def mae(x: Sequence[float], y: Sequence[float]) -> float:
-    """Mean absolute error, an interpretable companion to the VA correlations."""
+    """Mean absolute error."""
     _check(x, y)
     xa = np.asarray(x, dtype=float)
     ya = np.asarray(y, dtype=float)
@@ -172,7 +172,7 @@ def pearson(x: Sequence[float], y: Sequence[float]) -> float:
 
 
 def spearman(x: Sequence[float], y: Sequence[float]) -> float:
-    """Rank correlation, robust to the compressed VA scale."""
+    """Spearman rank correlation."""
     _check(x, y)
     xa = np.asarray(x, dtype=float)
     ya = np.asarray(y, dtype=float)

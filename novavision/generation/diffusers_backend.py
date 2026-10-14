@@ -21,8 +21,6 @@ def _pick_device() -> str:
 
 
 class DiffusersBackend(ImageBackend):
-    """Runs a local diffusers text-to-image pipeline."""
-
     name = "diffusers"
 
     def __init__(

@@ -54,7 +54,7 @@ class NovaVision:
         width: int = 512,
         height: int = 512,
     ) -> Result:
-        "App helper: skip emotion conditioning for neutral text."
+        "Skip emotion conditioning for neutral text."
         analysis = self.analyzer.analyze(text)
         tier = "raw" if analysis.primary == NEUTRAL else "affect"
         return self._render(text, analysis, style, tier, seed, width, height)

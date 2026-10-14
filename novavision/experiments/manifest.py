@@ -20,7 +20,7 @@ def package_version(pkg: str) -> str:
 
 
 def git_sha() -> str:
-    """Current commit SHA, or ``"unknown"`` outside a git checkout. Public API."""
+    """Current commit SHA, or ``"unknown"`` outside a git checkout."""
     try:
         out = subprocess.run(
             ["git", "rev-parse", "HEAD"],

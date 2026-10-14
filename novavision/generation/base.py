@@ -10,8 +10,6 @@ from PIL import Image
 
 
 class ImageBackend(ABC):
-    """Text-to-image backend."""
-
     name = "base"
 
     @abstractmethod

@@ -48,7 +48,7 @@ def env_int(name: str, default: int) -> int:
 
 
 class RateLimiter:
-    """Thread-safe per-key sliding-window limiter, no external dependency."""
+    """Thread-safe per-key sliding-window limiter."""
 
     def __init__(self, max_requests: int, window_seconds: float = 60.0, gc_threshold: int = 4096):
         self.max_requests = max_requests

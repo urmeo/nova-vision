@@ -12,8 +12,6 @@ from novavision.generation.base import ImageBackend
 
 
 class HFApiBackend(ImageBackend):
-    """Generates via the hosted HuggingFace Inference API."""
-
     name = "hf-api"
 
     def __init__(self, model_id: str = DIFFUSION_MODEL, token: str | None = None, **_):
