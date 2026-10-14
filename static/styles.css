@@ -1705,12 +1705,6 @@ select:focus + .select-arrow {
     margin-bottom: 12px;
 }
 
-.pipeline-header > p:last-child {
-    color: var(--pipeline-muted);
-    font-size: 28px;
-    line-height: 1.4;
-}
-
 .pipeline-diagram {
     display: block;
     border-radius: 20px;
@@ -1845,10 +1839,6 @@ select:focus + .select-arrow {
     .pipeline-header h2 {
         font-size: 36px;
         letter-spacing: -1px;
-    }
-
-    .pipeline-header > p:last-child {
-        font-size: 21px;
     }
 
     .pipeline-eyebrow {
