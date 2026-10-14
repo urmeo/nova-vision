@@ -21,12 +21,15 @@ write new experiments and temporary reports to `outputs/generated/`.
 
 ## Local use
 
-Use Python 3.9 or later. Browser tests use Node.js 22 in CI.
+Use Python 3.10 or later. Browser tests use Node.js 22 in CI.
+The ML extra requires PyTorch 2.14.1 or later for native MPS interpolation.
 Models download when missing from the local cache. Set `NOVA_BACKEND` for the app:
 
-- `diffusers`: runs SD-Turbo locally; CPU generation can be slow.
+- `diffusers`: runs SD-Turbo locally. It selects CUDA, Apple MPS, then CPU.
+  GPU runs use float16; CPU runs use float32 and can be slow.
 - `null` (app default): makes test images. Text analysis still needs its classifier.
-- `hf-api`: sends prompts to Hugging Face and requires `HF_TOKEN`.
+- `hf-api`: sends prompts to Hugging Face. It requires `HF_TOKEN` and a
+  provider-supported model set through `NOVA_DIFFUSION_MODEL`.
 
 ## Experiments and reports
 
