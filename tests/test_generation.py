@@ -1,3 +1,4 @@
+import json
 import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -5,19 +6,19 @@ from types import SimpleNamespace
 
 import pytest
 from PIL import Image
+from PIL.PngImagePlugin import PngInfo
 
-from novavision.generation import NullBackend, get_backend
+from novavision.generation import NullBackend, get_backend, hf_api_backend
 from novavision.generation.diffusers_backend import DiffusersBackend
 from novavision.generation.hf_api_backend import HFApiBackend
 
 
-class RecordingClient:
-    def __init__(self):
-        self.parameters = {}
-
-    def text_to_image(self, prompt, **parameters):
-        self.parameters.update(parameters)
-        return Image.new("RGB", (8, 8))
+def record_hosted_request(connection, image_path, model_id, token, timeout, prompt, parameters):
+    metadata = PngInfo()
+    metadata.add_text("parameters", json.dumps(parameters))
+    Image.new("RGB", (8, 8)).save(image_path, pnginfo=metadata)
+    connection.send(("ok", ""))
+    connection.close()
 
 
 def test_factory():
@@ -60,12 +61,13 @@ def test_negative_seed_does_not_crash():
 )
 def test_hf_api_negative_prompt_depends_on_model(monkeypatch, model_id, expected_negative_prompt):
     monkeypatch.setenv("HF_TOKEN", "x")
-    client = RecordingClient()
+    monkeypatch.setattr(hf_api_backend, "_generate_image", record_hosted_request)
     backend = HFApiBackend(model_id=model_id)
-    backend._client = client
-    backend.generate("p", width=8, height=8, seed=3, negative_prompt="blurry")
-    assert client.parameters["negative_prompt"] == expected_negative_prompt
-    assert client.parameters["seed"] == 3
+    image = backend.generate("p", width=8, height=8, seed=3, negative_prompt="blurry")
+    parameters = json.loads(image.info["parameters"])
+    assert parameters["negative_prompt"] == expected_negative_prompt
+    assert parameters["seed"] == 3
+    assert image.size == (8, 8)
 
 
 @pytest.mark.parametrize(
@@ -170,8 +172,8 @@ def test_null_backend_prompt_sensitivity():
 
 def test_hf_api_default_size_matches_diffusers(monkeypatch):
     monkeypatch.setenv("HF_TOKEN", "x")
-    client = RecordingClient()
+    monkeypatch.setattr(hf_api_backend, "_generate_image", record_hosted_request)
     backend = HFApiBackend(model_id="stabilityai/sd-turbo")
-    backend._client = client
-    backend.generate("p", seed=1)
-    assert (client.parameters["width"], client.parameters["height"]) == (512, 512)
+    image = backend.generate("p", seed=1)
+    parameters = json.loads(image.info["parameters"])
+    assert (parameters["width"], parameters["height"]) == (512, 512)

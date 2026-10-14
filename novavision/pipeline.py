@@ -87,8 +87,10 @@ def build_pipeline(settings: Settings | None = None) -> NovaVision:
     "Construct the app and CLI pipeline from shared settings."
     settings = settings or get_settings()
     backend_name = settings.backend.lower()
-    kwargs = (
+    kwargs: dict = (
         {"model_id": settings.diffusion_model} if backend_name in {"diffusers", "hf-api"} else {}
     )
+    if backend_name == "hf-api":
+        kwargs["timeout"] = settings.hf_timeout
     backend = get_backend(backend_name, **kwargs)
     return NovaVision(backend=backend, analyzer=EmotionAnalyzer(settings.emotion_model))

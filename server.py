@@ -156,6 +156,9 @@ def generate():
         return jsonify({"error": "Server busy. Try again shortly."}), 429
     try:
         result = pipeline().auto_run(text, style=style, seed=seed)
+    except TimeoutError:
+        logger.warning("generation timed out")
+        return jsonify({"error": "Generation timed out. Try again shortly."}), 504
     except Exception:
         logger.exception("generation failed")
         return jsonify({"error": "Generation failed."}), 500

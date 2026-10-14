@@ -63,7 +63,7 @@ def test_build_pipeline_honors_configured_diffusion_model(backend, monkeypatch):
         assert nv.backend._pipe is None
         assert nv.backend.revision is None
     else:
-        assert nv.backend._client is None
+        assert nv.backend.timeout == settings.hf_timeout
 
 
 def test_public_api_is_importable():

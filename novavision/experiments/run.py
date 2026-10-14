@@ -10,7 +10,16 @@ import os
 from pathlib import Path
 
 from novavision.affect.analyzer import EmotionAnalyzer
-from novavision.config import CLIP_MODEL, CLIP_REVISION, default_revision
+from novavision.config import (
+    CLIP_MODEL,
+    CLIP_REVISION,
+    DEFAULT_HF_TIMEOUT,
+    DIFFUSION_MODEL,
+    DIFFUSION_REVISION,
+    EMOTION_MODEL,
+    EMOTION_REVISION,
+    default_revision,
+)
 from novavision.data import (
     CONTENT_BANK_PATH,
     LEXICON_PATH,
@@ -39,6 +48,7 @@ from novavision.eval.probes import image_digest as _image_digest
 from novavision.experiments.manifest import build_manifest, package_version
 from novavision.generation import get_backend
 from novavision.prompting import NEGATIVE_PROMPT, TIERS, build_prompt
+from novavision.revisions import resolve_model_revision
 from novavision.taxonomy import EMOTIONS, prior
 
 CONDITIONS = {
@@ -184,16 +194,22 @@ def _source_fingerprint() -> str:
     return digest.hexdigest()
 
 
-def _make_probe(kind: str, probe_model: str | None, clip_model: str, device: str | None):
+def _make_probe(
+    kind: str,
+    probe_model: str | None,
+    clip_model: str,
+    device: str | None,
+    revision: str | None = None,
+):
     """CLIP (default) or an independent HF image-emotion classifier."""
     if kind == "hf":
         if not probe_model:
             raise ValueError("--probe hf requires --probe-model")
-        return HFImageClassifierProbe(model_id=probe_model, device=device)
+        return HFImageClassifierProbe(model_id=probe_model, device=device, revision=revision)
     if kind != "clip":
         raise ValueError(f"unknown probe kind '{kind}', expected 'clip' or 'hf'")
     model_id = probe_model or clip_model
-    revision = default_revision(model_id, CLIP_MODEL, CLIP_REVISION)
+    revision = revision or default_revision(model_id, CLIP_MODEL, CLIP_REVISION)
     return CLIPProbe(model_id=model_id, device=device, revision=revision)
 
 
@@ -211,17 +227,39 @@ def run_experiment(
     width: int = 512,
     height: int = 512,
     device: str | None = None,
-    diffusion_model: str = "stabilityai/sd-turbo",
+    diffusion_model: str = DIFFUSION_MODEL,
+    diffusion_revision: str | None = None,
     probe: str = "clip",
     clip_model: str = CLIP_MODEL,
+    clip_revision: str | None = None,
     probe_model: str | None = None,
-    emotion_model: str = "j-hartmann/emotion-english-distilroberta-base",
+    probe_revision: str | None = None,
+    emotion_model: str = EMOTION_MODEL,
+    emotion_revision: str | None = None,
+    hf_timeout: float = DEFAULT_HF_TIMEOUT,
     coverage_override: float | None = None,
     resume: bool = False,
     save_images: bool = False,
 ) -> dict:
+    backend = backend.lower()
+    if backend not in {"null", "diffusers", "hf-api"}:
+        raise ValueError(f"Unknown backend: {backend}")
     if track not in CONDITIONS:
         raise ValueError(f"Unknown track: {track}")
+    if probe not in {"clip", "hf"}:
+        raise ValueError(f"Unknown probe: {probe}")
+    if probe == "hf" and not probe_model:
+        raise ValueError("--probe hf requires --probe-model")
+    if probe == "hf" and clip_revision is not None:
+        raise ValueError("--clip-revision requires the CLIP probe; use --probe-revision")
+    if clip_revision is not None and probe_revision is not None and clip_revision != probe_revision:
+        raise ValueError("--clip-revision and --probe-revision must match when both are supplied")
+    if diffusion_revision is not None and backend != "diffusers":
+        raise ValueError("--diffusion-revision requires the local diffusers backend")
+    if emotion_revision is not None and track != "text":
+        raise ValueError("--emotion-revision requires the text track")
+    if isinstance(hf_timeout, bool) or not math.isfinite(hf_timeout) or hf_timeout <= 0:
+        raise ValueError("Hosted generation timeout must be finite and positive")
     if seeds < 1 or width < 1 or height < 1:
         raise ValueError("Seeds, width and height must be positive")
     if (contents is not None and contents < 0) or (limit is not None and limit < 0):
@@ -240,12 +278,48 @@ def run_experiment(
         n_items = len(bank)
 
     _check_seed_domain(n_items, seeds)
+    requested_revisions = {
+        "diffusion": diffusion_revision,
+        "emotion": emotion_revision,
+        "probe": probe_revision or clip_revision,
+    }
+    diffusion_revision = (
+        resolve_model_revision(
+            diffusion_model,
+            diffusion_revision
+            or default_revision(diffusion_model, DIFFUSION_MODEL, DIFFUSION_REVISION),
+        )
+        if backend == "diffusers"
+        else None
+    )
+    emotion_revision = (
+        resolve_model_revision(
+            emotion_model,
+            emotion_revision or default_revision(emotion_model, EMOTION_MODEL, EMOTION_REVISION),
+        )
+        if track == "text"
+        else None
+    )
+    selected_probe_model = probe_model or clip_model
+    probe_revision = resolve_model_revision(
+        selected_probe_model,
+        requested_revisions["probe"]
+        or (
+            default_revision(selected_probe_model, CLIP_MODEL, CLIP_REVISION)
+            if probe == "clip"
+            else None
+        ),
+    )
     set_determinism(base_seed)
-    kwargs = {"model_id": diffusion_model}
+    kwargs: dict = {"model_id": diffusion_model}
+    if backend == "diffusers":
+        kwargs["revision"] = diffusion_revision
+    elif backend == "hf-api":
+        kwargs["timeout"] = hf_timeout
     if device:
         kwargs["device"] = device
     gen = get_backend(backend, **kwargs)
-    probe_obj = _make_probe(probe, probe_model, clip_model, device)
+    probe_obj = _make_probe(probe, probe_model, clip_model, device, revision=probe_revision)
     out_dir = Path(out)
     out_dir.mkdir(parents=True, exist_ok=True)
     lexicon_path = Path(os.getenv("NOVAVISION_LEXICON") or LEXICON_PATH)
@@ -253,9 +327,15 @@ def run_experiment(
         backend=backend,
         track=track,
         diffusion_model=diffusion_model,
+        diffusion_revision=diffusion_revision,
         probe=probe_obj.name,
         clip_model=probe_model or clip_model,
+        clip_revision=probe_revision if probe == "clip" else None,
+        probe_revision=probe_revision,
         emotion_model=emotion_model if track == "text" else None,
+        emotion_revision=emotion_revision,
+        requested_model_revisions=requested_revisions,
+        hf_timeout=hf_timeout if backend == "hf-api" else None,
         requested_device=device,
         device=getattr(gen, "device", "n/a"),
         dtype=getattr(gen, "dtype", "n/a"),
@@ -281,14 +361,17 @@ def run_experiment(
         {pkg: package_version(pkg) for pkg in ("accelerate", "huggingface-hub", "safetensors")}
     )
 
-    manifest["model_revisions"]["diffusion"] = getattr(gen, "revision", None)
     ckpt = _Checkpoint(
         out_dir / "records.jsonl" if resume else None,
         manifest,
         images_dir=out_dir / "images" if save_images else None,
     )
     if track == "text":
-        analyzer = EmotionAnalyzer(model_name=emotion_model, coverage_override=coverage_override)
+        analyzer = EmotionAnalyzer(
+            model_name=emotion_model,
+            revision=emotion_revision,
+            coverage_override=coverage_override,
+        )
         records = _text_records(
             rows, gen, probe_obj, analyzer, style, seeds, base_seed, width, height, ckpt
         )
@@ -659,10 +742,21 @@ def main() -> None:
     parser.add_argument("--seeds", type=int, default=3)
     parser.add_argument("--base-seed", type=int, default=0)
     parser.add_argument("--style", default="artistic")
-    parser.add_argument("--diffusion-model", default="stabilityai/sd-turbo")
+    parser.add_argument("--diffusion-model", default=DIFFUSION_MODEL)
+    parser.add_argument("--diffusion-revision", help="local generator Hub commit, tag, or branch")
+    parser.add_argument("--emotion-model", default=EMOTION_MODEL)
+    parser.add_argument("--emotion-revision", help="text classifier Hub commit, tag, or branch")
     parser.add_argument("--probe", default="clip", choices=["clip", "hf"])
     parser.add_argument("--clip-model", default=CLIP_MODEL)
+    parser.add_argument("--clip-revision", help="CLIP probe Hub commit, tag, or branch")
     parser.add_argument("--probe-model", default=None, help="probe model id (CLIP or HF)")
+    parser.add_argument("--probe-revision", help="selected probe Hub commit, tag, or branch")
+    parser.add_argument(
+        "--hf-timeout",
+        type=float,
+        default=DEFAULT_HF_TIMEOUT,
+        help="hosted generation deadline in seconds",
+    )
     parser.add_argument("--width", type=int, default=512)
     parser.add_argument("--height", type=int, default=512)
     parser.add_argument("--device", default=None, help="cpu, cuda, or mps; auto if unset")
@@ -699,9 +793,15 @@ def main() -> None:
         height=args.height,
         device=args.device,
         diffusion_model=args.diffusion_model,
+        diffusion_revision=args.diffusion_revision,
         probe=args.probe,
         clip_model=args.clip_model,
+        clip_revision=args.clip_revision,
         probe_model=args.probe_model,
+        probe_revision=args.probe_revision,
+        emotion_model=args.emotion_model,
+        emotion_revision=args.emotion_revision,
+        hf_timeout=args.hf_timeout,
         coverage_override=args.force_coverage,
         resume=args.resume,
         save_images=args.save_images,

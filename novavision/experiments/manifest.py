@@ -73,6 +73,9 @@ def build_manifest(**config) -> dict:
     )
 
     def pin(key: str, default_id: str, revision: str) -> str | None:
+        revision_key = key.removesuffix("_model") + "_revision"
+        if revision_key in config:
+            return config[revision_key]
         return default_revision(config.get(key) or default_id, default_id, revision)
 
     return {
@@ -88,6 +91,7 @@ def build_manifest(**config) -> dict:
             "emotion": pin("emotion_model", EMOTION_MODEL, EMOTION_REVISION),
             "diffusion": pin("diffusion_model", DIFFUSION_MODEL, DIFFUSION_REVISION),
             "clip": pin("clip_model", CLIP_MODEL, CLIP_REVISION),
+            "probe": config.get("probe_revision", pin("clip_model", CLIP_MODEL, CLIP_REVISION)),
         },
         "config": config,
     }
