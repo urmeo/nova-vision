@@ -34,7 +34,8 @@ class DiffusersBackend(ImageBackend):
     ):
         self.model_id = model_id
         self.device = device or _pick_device()
-        self.dtype = "float16" if self.device == "cuda" else "float32"
+        device_type = self.device.split(":", 1)[0]
+        self.dtype = "float16" if device_type in {"cuda", "mps"} else "float32"
         self.steps = steps
         self.revision = revision or default_revision(model_id, DIFFUSION_MODEL, DIFFUSION_REVISION)
         self._pipe = None

@@ -68,9 +68,54 @@ def test_hf_api_negative_prompt_depends_on_model(monkeypatch, model_id, expected
     assert client.parameters["seed"] == 3
 
 
-def test_diffusers_dtype_known_before_first_generation():
-    assert DiffusersBackend(device="cpu").dtype == "float32"
-    assert DiffusersBackend(device="cuda").dtype == "float16"
+@pytest.mark.parametrize(
+    ("device", "dtype"),
+    [("cpu", "float32"), ("cuda", "float16"), ("cuda:0", "float16"), ("mps", "float16")],
+)
+def test_diffusers_loads_the_selected_precision(monkeypatch, device, dtype):
+    loaded = {}
+
+    class FakePipeline:
+        def to(self, target):
+            loaded["device"] = target
+            return self
+
+        def set_progress_bar_config(self, **kwargs):
+            pass
+
+    def from_pretrained(model_id, **kwargs):
+        loaded.update(kwargs)
+        return FakePipeline()
+
+    monkeypatch.setitem(sys.modules, "torch", SimpleNamespace(float16="float16", float32="float32"))
+    monkeypatch.setitem(
+        sys.modules,
+        "diffusers",
+        SimpleNamespace(AutoPipelineForText2Image=SimpleNamespace(from_pretrained=from_pretrained)),
+    )
+
+    backend = DiffusersBackend(device=device)
+    assert backend.dtype == dtype
+    assert backend.pipe is backend.pipe
+    assert loaded["torch_dtype"] == dtype
+    assert loaded["device"] == device
+
+
+@pytest.mark.parametrize(
+    ("cuda_available", "mps_available", "expected"),
+    [(True, True, "cuda"), (False, True, "mps"), (False, False, "cpu")],
+)
+def test_diffusers_selects_available_hardware(monkeypatch, cuda_available, mps_available, expected):
+    monkeypatch.setitem(
+        sys.modules,
+        "torch",
+        SimpleNamespace(
+            cuda=SimpleNamespace(is_available=lambda: cuda_available),
+            backends=SimpleNamespace(mps=SimpleNamespace(is_available=lambda: mps_available)),
+        ),
+    )
+
+    assert DiffusersBackend().device == expected
 
 
 def test_diffusers_serializes_requests_using_the_cached_pipeline(monkeypatch):
