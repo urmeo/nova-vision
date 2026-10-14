@@ -11,6 +11,6 @@ authors:
   - given-names: urme
     alias: urmeo
 abstract: >-
-  An emotion-guided image app and paired evaluation harness with
-  swappable generators and recovery probes. Saved pilot records support
-  metric reanalysis; they do not establish emotion controllability.
+  A Python prototype for emotion-guided image prompts and paired
+  recovery evaluation. Archived pilot charts and tables do not
+  establish emotion controllability.
