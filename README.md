@@ -22,12 +22,14 @@ The [public website](https://urmeo.github.io/nova-vision/) is a static preview. 
 
 ## Run
 
+Use Python 3.10 or later.
+
 ```bash
 git clone https://github.com/urmeo/nova-vision.git
 cd nova-vision
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[app,ml]"
+python -m pip install --upgrade -e ".[app,ml]"
 python -m pip install -e ".[dev]"
 python -m pytest
 node --test tests/test_web_ui.js
