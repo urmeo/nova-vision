@@ -9,12 +9,12 @@ Analysis and generation controls are disabled
 in this public preview.
 
 00:08.000 --> 00:13.000
-Write text → Estimate emotion →
-Shape the prompt → Render image.
+Write text → Analyze text →
+Build prompt → Render image.
 
 00:13.000 --> 00:18.000
-Separate validation compares paired prompts
-with known targets and an image probe.
+Experiments reuse prompt building and rendering,
+then compare paired outputs with known targets.
 
 00:18.000 --> 00:23.000
 The saved pilot shows no demonstrated improvement.

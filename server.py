@@ -25,6 +25,7 @@ logger = logging.getLogger("novavision.server")
 MIN_TEXT, MAX_TEXT = 3, 2000
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
 _STATIC = Path(__file__).resolve().parent / "static"
+_ASSETS = _STATIC.parent / "docs" / "assets"
 
 app = Flask(__name__, static_folder=str(_STATIC), static_url_path="")
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024
@@ -100,6 +101,11 @@ def _bearer_token() -> str | None:
 @app.route("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")
+
+
+@app.route("/assets/<path:filename>")
+def assets(filename):
+    return send_from_directory(_ASSETS, filename)
 
 
 @app.route("/api/analyze", methods=["POST"])

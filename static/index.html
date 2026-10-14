@@ -403,58 +403,25 @@
     <section id="how-it-works" aria-labelledby="pipelineTitle">
         <div class="section-container">
             <header class="pipeline-header">
-                <p class="pipeline-eyebrow">NovaVision / text to image</p>
+                <p class="pipeline-eyebrow">NovaVision pipeline</p>
                 <h2 id="pipelineTitle">From text to an image</h2>
-                <p>Test whether prompt cues preserve the intended emotion.</p>
+                <p>Four app steps. Separate experiments compare the outputs.</p>
             </header>
 
-            <h3 class="pipeline-label" id="appPipelineTitle">App / one description at a time</h3>
-            <ol class="pipeline" aria-labelledby="appPipelineTitle" role="list">
-                <li class="pipeline-step">
-                    <span class="pipeline-number" aria-hidden="true">01</span>
-                    <h4 class="pipeline-title">Write text</h4>
-                    <p class="pipeline-detail">English text<br>+ visual style</p>
-                </li>
-                <li class="pipeline-step">
-                    <span class="pipeline-number" aria-hidden="true">02</span>
-                    <h4 class="pipeline-title">Estimate emotion</h4>
-                    <p class="pipeline-detail">7 emotion scores<br>+ pleasantness<br>+ activation</p>
-                </li>
-                <li class="pipeline-step pipeline-prompt">
-                    <span class="pipeline-number"><span aria-hidden="true">03 / </span>Prompt mechanism</span>
-                    <h4 class="pipeline-title">Shape the prompt</h4>
-                    <p class="pipeline-detail">Emotion + affect → visual cues</p>
-                    <p class="pipeline-cues">Mood · palette · lighting · composition</p>
-                    <p class="pipeline-policy"><span>Neutral → <code>raw</code></span><span>Other labels → <code>affect</code></span></p>
-                </li>
-                <li class="pipeline-step">
-                    <span class="pipeline-number" aria-hidden="true">04</span>
-                    <h4 class="pipeline-title">Render image</h4>
-                    <p class="pipeline-detail">Backend + seed<br>+ image size</p>
-                </li>
-            </ol>
-            <p class="pipeline-output">Returns an image and run details. Default backend: synthetic test images.</p>
-
-            <h3 class="pipeline-label pipeline-validation-label" id="validationPipelineTitle">Validation / separate experiment</h3>
-            <ol class="pipeline-validation" aria-labelledby="validationPipelineTitle" role="list">
-                <li class="pipeline-step">
-                    <h4 class="pipeline-title">Known targets</h4>
-                    <p class="pipeline-detail">Subjects + labels<br>or labelled text</p>
-                </li>
-                <li class="pipeline-step">
-                    <h4 class="pipeline-title">Paired conditions</h4>
-                    <p class="pipeline-detail"><code>raw</code> · <code>naive</code> · <code>emotion</code> · <code>affect</code><br>Same seed per input + label</p>
-                </li>
-                <li class="pipeline-step">
-                    <h4 class="pipeline-title">Generate images</h4>
-                    <p class="pipeline-detail">Same model, style,<br>and image settings</p>
-                </li>
-                <li class="pipeline-step">
-                    <h4 class="pipeline-title">Probe + compare</h4>
-                    <p class="pipeline-detail">Recover emotion; compare with the intended target</p>
-                </li>
-            </ol>
-            <p class="pipeline-validation-note">The image probe runs in the experiment runner. Its predictions do not feed back into app generation.</p>
+            <figure class="pipeline-figure">
+                <a class="pipeline-diagram" href="assets/pipeline.svg" aria-describedby="pipelineDescription">
+                    <picture>
+                        <source media="(max-width: 900px)" srcset="assets/pipeline-mobile.svg" type="image/svg+xml" width="480" height="1968">
+                        <img src="assets/pipeline.svg" alt="NovaVision pipeline: four app steps and three experiment steps. Open the full-size diagram." width="1280" height="864" loading="lazy" decoding="async">
+                    </picture>
+                </a>
+                <figcaption class="visually-hidden" id="pipelineDescription">
+                    The app follows Write text → Analyze text → Build prompt → Render image, then returns the image, prompt, and run details.
+                    Neutral uses raw prompts; other labels use affect prompts. The default backend creates synthetic test images.
+                    Experiments follow Set targets → Generate pairs → Probe + compare. They reuse prompt building and rendering with raw, naive, emotion, and affect prompts, using the same seed and settings.
+                    The image probe estimates emotion and affect, compares them with known targets, and saves records and charts. CLIP is the default probe. Its estimates are not human ratings.
+                </figcaption>
+            </figure>
 
             <aside class="pipeline-evidence" aria-labelledby="pipelineEvidenceTitle">
                 <h3 id="pipelineEvidenceTitle">Saved pilot / no demonstrated improvement</h3>
@@ -477,7 +444,7 @@
                 <p class="pipeline-evidence-note">Item-bootstrap 95% confidence intervals. These are model predictions, not human ratings.</p>
             </aside>
             <div class="pipeline-links">
-                <a href="https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=20-2">Figma pipeline</a>
+                <a href="https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=24-2">Figma pipeline</a>
                 <a href="https://github.com/urmeo/nova-vision/blob/main/docs/results-tables.md">Saved metric tables</a>
             </div>
         </div>

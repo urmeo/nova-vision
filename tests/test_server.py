@@ -87,6 +87,25 @@ def test_index_served(client):
     assert client.get("/").status_code == 200
 
 
+@pytest.mark.parametrize(
+    "name", ["pipeline.svg", "pipeline-mobile.svg", "pipeline.png", "pipeline-mobile.png"]
+)
+def test_pipeline_assets_served(client, name):
+    response = client.get(f"/assets/{name}")
+
+    assert response.status_code == 200
+    if name.endswith(".svg"):
+        assert response.mimetype == "image/svg+xml"
+        assert response.data.lstrip().startswith(b"<svg")
+    else:
+        assert response.mimetype == "image/png"
+        assert response.data.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_asset_route_cannot_expose_repository_files(client):
+    assert client.get("/assets/../../server.py").status_code == 404
+
+
 def test_repo_root_not_exposed(client):
     for leak in ("/server.py", "/config.py", "/.env", "/outputs/results/results.json"):
         assert client.get(leak).status_code == 404

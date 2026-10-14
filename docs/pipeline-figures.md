@@ -9,7 +9,8 @@ is listed separately below.
 
 | Figure | Editable source | Repository exports |
 |---|---|---|
-| Integrated pipeline | [Figma, frame 20:2](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=20-2) | [SVG](assets/pipeline.svg) · [PNG](assets/pipeline.png) |
+| Pipeline, desktop | [Figma, frame 24:2](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=24-2) | [SVG](assets/pipeline.svg) · [PNG](assets/pipeline.png) |
+| Pipeline, mobile | [Figma, frame 24:3](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=24-3) | [SVG](assets/pipeline-mobile.svg) · [PNG](assets/pipeline-mobile.png) |
 | Text analysis | [Figma, frame 5:2](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=5-2) | [SVG](assets/analysis.svg) · [PNG](assets/analysis.png) |
 
 Edit the Figma frames and export both formats when the method or labels change.
@@ -18,6 +19,7 @@ use labels and arrows as well as color to identify stages.
 PNG exports use 1.5× scale. SVG text uses outlines to preserve the layout without
 installed fonts. Keep the SVG title, description, and accessible image role when
 replacing an export; the text equivalents below supply the full explanation.
+The README and website select the mobile figure on screens up to 900 pixels wide.
 
 ## Method shown
 
@@ -89,14 +91,15 @@ incomplete, so exact image replay is unverified.
 
 ## Captions and text equivalents
 
-**Integrated pipeline.** The app analyzes English text, builds a prompt, and
+**Pipeline, both layouts.** The app analyzes English text, builds a prompt, and
 renders an image. The prompt receives the original text and style, the leading
 emotion label, and blended valence and arousal. Neutral selects `raw`; other
-labels select `affect`. Seed and dimensions enter the renderer. One output
-branch returns the app's image and metadata. Experiments supply known targets
-to paired prompt tiers, use the same prompt builder and renderer, then send
-their images to a probe. The probe estimates emotion and affect. Comparison
-uses these estimates and the known targets to save recovery and affect results,
+labels select `affect`. Seed and dimensions enter the renderer. The app returns
+its image, prompt, and run details. The separate experiment row starts with
+known targets. Its "Generate pairs" step reuses numbered steps 3 and 4: prompt
+building and rendering. It compares four tiers with the same requested seed and
+settings for each input and target. The probe estimates emotion and affect.
+Comparison uses these estimates and the known targets to save recovery and affect results,
 records, and charts. Probe estimates are not human ratings and do not feed back
 into generation.
 
