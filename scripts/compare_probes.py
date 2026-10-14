@@ -5,10 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 from collections.abc import Sequence
-from math import comb
 from pathlib import Path
 
 from novavision.eval.metrics import accuracy
+from novavision.eval.metrics import mcnemar_exact as binary_mcnemar_exact
 
 
 def mcnemar_exact(gold: Sequence[str], pred_a: Sequence[str], pred_b: Sequence[str]) -> dict:
@@ -17,14 +17,7 @@ def mcnemar_exact(gold: Sequence[str], pred_a: Sequence[str], pred_b: Sequence[s
         raise ValueError("Paired gold and prediction arrays must have equal lengths")
     correct_a = [g == p for g, p in zip(gold, pred_a)]
     correct_b = [g == p for g, p in zip(gold, pred_b)]
-    only_a = sum(a and not b for a, b in zip(correct_a, correct_b))
-    only_b = sum(b and not a for a, b in zip(correct_a, correct_b))
-    discordant = only_a + only_b
-    if discordant == 0:
-        return {"only_a_correct": 0, "only_b_correct": 0, "p_value": 1.0}
-    tail_count = min(only_a, only_b)
-    p_value = min(1.0, 2 * sum(comb(discordant, i) for i in range(tail_count + 1)) / 2**discordant)
-    return {"only_a_correct": only_a, "only_b_correct": only_b, "p_value": round(p_value, 4)}
+    return binary_mcnemar_exact(correct_a, correct_b)
 
 
 def main() -> None:

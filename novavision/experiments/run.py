@@ -37,7 +37,7 @@ from novavision.eval.metrics import (
     macro_f1,
     mae,
     majority_baseline,
-    paired_bootstrap_test,
+    paired_binary_test,
     pearson,
     permutation_test,
     prediction_collapse,
@@ -650,7 +650,7 @@ def _classification_accuracy(records) -> float | None:
 
 
 def _contrasts(records) -> dict:
-    """Paired bootstrap on per-item recovery correctness between tiers."""
+    """Exact paired binary tests and bootstrap intervals between tiers."""
 
     by_key: dict[tuple, dict[str, int]] = {}
     for record in records:
@@ -665,8 +665,12 @@ def _contrasts(records) -> dict:
                 higher_scores.append(tiers[higher])
                 lower_scores.append(tiers[lower])
         if higher_scores:
-            result = paired_bootstrap_test(higher_scores, lower_scores)
-            contrasts[f"{higher}_vs_{lower}"] = {k: round(v, 4) for k, v in result.items()}
+            result = paired_binary_test(higher_scores, lower_scores)
+            contrasts[f"{higher}_vs_{lower}"] = {
+                **{k: v if k == "p_value" else round(v, 4) for k, v in result.items()},
+                "p_method": "mcnemar_exact",
+                "n_pairs": len(higher_scores),
+            }
     return contrasts
 
 

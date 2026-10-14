@@ -24,6 +24,16 @@ def test_mcnemar_symmetric_is_capped_at_one():
     assert r["p_value"] == 1.0
 
 
+def test_mcnemar_two_pairs_cannot_be_significant():
+    r = compare_probes.mcnemar_exact(["joy"] * 2, ["joy"] * 2, ["sadness"] * 2)
+    assert r == {"only_a_correct": 2, "only_b_correct": 0, "p_value": 0.5}
+
+
+def test_mcnemar_retains_small_p_values():
+    r = compare_probes.mcnemar_exact(["joy"] * 20, ["joy"] * 20, ["sadness"] * 20)
+    assert r["p_value"] == 2 / 2**20
+
+
 def test_saved_scene_mcnemar_arithmetic_assumes_the_unverified_arrays_are_paired():
     root = Path(__file__).resolve().parents[1] / "outputs" / "results"
     a = json.loads((root / "probe_validation_scene.json").read_text())

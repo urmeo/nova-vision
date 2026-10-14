@@ -17,6 +17,10 @@ def _fmt(value: float | None) -> str:
     return f"{value:.3f}" if value is not None and isfinite(value) else "n/a"
 
 
+def _fmt_p(value: float | None) -> str:
+    return "<0.001" if value is not None and 0 < value < 0.001 else _fmt(value)
+
+
 def _rho(metrics: dict, key: str) -> str:
     """Format a correlation and its bootstrap interval when both bounds are finite."""
     rho = metrics.get(key)
@@ -108,8 +112,8 @@ def metrics_table(metrics: dict) -> str:
 
 
 def contrasts_table(contrasts: dict, metrics: dict | None = None) -> str:
-    head = "| Contrast | Δ accuracy | 95% CI | Cohen's h | p |"
-    rule = "|" + "---|" * 5
+    head = "| Contrast | Δ accuracy | Bootstrap 95% CI | Cohen's h | p | p test |"
+    rule = "|" + "---|" * 6
     lines = [head, rule]
     metrics = metrics or {}
     for name, contrast in contrasts.items():
@@ -119,10 +123,17 @@ def contrasts_table(contrasts: dict, metrics: dict | None = None) -> str:
             f"{difference:+.3f}" if difference is not None and isfinite(difference) else "n/a"
         )
         label = name.replace("_", " ")
+        test = "exact McNemar" if contrast.get("p_method") == "mcnemar_exact" else "unrecorded"
         lines.append(
             f"| {label} | {formatted_difference} | {interval} | {_cohens_h(name, metrics)} | "
-            f"{_fmt(contrast['p_value'])} |"
+            f"{_fmt_p(contrast['p_value'])} | {test} |"
         )
+    lines.append(
+        "\nExact McNemar p-values are two-sided and use discordant pairs. "
+        "Bootstrap intervals resample item pairs and can collapse to a point in small samples; "
+        "they do not determine the exact test's p-value. "
+        "P-values with an unrecorded test are retained as saved."
+    )
     return "\n".join(lines)
 
 

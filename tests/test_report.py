@@ -38,6 +38,41 @@ def test_render_includes_ci_and_significance():
     assert "chance" in out.lower()
 
 
+def test_contrast_reports_exact_method_and_separate_bootstrap_interval():
+    results = _results()
+    results["contrasts"]["affect_vs_raw"].update(
+        mean_diff=1.0, ci_low=1.0, ci_high=1.0, p_value=0.5, p_method="mcnemar_exact", n_pairs=2
+    )
+
+    out = report.render(results)
+
+    assert "Bootstrap 95% CI" in out
+    assert "| 0.500 | exact McNemar |" in out
+    assert "two-sided" in out
+    assert "collapse to a point in small samples" in out
+
+
+def test_legacy_contrast_is_not_relabeled_as_exact():
+    out = report.contrasts_table(_results()["contrasts"])
+    assert "| 0.001 | unrecorded |" in out
+    assert "retained as saved" in out
+
+
+def test_mixed_contrasts_identify_each_test_separately():
+    contrasts = _results()["contrasts"]
+    contrasts["emotion_vs_raw"] = {**contrasts["affect_vs_raw"], "p_method": "mcnemar_exact"}
+    out = report.contrasts_table(contrasts)
+    assert "| 0.001 | unrecorded |" in out
+    assert "| 0.001 | exact McNemar |" in out
+
+
+@pytest.mark.parametrize("p_value", [2 / 2**20, 0.00049])
+def test_small_positive_p_values_do_not_display_as_zero(p_value):
+    contrasts = _results()["contrasts"]
+    contrasts["affect_vs_raw"]["p_value"] = p_value
+    assert "| <0.001 |" in report.contrasts_table(contrasts)
+
+
 def test_nan_renders_as_placeholder():
     assert report._fmt(float("nan")) == "n/a"
     assert report._fmt(None) == "n/a"

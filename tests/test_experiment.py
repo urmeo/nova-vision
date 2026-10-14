@@ -89,6 +89,45 @@ def test_contrasts_detect_lift():
     assert contrasts["emotion_vs_raw"]["p_value"] < 0.05
 
 
+@pytest.mark.parametrize("pairs, expected_p", [(1, 1.0), (2, 0.5), (8, 0.0078125)])
+def test_contrasts_use_exact_binary_significance(pairs, expected_p):
+    records = [
+        {
+            "tier": tier,
+            "index": index,
+            "content": "same text",
+            "intended": "joy",
+            "predicted": "joy" if tier == "emotion" else "sadness",
+            "seed": 0,
+        }
+        for index in range(pairs)
+        for tier in ("raw", "emotion")
+    ]
+    contrast = run._contrasts(records)["emotion_vs_raw"]
+
+    assert contrast["mean_diff"] == 1.0
+    assert contrast["p_value"] == expected_p
+    assert contrast["p_method"] == "mcnemar_exact"
+    assert contrast["n_pairs"] == pairs
+
+
+def test_contrasts_preserve_small_exact_p_values():
+    records = [
+        {
+            "tier": tier,
+            "index": index,
+            "content": "same text",
+            "intended": "joy",
+            "predicted": "joy" if tier == "emotion" else "sadness",
+            "seed": 0,
+        }
+        for index in range(20)
+        for tier in ("raw", "emotion")
+    ]
+    contrast = run._contrasts(records)["emotion_vs_raw"]
+    assert contrast["p_value"] == 2 / 2**20
+
+
 def test_indexed_repeated_text_keeps_distinct_paired_observations():
     records = []
     for index, correct in enumerate((False, True)):

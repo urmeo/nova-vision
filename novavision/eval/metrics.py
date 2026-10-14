@@ -236,31 +236,53 @@ def bootstrap_ci(
     return float(lo), float(hi)
 
 
-def paired_bootstrap_test(
-    a: Sequence[float], b: Sequence[float], *, n: int = 2000, seed: int = 0
-) -> dict[str, float]:
-    "Paired bootstrap on the per-item difference a - b."
+def _binary_pair(a: Sequence[float], b: Sequence[float]) -> tuple[np.ndarray, np.ndarray]:
     da = np.asarray(a, dtype=float)
     db = np.asarray(b, dtype=float)
+    if any(values.ndim != 1 or not np.isin(values, [0, 1]).all() for values in (da, db)):
+        raise ValueError("a and b must be one-dimensional binary correctness arrays")
     if len(da) != len(db):
         raise ValueError("a and b must be the same length")
+    return da, db
+
+
+def mcnemar_exact(a: Sequence[float], b: Sequence[float]) -> dict[str, float | int]:
+    "Two-sided exact McNemar test, conditional on discordant binary pairs."
+    da, db = _binary_pair(a, b)
+    only_a = int(np.count_nonzero(da > db))
+    only_b = int(np.count_nonzero(db > da))
+    discordant = only_a + only_b
+    coefficient = tail = 1
+    for i in range(1, min(only_a, only_b) + 1):
+        coefficient = coefficient * (discordant - i + 1) // i
+        tail += coefficient
+    p_value = min(1.0, (2 * tail) / (1 << discordant))
+    return {"only_a_correct": only_a, "only_b_correct": only_b, "p_value": p_value}
+
+
+def paired_binary_test(
+    a: Sequence[float], b: Sequence[float], *, n: int = 2000, seed: int = 0
+) -> dict[str, float]:
+    "Exact McNemar p-value and a paired percentile-bootstrap interval for mean a - b."
+    da, db = _binary_pair(a, b)
+    if isinstance(n, bool) or not isinstance(n, int) or n < 1:
+        raise ValueError("n must be a positive integer")
     diff = da - db
-    if len(diff) < 2:
+    if len(diff) == 0:
         return {
             "mean_diff": float("nan"),
             "ci_low": float("nan"),
             "ci_high": float("nan"),
             "p_value": float("nan"),
         }
-    rng = np.random.default_rng(seed)
-    resampled = diff[rng.integers(0, len(diff), size=(n, len(diff)))].mean(axis=1)
-    lo, hi = np.quantile(resampled, [0.025, 0.975])
-    centered = resampled - resampled.mean()
-
-    p = float((1 + np.sum(np.abs(centered) >= abs(diff.mean()))) / (n + 1))
+    lo, hi = bootstrap_ci(diff, n=n, seed=seed)
     return {
         "mean_diff": float(diff.mean()),
         "ci_low": float(lo),
         "ci_high": float(hi),
-        "p_value": p,
+        "p_value": float(mcnemar_exact(a, b)["p_value"]),
     }
+
+
+# Compatibility name: binary inputs, exact p-value, bootstrap interval.
+paired_bootstrap_test = paired_binary_test
