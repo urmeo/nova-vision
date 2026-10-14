@@ -1,10 +1,5 @@
 # Pipeline figures
 
-The figures explain how NovaVision builds an image prompt and how separate
-experiments test emotion recovery. They describe the implemented method, not a
-new model or demonstrated improvement in emotion control. Saved pilot evidence
-is listed separately below.
-
 ## Editable source and exports
 
 | Figure | Editable source | Repository exports |
@@ -14,8 +9,7 @@ is listed separately below.
 | Text analysis | [Figma, frame 5:2](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=5-2) | [SVG](assets/analysis.svg) · [PNG](assets/analysis.png) |
 
 Edit the Figma frames and export both formats when the method or labels change.
-Keep the captions and README alt text consistent with the exports. The diagrams
-use labels and arrows as well as color to identify stages.
+Keep the captions and README alt text consistent with the exports.
 PNG exports use 1.5× scale. SVG text uses outlines to preserve the layout without
 installed fonts. Keep the SVG title, description, and accessible image role when
 replacing an export; the text equivalents below supply the full explanation.
@@ -39,10 +33,9 @@ demonstrations, not empirical norms. Valence ranges from −1 to 1; arousal rang
 from 0 to 1. These are text estimates, not measured responses to the generated
 image.
 
-The highlighted prompt stage shows the mechanism under study. For non-neutral
-text, `affect` adds mood wording, a valence-based palette, and arousal-based
-lighting and composition. Neutral selects `raw`. The original text and selected
-style enter the prompt directly, and both prompt paths retain fixed quality
+For non-neutral text, `affect` adds mood wording, a valence-based palette, and
+arousal-based lighting and composition. Neutral selects `raw`. The original text
+and selected style enter the prompt directly, and both prompt paths retain fixed quality
 terms. Seed and image dimensions enter the rendering backend. The app returns
 an image and metadata. The default `null` backend creates synthetic test images;
 local Diffusers and hosted inference are optional generation backends.
@@ -50,11 +43,9 @@ local Diffusers and hosted inference are optional generation backends.
 Experiments enter the same prompt builder and renderer with known targets and
 paired prompt tiers. The four main conditions—`raw`, `naive`, `emotion`, and
 `affect`—share a generator seed for each input, intended label, and seed index.
-Other generation settings stay fixed. The app returns its image and metadata;
-the experiment branch sends generated images to a probe and compares the
-estimates with the targets. The default probe is CLIP. The target line carries
-known labels and affect targets directly to comparison. Probe predictions do
-not update prompts or regenerate images.
+Other generation settings stay fixed. Experiments send generated images to a
+probe and compare its estimates with the targets. The default probe is CLIP.
+Probe predictions do not update prompts or regenerate images.
 
 | Method or evidence | Implementation or record |
 |---|---|
