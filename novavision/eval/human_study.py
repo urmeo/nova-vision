@@ -6,14 +6,19 @@ import argparse
 import csv
 import json
 import random
+import shutil
 from collections import Counter
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from uuid import UUID, uuid4
 
 from novavision.data import load_content_bank
 from novavision.eval.metrics import accuracy, cohen_kappa
 from novavision.generation import get_backend
 from novavision.prompting import NEGATIVE_PROMPT, build_prompt
 from novavision.taxonomy import EMOTIONS
+
+_IDENTITY_FIELDS = ("id", "study_id", "image", "image_pixel_sha256")
 
 
 def _sample_records(records: list[dict], n: int, seed: int) -> list[dict]:
@@ -99,10 +104,13 @@ def _verify_rebuild_provenance(data: dict) -> None:
 def build_sheet(
     results_dir: str | Path, n: int = 60, seed: int = 0, gen=None, *, out: str | Path | None = None
 ) -> Path:
-    "Build blinded ratings from verified images; ``out`` selects the study directory."
+    "Build a blinded study from verified images in a new destination directory."
     if n < 1:
         raise ValueError("n must be positive")
     results_dir = Path(results_dir)
+    study = Path(out) if out is not None else results_dir / "human_study"
+    if study.exists() or study.is_symlink():
+        raise FileExistsError(f"Study destination already exists: {study}. Choose a new directory.")
     data = json.loads((results_dir / "results.json").read_text())
     config = data["manifest"]["config"]
     style = config.get("style", "artistic")
@@ -153,34 +161,50 @@ def build_sheet(
 
     print(f"[human-study] realized per-class counts: {per_class}", flush=True)
 
-    study = Path(out) if out is not None else results_dir / "human_study"
-    images = study / "images"
-    images.mkdir(parents=True, exist_ok=True)
+    study_id = uuid4().hex
+    study.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(prefix=f".{study.name}-", dir=study.parent) as temporary:
+        staging = Path(temporary)
+        (staging / "images").mkdir()
+        sheet, key = [], []
+        for index, record in enumerate(picked):
+            if record.get("image_path"):
+                source = Path(record["image_path"])
+                if not source.is_absolute():
+                    source = results_dir / source
+                with Image.open(source) as saved:
+                    image = saved.convert("RGB")
+            else:
+                image = _rebuild_image(record, bank, gen, config, style, _seed)
+            digest = _image_digest(image)
+            if digest != record["image_pixel_sha256"]:
+                raise ValueError("Image pixel digest differs from the image the probe scored")
+            image_id = f"{study_id}-{index:03d}"
+            relative_path = f"images/{image_id}.png"
+            image.save(staging / relative_path)
+            identity = {
+                "id": image_id,
+                "study_id": study_id,
+                "image": relative_path,
+                "image_pixel_sha256": digest,
+            }
+            sheet.append({**identity, "emotion": ""})
+            key.append({**identity, "intended": record["intended"], "probe": record["predicted"]})
 
-    sheet, key = [], []
-    for index, record in enumerate(picked):
-        if record.get("image_path"):
-            source = Path(record["image_path"])
-            if not source.is_absolute():
-                source = results_dir / source
-            with Image.open(source) as saved:
-                image = saved.convert("RGB")
-        else:
-            image = _rebuild_image(record, bank, gen, config, style, _seed)
-        if _image_digest(image) != record["image_pixel_sha256"]:
-            raise ValueError("Image pixel digest differs from the image the probe scored")
-        relative_path = f"images/{index:03d}.png"
-        image.save(study / relative_path)
-        sheet.append({"id": index, "image": relative_path, "emotion": ""})
-        key.append({"id": index, "intended": record["intended"], "probe": record["predicted"]})
-
-    _write_csv(study / "ratings_template.csv", ["id", "image", "emotion"], sheet)
-    _write_csv(study / "key.csv", ["id", "intended", "probe"], key)
-    _write_csv(
-        study / "counts.csv",
-        ["emotion", "n"],
-        [{"emotion": emotion, "n": count} for emotion, count in per_class.items()],
-    )
+        _write_csv(staging / "ratings_template.csv", [*_IDENTITY_FIELDS, "emotion"], sheet)
+        _write_csv(staging / "key.csv", [*_IDENTITY_FIELDS, "intended", "probe"], key)
+        _write_csv(
+            staging / "counts.csv",
+            ["emotion", "n"],
+            [{"emotion": emotion, "n": count} for emotion, count in per_class.items()],
+        )
+        study.mkdir(exist_ok=False)
+        try:
+            for path in staging.iterdir():
+                path.replace(study / path.name)
+        except OSError:
+            shutil.rmtree(study)
+            raise
     return study
 
 
@@ -208,20 +232,27 @@ def _rebuild_image(record, bank, gen, config, style, seed_fn):
 def analyze(ratings_csv: str | Path, key_csv: str | Path) -> dict:
     from novavision.eval.validate_probe import EKMAN_ALIASES
 
-    raw = {
-        image_id: record["emotion"].strip().lower()
-        for image_id, record in _read_by_id(ratings_csv).items()
-    }
+    rated_records = _read_by_id(ratings_csv, ("emotion",))
+    key = _read_by_id(key_csv, ("intended", "probe"))
+    if not key:
+        raise ValueError("The study key contains no images")
+    unknown_ids = set(rated_records) - set(key)
+    if unknown_ids:
+        raise ValueError(f"Ratings contain image IDs absent from the key: {sorted(unknown_ids)}")
+    for image_id, record in rated_records.items():
+        if any(record[field] != key[image_id][field] for field in _IDENTITY_FIELDS):
+            raise ValueError(f"Ratings do not match the study key for image {image_id}")
+    if any(
+        record[label] not in EMOTIONS for record in key.values() for label in ("intended", "probe")
+    ):
+        raise ValueError("The study key contains an unknown emotion label")
+    _verify_study_images(Path(key_csv).parent, key)
 
     ratings = {
         image_id: EKMAN_ALIASES.get(emotion, emotion)
-        for image_id, emotion in raw.items()
-        if emotion
+        for image_id, record in rated_records.items()
+        if (emotion := record["emotion"].strip().lower())
     }
-    key = _read_by_id(key_csv)
-    unknown_ids = set(ratings) - set(key)
-    if unknown_ids:
-        raise ValueError(f"Ratings contain image IDs absent from the key: {sorted(unknown_ids)}")
     known = set(EMOTIONS)
 
     ids = [image_id for image_id in key if ratings.get(image_id) in known]
@@ -253,14 +284,69 @@ def _read_csv(path):
         return list(csv.DictReader(fh))
 
 
-def _read_by_id(path) -> dict[int, dict]:
+def _read_by_id(path, labels: tuple[str, ...]) -> dict[str, dict]:
     records = {}
-    for record in _read_csv(path):
-        image_id = int(record["id"])
-        if image_id in records:
-            raise ValueError(f"Duplicate image ID {image_id} in {path}")
-        records[image_id] = record
+    study_ids = set()
+    with open(path, encoding="utf-8", newline="") as fh:
+        reader = csv.DictReader(fh)
+        fields = reader.fieldnames or []
+        if not set((*_IDENTITY_FIELDS, *labels)).issubset(fields):
+            raise ValueError(
+                "Study files lack image bindings; rebuild the study and collect new ratings. "
+                "Old unbound ratings cannot be migrated safely."
+            )
+        if len(fields) != len(set(fields)):
+            raise ValueError(f"Duplicate CSV columns in {path}")
+        for record in reader:
+            if None in record or any(value is None for value in record.values()):
+                raise ValueError(f"Malformed CSV row in {path}")
+            study_id, image_id = record["study_id"], record["id"]
+            try:
+                valid_study = UUID(study_id).hex == study_id
+            except ValueError:
+                valid_study = False
+            suffix = image_id.removeprefix(study_id + "-")
+            if (
+                not valid_study
+                or not image_id.startswith(study_id + "-")
+                or not suffix.isascii()
+                or not suffix.isdigit()
+                or image_id != f"{study_id}-{int(suffix):03d}"
+            ):
+                raise ValueError(f"Invalid study/image identity in {path}")
+            digest = record["image_pixel_sha256"]
+            if len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+                raise ValueError(f"Invalid image pixel digest for {image_id} in {path}")
+            if record["image"] != f"images/{image_id}.png":
+                raise ValueError(f"Invalid image path for {image_id} in {path}")
+            if image_id in records:
+                raise ValueError(f"Duplicate image ID {image_id} in {path}")
+            study_ids.add(study_id)
+            records[image_id] = record
+    if len(study_ids) > 1:
+        raise ValueError(f"Multiple study IDs in {path}")
     return records
+
+
+def _verify_study_images(study: Path, key: dict[str, dict]) -> None:
+    from PIL import Image
+
+    from novavision.experiments.run import _image_digest
+
+    images = study / "images"
+    if not images.exists() and not images.is_symlink():
+        return
+    for image_id, record in key.items():
+        image_path = study / record["image"]
+        if not image_path.is_file():
+            raise ValueError(f"Study image is missing: {image_id}")
+        try:
+            with Image.open(image_path) as image:
+                digest = _image_digest(image)
+        except OSError as exc:
+            raise ValueError(f"Study image cannot be read: {image_id}") from exc
+        if digest != record["image_pixel_sha256"]:
+            raise ValueError(f"Study image pixel digest differs for {image_id}")
 
 
 def main() -> None:
@@ -274,7 +360,7 @@ def main() -> None:
     build_parser.add_argument(
         "--out",
         default="outputs/generated/human_study",
-        help="destination directory for ratings, images and counts",
+        help="new destination directory for ratings, images and counts; existing paths are refused",
     )
 
     analyze_parser = sub.add_parser("analyze")

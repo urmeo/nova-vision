@@ -82,11 +82,13 @@ def test_build_sheet_and_analyze(tmp_path):
     assert len(list((study / "images").glob("*.png"))) == 7
 
     key = list(human_study._read_csv(study / "key.csv"))
+    template = human_study._read_csv(study / "ratings_template.csv")
+    assert all(set(record) == {*human_study._IDENTITY_FIELDS, "emotion"} for record in template)
     rated = study / "rated.csv"
     human_study._write_csv(
         rated,
-        ["id", "image", "emotion"],
-        [{"id": r["id"], "image": "", "emotion": r["probe"]} for r in key],
+        [*human_study._IDENTITY_FIELDS, "emotion"],
+        [{**record, "emotion": target["probe"]} for record, target in zip(template, key)],
     )
     result = human_study.analyze(rated, study / "key.csv")
     assert result["n_rated"] == 7
@@ -135,47 +137,63 @@ def test_analyze_skips_out_of_vocab_rating(tmp_path):
     key = tmp_path / "key.csv"
     human_study._write_csv(
         key,
-        ["id", "intended", "probe"],
+        [*human_study._IDENTITY_FIELDS, "intended", "probe"],
         [
-            {"id": 0, "intended": "joy", "probe": "joy"},
-            {"id": 1, "intended": "anger", "probe": "anger"},
+            {**_identity(0), "intended": "joy", "probe": "joy"},
+            {**_identity(1), "intended": "anger", "probe": "anger"},
         ],
     )
     rated = tmp_path / "rated.csv"
 
     human_study._write_csv(
         rated,
-        ["id", "image", "emotion"],
+        [*human_study._IDENTITY_FIELDS, "emotion"],
         [
-            {"id": 0, "image": "", "emotion": "happy"},
-            {"id": 1, "image": "", "emotion": "banana"},
+            {**_identity(0), "emotion": "happy"},
+            {**_identity(1), "emotion": "banana"},
         ],
     )
     res = human_study.analyze(rated, key)
-    assert res["n_rated"] == 1 and res["n_unscored"] == 1 and res["unscored_ids"] == [1]
+    assert res["n_rated"] == 1 and res["n_unscored"] == 1
+    assert res["unscored_ids"] == [_identity(1)["id"]]
+
+
+def _identity(index, study_id="1" * 32):
+    image_id = f"{study_id}-{index:03d}"
+    return {
+        "id": image_id,
+        "study_id": study_id,
+        "image": f"images/{image_id}.png",
+        "image_pixel_sha256": "a" * 64,
+    }
+
+
+def _write_study_files(tmp_path, ratings, key):
+    ratings_path, key_path = tmp_path / "ratings.csv", tmp_path / "key.csv"
+    human_study._write_csv(ratings_path, [*human_study._IDENTITY_FIELDS, "emotion"], ratings)
+    human_study._write_csv(key_path, [*human_study._IDENTITY_FIELDS, "intended", "probe"], key)
+    return ratings_path, key_path
 
 
 @pytest.mark.parametrize("duplicate_file", ["ratings", "key"])
 def test_analyze_rejects_duplicate_image_ids(tmp_path, duplicate_file):
-    ratings = [{"id": 0, "emotion": "joy"}]
-    key = [{"id": 0, "intended": "joy", "probe": "joy"}]
+    ratings = [{**_identity(0), "emotion": "joy"}]
+    key = [{**_identity(0), "intended": "joy", "probe": "joy"}]
     (ratings if duplicate_file == "ratings" else key).append(
-        {"id": 0, "emotion": "anger"} if duplicate_file == "ratings" else key[0]
+        {**_identity(0), "emotion": "anger"} if duplicate_file == "ratings" else key[0]
     )
-    ratings_path, key_path = tmp_path / "ratings.csv", tmp_path / "key.csv"
-    human_study._write_csv(ratings_path, ["id", "emotion"], ratings)
-    human_study._write_csv(key_path, ["id", "intended", "probe"], key)
-    with pytest.raises(ValueError, match="Duplicate image ID 0"):
+    ratings_path, key_path = _write_study_files(tmp_path, ratings, key)
+    with pytest.raises(ValueError, match=f"Duplicate image ID {_identity(0)['id']}"):
         human_study.analyze(ratings_path, key_path)
 
 
 def test_analyze_rejects_rated_image_absent_from_the_key(tmp_path):
-    ratings_path, key_path = tmp_path / "ratings.csv", tmp_path / "key.csv"
-    human_study._write_csv(ratings_path, ["id", "emotion"], [{"id": 1, "emotion": "joy"}])
-    human_study._write_csv(
-        key_path, ["id", "intended", "probe"], [{"id": 0, "intended": "joy", "probe": "joy"}]
+    ratings_path, key_path = _write_study_files(
+        tmp_path,
+        [{**_identity(1), "emotion": "joy"}],
+        [{**_identity(0), "intended": "joy", "probe": "joy"}],
     )
-    with pytest.raises(ValueError, match="image IDs absent from the key: \\[1\\]"):
+    with pytest.raises(ValueError, match="image IDs absent from the key"):
         human_study.analyze(ratings_path, key_path)
 
 
@@ -277,7 +295,8 @@ def test_build_sheet_uses_verified_original_and_custom_destination(tmp_path, mon
     destination = tmp_path / "separate" / "study"
     study = human_study.build_sheet(tmp_path, n=1, out=destination)
     assert study == destination
-    assert run._image_digest(Image.open(study / "images" / "000.png")) == run._image_digest(
+    image_path = study / human_study._read_csv(study / "key.csv")[0]["image"]
+    assert run._image_digest(Image.open(image_path)) == run._image_digest(
         Image.open(tmp_path / "original.png")
     )
     assert not (tmp_path / "human_study").exists()
@@ -344,4 +363,203 @@ def test_diffusers_replay_uses_recorded_generator_settings(tmp_path, monkeypatch
     wrong = SavedSettingsGenerator()
     wrong.device = "mps"
     with pytest.raises(ValueError, match="supplied backend differs"):
-        human_study.build_sheet(tmp_path, n=1, gen=wrong)
+        human_study.build_sheet(tmp_path, n=1, gen=wrong, out=tmp_path / "wrong-backend")
+
+
+@pytest.mark.parametrize("destination_kind", ["empty", "file", "symlink", "broken_symlink"])
+def test_existing_destination_is_refused_before_results_or_backend_work(
+    tmp_path, monkeypatch, destination_kind
+):
+    destination = tmp_path / "existing"
+    if destination_kind == "empty":
+        destination.mkdir()
+    elif destination_kind == "file":
+        destination.write_text("preserved")
+    else:
+        target = tmp_path / "target"
+        if destination_kind == "symlink":
+            target.mkdir()
+        destination.symlink_to(target, target_is_directory=True)
+    monkeypatch.setattr(
+        human_study, "get_backend", lambda *a, **kw: pytest.fail("backend initialized")
+    )
+    with pytest.raises(FileExistsError, match="Choose a new directory"):
+        human_study.build_sheet(tmp_path / "no-results", out=destination)
+    if destination_kind == "file":
+        assert destination.read_text() == "preserved"
+
+
+def test_rebuilding_does_not_overwrite_images_key_or_completed_ratings(tmp_path):
+    (tmp_path / "results.json").write_text(json.dumps(_saved_original_payload(tmp_path)))
+    study = human_study.build_sheet(tmp_path, n=1)
+    template = human_study._read_csv(study / "ratings_template.csv")
+    template[0]["emotion"] = "fear"
+    human_study._write_csv(
+        study / "rated.csv", [*human_study._IDENTITY_FIELDS, "emotion"], template
+    )
+    before = {path: path.read_bytes() for path in study.rglob("*") if path.is_file()}
+    with pytest.raises(FileExistsError):
+        human_study.build_sheet(tmp_path, n=1)
+    assert {path: path.read_bytes() for path in study.rglob("*") if path.is_file()} == before
+
+
+def test_fresh_studies_have_distinct_identities_bound_to_verified_pixels(tmp_path):
+    (tmp_path / "results.json").write_text(json.dumps(_saved_original_payload(tmp_path)))
+    studies = [human_study.build_sheet(tmp_path, n=1, out=tmp_path / name) for name in ("a", "b")]
+    keys = [human_study._read_csv(study / "key.csv")[0] for study in studies]
+    assert keys[0]["study_id"] != keys[1]["study_id"]
+    assert keys[0]["id"] != keys[1]["id"]
+    assert keys[0]["image_pixel_sha256"] == keys[1]["image_pixel_sha256"]
+    for study, key in zip(studies, keys):
+        template = human_study._read_csv(study / "ratings_template.csv")[0]
+        assert all(template[field] == key[field] for field in human_study._IDENTITY_FIELDS)
+        assert template["id"].startswith(template["study_id"] + "-")
+        with Image.open(study / template["image"]) as image:
+            assert run._image_digest(image) == template["image_pixel_sha256"]
+    with pytest.raises(ValueError, match="image IDs absent from the key"):
+        human_study.analyze(studies[0] / "ratings_template.csv", studies[1] / "key.csv")
+
+
+def test_failed_build_does_not_publish_partial_study(tmp_path):
+    (tmp_path / "results.json").write_text(json.dumps(_saved_original_payload(tmp_path)))
+    Image.new("RGB", (8, 8), "red").save(tmp_path / "original.png")
+    destination = tmp_path / "study"
+    with pytest.raises(ValueError, match="pixel digest differs"):
+        human_study.build_sheet(tmp_path, n=1, out=destination)
+    assert not destination.exists()
+    assert not list(tmp_path.glob(".study-*"))
+
+
+def test_destination_created_during_build_is_preserved(tmp_path, monkeypatch):
+    (tmp_path / "results.json").write_text(json.dumps(_saved_original_payload(tmp_path)))
+    destination = tmp_path / "study"
+    original = human_study._write_csv
+
+    def competing_directory(path, fields, rows):
+        original(path, fields, rows)
+        if not destination.exists():
+            destination.mkdir()
+            (destination / "ratings.csv").write_text("preserved")
+
+    monkeypatch.setattr(human_study, "_write_csv", competing_directory)
+    with pytest.raises(FileExistsError):
+        human_study.build_sheet(tmp_path, n=1, out=destination)
+    assert list(destination.iterdir()) == [destination / "ratings.csv"]
+    assert (destination / "ratings.csv").read_text() == "preserved"
+    assert not list(tmp_path.glob(".study-*"))
+
+
+def test_publication_failure_removes_only_the_new_study(tmp_path, monkeypatch):
+    (tmp_path / "results.json").write_text(json.dumps(_saved_original_payload(tmp_path)))
+    previous = tmp_path / "previous-study"
+    previous.mkdir()
+    (previous / "rated.csv").write_text("preserved ratings")
+    before = {path: path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()}
+    destination = tmp_path / "study"
+    original = human_study.Path.replace
+    moves = 0
+
+    def failed_second_move(path, target):
+        nonlocal moves
+        moves += 1
+        if moves == 2:
+            raise OSError("publication failed")
+        return original(path, target)
+
+    monkeypatch.setattr(human_study.Path, "replace", failed_second_move)
+    with pytest.raises(OSError, match="publication failed"):
+        human_study.build_sheet(tmp_path, n=1, out=destination)
+    assert moves == 2
+    assert not destination.exists()
+    assert not list(tmp_path.glob(".study-*"))
+    assert {path: path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()} == before
+
+
+@pytest.mark.parametrize("legacy_file", ["ratings", "key"])
+def test_analyze_refuses_unbound_legacy_study_files(tmp_path, legacy_file):
+    ratings, key = _write_study_files(
+        tmp_path,
+        [{**_identity(0), "emotion": "joy"}],
+        [{**_identity(0), "intended": "joy", "probe": "joy"}],
+    )
+    if legacy_file == "ratings":
+        human_study._write_csv(ratings, ["id", "emotion"], [{"id": 0, "emotion": "joy"}])
+    else:
+        human_study._write_csv(
+            key, ["id", "intended", "probe"], [{"id": 0, "intended": "joy", "probe": "joy"}]
+        )
+    with pytest.raises(ValueError, match="Old unbound ratings cannot be migrated safely"):
+        human_study.analyze(ratings, key)
+
+
+@pytest.mark.parametrize("emotion", ["joy", ""])
+def test_analyze_validates_hash_binding_even_for_unrated_rows(tmp_path, emotion):
+    ratings, key = _write_study_files(
+        tmp_path,
+        [{**_identity(0), "image_pixel_sha256": "b" * 64, "emotion": emotion}],
+        [{**_identity(0), "intended": "joy", "probe": "joy"}],
+    )
+    with pytest.raises(ValueError, match="do not match the study key"):
+        human_study.analyze(ratings, key)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("study_id", "invalid", "Invalid study/image identity"),
+        ("id", "0", "Invalid study/image identity"),
+        ("image_pixel_sha256", "bad-hash", "Invalid image pixel digest"),
+        ("image", "../original.png", "Invalid image path"),
+    ],
+)
+def test_analyze_rejects_malformed_bindings(tmp_path, field, value, message):
+    ratings, key = _write_study_files(
+        tmp_path,
+        [{**_identity(0), field: value, "emotion": "joy"}],
+        [{**_identity(0), "intended": "joy", "probe": "joy"}],
+    )
+    with pytest.raises(ValueError, match=message):
+        human_study.analyze(ratings, key)
+
+
+@pytest.mark.parametrize("mixed_file", ["ratings", "key"])
+def test_analyze_refuses_mixed_studies(tmp_path, mixed_file):
+    identities = [_identity(0), _identity(1, study_id="2" * 32)]
+    ratings = [{**_identity(0), "emotion": "joy"}]
+    key = [{**_identity(0), "intended": "joy", "probe": "joy"}]
+    if mixed_file == "ratings":
+        ratings = [{**identity, "emotion": "joy"} for identity in identities]
+    else:
+        key = [{**identity, "intended": "joy", "probe": "joy"} for identity in identities]
+    ratings_path, key_path = _write_study_files(tmp_path, ratings, key)
+    with pytest.raises(ValueError, match="Multiple study IDs"):
+        human_study.analyze(ratings_path, key_path)
+
+
+@pytest.mark.parametrize("mutation", ["changed", "missing", "unreadable", "broken_directory"])
+def test_analyze_verifies_available_study_images(tmp_path, mutation):
+    (tmp_path / "results.json").write_text(json.dumps(_saved_original_payload(tmp_path)))
+    study = human_study.build_sheet(tmp_path, n=1)
+    identity = human_study._read_csv(study / "key.csv")[0]
+    image_path = study / identity["image"]
+    if mutation == "changed":
+        Image.new("RGB", (8, 8), "red").save(image_path)
+    elif mutation == "unreadable":
+        image_path.write_bytes(b"not an image")
+    else:
+        image_path.unlink()
+        if mutation == "broken_directory":
+            (study / "images").rmdir()
+            (study / "images").symlink_to(study / "absent", target_is_directory=True)
+    with pytest.raises(ValueError, match="pixel digest differs|image is missing|cannot be read"):
+        human_study.analyze(study / "ratings_template.csv", study / "key.csv")
+
+
+def test_analyze_rejects_unknown_key_labels(tmp_path):
+    ratings, key = _write_study_files(
+        tmp_path,
+        [{**_identity(0), "emotion": "joy"}],
+        [{**_identity(0), "intended": "positive", "probe": "joy"}],
+    )
+    with pytest.raises(ValueError, match="unknown emotion label"):
+        human_study.analyze(ratings, key)
