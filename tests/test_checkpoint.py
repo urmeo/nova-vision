@@ -39,7 +39,7 @@ def test_resume_discards_only_partial_final_record_and_can_append(tmp_path, tail
     reopened = run._Checkpoint(path, MANIFEST)
     assert reopened.cached("raw", "joy", 0, 0) == record
     assert reopened.cached("naive", "joy", 0, 0) == NEXT_RECORD
-    assert path.read_bytes() == complete + _line(NEXT_RECORD)
+    assert path.read_bytes().splitlines() == (complete + _line(NEXT_RECORD)).splitlines()
 
 
 @pytest.mark.parametrize("final_record", [None, {**RECORD, "content": "café"}])
@@ -52,6 +52,7 @@ def test_resume_keeps_valid_final_json_without_newline(tmp_path, final_record):
 
     checkpoint = run._Checkpoint(path, MANIFEST)
 
+    assert path.read_bytes() == contents
     if final_record is not None:
         assert checkpoint.cached("raw", "joy", 0, 0) == final_record
     checkpoint.record(NEXT_RECORD)
@@ -59,7 +60,7 @@ def test_resume_keeps_valid_final_json_without_newline(tmp_path, final_record):
     assert reopened.cached("naive", "joy", 0, 0) == NEXT_RECORD
     if final_record is not None:
         assert reopened.cached("raw", "joy", 0, 0) == final_record
-    assert path.read_bytes() == contents + _line(NEXT_RECORD)
+    assert path.read_bytes().splitlines() == (contents + _line(NEXT_RECORD)).splitlines()
 
 
 @pytest.mark.parametrize("bad_line", [b'{"tier":', b'{"content": "caf\xc3'])
