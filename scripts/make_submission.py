@@ -1,4 +1,4 @@
-"Turn a run's results.json into a schema-valid benchmark submission."
+"Build a benchmark submission from saved run measurements."
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from novavision.experiments.run import ALL_CONDITIONS
 def build_submission(results: dict, system: str) -> dict:
     manifest = results["manifest"]
     config = manifest["config"]
+    backend = config.get("backend", "").lower()
     metrics = results["metrics"]
 
     conditions = {}
@@ -30,8 +31,8 @@ def build_submission(results: dict, system: str) -> dict:
     submission = {
         "system": system,
         "track": config.get("track", "content"),
-        "generator": config.get("diffusion_model", "unknown"),
-        "probe": config.get("probe", "unknown"),
+        "generator": ("null" if backend == "null" else config.get("diffusion_model", "unknown")),
+        "probe": config.get("clip_model") or config.get("probe", "unknown"),
         "conditions": conditions,
         "provenance": {
             "git_sha": manifest.get("git_sha", "unknown"),

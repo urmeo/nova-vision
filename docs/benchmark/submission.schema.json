@@ -9,7 +9,7 @@
   "properties": {
     "system": {"type": "string", "description": "Human-readable name of the submitted system."},
     "track": {"enum": ["content", "text"]},
-    "generator": {"type": "string", "description": "Text-to-image model id (HF or local)."},
+    "generator": {"type": "string", "description": "Generator model id (HF or local), or the string 'null' for synthetic test images."},
     "probe": {"type": "string", "description": "Recovery probe id (CLIP or HF image classifier)."},
     "conditions": {
       "type": "object",

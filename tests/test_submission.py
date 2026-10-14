@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import make_submission
+import pytest
 
 
 def test_submission_has_required_schema_fields():
@@ -72,3 +73,41 @@ def test_submission_omits_probe_health_when_degenerate():
     }
     sub = make_submission.build_submission(results, "degenerate")
     assert "probe_health" not in sub
+
+
+@pytest.mark.parametrize(
+    ("backend", "probe_name", "probe_model", "expected_generator"),
+    [
+        ("null", "clip:test", "openai/test", "null"),
+        ("NULL", "clip:test", "openai/test", "null"),
+        ("diffusers", "clip:test", "openai/test", "org/renderer"),
+        ("hf-api", "img:test", "org/test", "org/renderer"),
+    ],
+)
+def test_submission_preserves_generator_and_probe_identity(
+    backend, probe_name, probe_model, expected_generator
+):
+    results = {
+        "manifest": {
+            "config": {
+                "backend": backend,
+                "diffusion_model": "org/renderer",
+                "probe": probe_name,
+                "clip_model": probe_model,
+            }
+        },
+        "metrics": {},
+    }
+
+    submission = make_submission.build_submission(results, "identity check")
+
+    assert submission["generator"] == expected_generator
+    assert submission["probe"] == probe_model
+
+
+def test_submission_keeps_legacy_probe_identity_without_a_model_id():
+    results = {"manifest": {"config": {"probe": "clip:legacy"}}, "metrics": {}}
+
+    submission = make_submission.build_submission(results, "legacy check")
+
+    assert submission["probe"] == "clip:legacy"
