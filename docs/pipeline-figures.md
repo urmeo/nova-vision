@@ -56,13 +56,20 @@ Probe predictions do not update prompts or regenerate images.
 | Neutral selection and image rendering | [App pipeline](../novavision/pipeline.py) |
 | Mood, palette, lighting, and tier definitions | [Prompt templates](../novavision/prompting.py) |
 | Shared seeds, probe calls, and paired comparisons | [Experiment runner](../novavision/experiments/run.py) |
-| Recovery, bootstrap intervals, and permutation tests | [Metrics](../novavision/eval/metrics.py) |
+| Recovery, bootstrap intervals, exact paired binary tests, and label-permutation controls | [Metrics](../novavision/eval/metrics.py) |
 | Saved pilot measurements | [Archived pilot table](results-tables.md#pilot-recovery) |
 
 The content track crosses neutral subjects with supplied emotion labels and uses
 fixed affect priors. The text track uses benchmark gold labels for prompt
 conditioning; analyzer estimates supply affect targets. The saved pilot covers
 only the content track.
+
+New paired accuracy comparisons use a two-sided exact McNemar test on the
+discordant pairs. Under equal correctness, either tier wins a discordant pair
+with probability 0.5. Two wins and no losses give p=0.5. The
+[exact test uses a binomial distribution](https://www.statsmodels.org/stable/generated/statsmodels.stats.contingency_tables.mcnemar.html).
+Intervals still use a paired percentile bootstrap. Small samples can give
+point intervals even when the exact test is not significant.
 
 ## Saved evidence
 
@@ -74,9 +81,12 @@ independent runs or human judgments.
 
 Across the 42 conditioning-tier images, the probe predicted neutral 38 times (90.5%) and used
 only two of seven labels. No measured condition exceeds the label-permutation
-null at p < .05. The saved paired difference between `emotion` and `raw` is
-+7.14 percentage points (p=.2554); `affect` and `emotion` have equal recovery
-(p=1). The pilot does not establish emotion controllability.
+null at p < .05. The historical bootstrap test reported a paired difference
+between `emotion` and `raw` of +7.14 percentage points (p=.2554);
+`affect` and `emotion` have equal recovery
+(p=1). These saved p-values have not been recomputed with the exact test because
+the paired pilot records are no longer bundled. The pilot does not establish
+emotion controllability.
 
 `naive` has no saved measurement. The seven-image fixed-scene diagnostic is
 separate from subject pairing.
