@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import threading
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -9,7 +10,7 @@ from types import MappingProxyType
 
 from novavision.affect.lexicon import AffectLexicon
 from novavision.config import EMOTION_MODEL, EMOTION_REVISION, default_revision
-from novavision.taxonomy import prior
+from novavision.taxonomy import EMOTIONS, prior
 
 DEFAULT_MODEL = EMOTION_MODEL
 
@@ -67,13 +68,27 @@ class EmotionAnalyzer:
                 if self._classifier is None:
                     from transformers import pipeline
 
-                    self._classifier = pipeline(
+                    classifier = pipeline(
                         "text-classification",
                         model=self.model_name,
                         revision=self.revision,
                         top_k=None,
                         device=-1,
                     )
+                    config = getattr(getattr(classifier, "model", None), "config", None)
+                    labels = getattr(config, "id2label", None)
+                    normalized = (
+                        [label.strip().lower() for label in labels.values()]
+                        if isinstance(labels, Mapping)
+                        and all(isinstance(label, str) for label in labels.values())
+                        else []
+                    )
+                    if len(normalized) != len(EMOTIONS) or set(normalized) != set(EMOTIONS):
+                        raise ValueError(
+                            f"Emotion classifier {self.model_name!r} must define exactly these "
+                            f"labels: {', '.join(EMOTIONS)}"
+                        )
+                    self._classifier = classifier
         return self._classifier
 
     def analyze(self, text: str) -> EmotionAnalysis:
@@ -81,7 +96,25 @@ class EmotionAnalyzer:
             raise ValueError("Input text cannot be empty")
 
         predictions = self.classifier(text, truncation=True)[0]
-        scores = {result["label"].lower(): float(result["score"]) for result in predictions}
+        scores = {}
+        for result in predictions:
+            label = result["label"]
+            if not isinstance(label, str) or label.strip().lower() not in EMOTIONS:
+                raise ValueError(
+                    f"Emotion classifier returned unsupported label {label!r}; "
+                    f"expected one of: {', '.join(EMOTIONS)}"
+                )
+            label = label.strip().lower()
+            if label in scores:
+                raise ValueError(f"Emotion classifier returned duplicate label {label!r}")
+            score = float(result["score"])
+            if not math.isfinite(score) or not 0.0 <= score <= 1.0:
+                raise ValueError(
+                    f"Emotion classifier score for {label!r} must be finite and in [0, 1]"
+                )
+            scores[label] = score
+        if not scores:
+            raise ValueError("Emotion classifier returned no scores")
         primary = max(scores, key=scores.__getitem__)
 
         affect = self.lexicon.score(text)

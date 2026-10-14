@@ -12,6 +12,7 @@ from novavision.data import LEXICON_PATH
 
 # Keep contractions intact without consuming surrounding quotation marks.
 _TOKEN = re.compile(r"[a-z][a-z']*[a-z]")
+_NEGATION_BOUNDARY = re.compile(r"[.!?,;:\r\n–—]|--|\s-\s")
 
 
 STOPWORDS = frozenset(
@@ -88,10 +89,21 @@ class AffectLexicon:
         return None
 
     def score(self, text: str) -> AffectScore:
-        tokens = _TOKEN.findall(text.lower().replace("’", "'"))
+        text = text.lower().replace("’", "'")
         matched: list[tuple[float, float]] = []
         content_count = 0
-        for index, token in enumerate(tokens):
+        previous_tokens: list[str] = []
+        previous_end = 0
+        for match in _TOKEN.finditer(text):
+            token = match.group()
+            contrast = token in {"but", "however"} or (
+                token == "yet" and bool(previous_tokens) and previous_tokens[-1] not in NEGATORS
+            )
+            if contrast or _NEGATION_BOUNDARY.search(text[previous_end : match.start()]):
+                previous_tokens.clear()
+            negated = any(previous in NEGATORS for previous in previous_tokens)
+            previous_tokens = [*previous_tokens[-1:], token]
+            previous_end = match.end()
             if token in STOPWORDS or token in NEGATORS:
                 continue
             content_count += 1
@@ -100,7 +112,7 @@ class AffectLexicon:
                 continue
             valence, arousal = affect
 
-            if any(previous in NEGATORS for previous in tokens[max(0, index - 2) : index]):
+            if negated:
                 valence = -valence
             matched.append((valence, arousal))
         if not matched:

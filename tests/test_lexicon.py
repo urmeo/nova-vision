@@ -106,6 +106,63 @@ def test_negation_flips_valence():
     assert lex.score("happy").valence == 0.8
 
 
+@pytest.mark.parametrize(
+    "boundary",
+    [
+        ".",
+        "!",
+        "?",
+        ",",
+        ";",
+        ":",
+        "\n",
+        "\r\n",
+        "—",
+        "–",
+        " -- ",
+        " - ",
+    ],
+)
+def test_negation_stops_at_punctuation_boundaries(boundary):
+    lex = AffectLexicon({"sad": (-0.6, 0.3), "happy": (0.8, 0.7)})
+    score = lex.score(f"Not sad{boundary} Happy!")
+    assert score.valence == 0.7
+    assert score.arousal == 0.5
+    assert score.coverage == 1.0
+    assert lex.score(f"Sad{boundary} Not happy!").valence == -0.7
+
+
+@pytest.mark.parametrize("contrast", ["but", "however", "yet"])
+def test_negation_stops_at_contrast_clauses(contrast):
+    lex = AffectLexicon({"sad": (-0.6, 0.3), "happy": (0.8, 0.7)})
+    score = lex.score(f"not sad {contrast} happy")
+    assert score.valence == 0.7
+    assert score.arousal == 0.5
+    assert score.coverage == (1.0 if contrast == "but" else 0.6667)
+    assert lex.score(f"not sad {contrast} not happy").valence == -0.1
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "not very happy",
+        "not yet happy",
+        "not-happy",
+        "not 'happy'",
+        "not (happy)",
+        "not (really) happy",
+    ],
+)
+def test_same_clause_negation_keeps_two_word_window(text):
+    lex = AffectLexicon({"happy": (0.8, 0.7)})
+    assert lex.score(text).valence == -0.8
+
+
+def test_negation_does_not_extend_beyond_two_words():
+    lex = AffectLexicon({"happy": (0.8, 0.7)})
+    assert lex.score("not really very happy").valence == 0.8
+
+
 def test_stopwords_are_not_scored_or_counted():
     lex = AffectLexicon({"happy": (0.8, 0.7), "the": (0.9, 0.9)})
     s = lex.score("the happy dog")

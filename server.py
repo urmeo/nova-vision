@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("novavision.server")
 
 MIN_TEXT, MAX_TEXT = 3, 2000
-_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+_CONTROL_CHARS = re.compile(r"[\x00-\x09\x0b\x0c\x0e-\x1f\x7f]")
 _STATIC = Path(__file__).resolve().parent / "static"
 _ASSETS = _STATIC.parent / "docs" / "assets"
 

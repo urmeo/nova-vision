@@ -83,6 +83,27 @@ def test_control_chars_stripped():
     assert all(c not in text for c in "\x00\x07\x1f")
 
 
+@pytest.mark.parametrize("line_break", ["\n", "\r\n", "\r"])
+@pytest.mark.parametrize("route", ["/api/analyze", "/api/generate"])
+def test_api_preserves_line_breaks_for_negation(client, monkeypatch, route, line_break):
+    from novavision.affect.analyzer import EmotionAnalyzer
+    from novavision.affect.lexicon import AffectLexicon
+    from novavision.generation import NullBackend
+    from novavision.pipeline import NovaVision
+
+    analyzer = EmotionAnalyzer(lexicon=AffectLexicon({"sad": (-0.6, 0.4), "happy": (0.8, 0.6)}))
+    analyzer._classifier = lambda *args, **kwargs: [[{"label": "joy", "score": 1.0}]]
+    monkeypatch.setattr(server, "_pipeline", NovaVision(backend=NullBackend(), analyzer=analyzer))
+    text = f"Not sad{line_break}Happy!"
+
+    response = client.post(route, json={"text": text, "seed": 0})
+
+    assert response.status_code == 200
+    assert response.get_json()["valence"] == 0.72
+    if route == "/api/generate":
+        assert response.get_json()["original_text"] == text
+
+
 def test_index_served(client):
     assert client.get("/").status_code == 200
 
