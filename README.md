@@ -2,13 +2,13 @@
 
 A Python prototype for turning English text into image prompts with emotion, palette, and lighting cues. Separate experiments test whether an image probe recovers the intended emotion.
 
-<a href="docs/assets/pipeline.svg"><picture><source media="(max-width: 900px)" srcset="docs/assets/pipeline-mobile.svg"><img src="docs/assets/pipeline.svg" alt="NovaVision pipeline: write text, analyze text, build a prompt, and render an image. Separate experiments set known targets, reuse prompt building and rendering for four paired tiers, then compare image-probe estimates with the targets. Probe outputs are model estimates, not human ratings."></picture></a>
+<a href="docs/assets/pipeline.svg"><picture><source media="(max-width: 900px)" srcset="docs/assets/pipeline-mobile.svg"><img src="docs/assets/pipeline.svg" alt="NovaVision signal flow: text branches into emotion classification and word scoring. Label priors and word scores blend into affect estimates. Original text, style, label, and affect build the image prompt. A backend renders the image. Separate experiments compare four paired prompt tiers against known targets. Probe outputs are model estimates, not human ratings."></picture></a>
 
-[Editable Figma source](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=24-2) · [Figure sources and captions](docs/pipeline-figures.md).
+[Figma](https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=14-2) · [Figma files](figma/) · [Figure sources and captions](docs/pipeline-figures.md).
 
 [https://urmeo.github.io/nova-vision/](https://urmeo.github.io/nova-vision/) · [Video](#video) · [Run locally](#run) · [Notebook](notebooks/reproduce.ipynb)
 
-Keywords: **Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask**
+Keywords: **Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask · Figma**
 
 The [public website](https://urmeo.github.io/nova-vision/) is a static preview. Run the Python server for text analysis and image generation.
 
