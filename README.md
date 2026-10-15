@@ -22,7 +22,7 @@ The [public website](https://urmeo.github.io/nova-vision/) is a static preview. 
 
 ## Run
 
-Use Python 3.10 or later.
+Use Python 3.10 or later. Use Node.js 22 or later for the browser checks.
 
 ```bash
 git clone https://github.com/urmeo/nova-vision.git
