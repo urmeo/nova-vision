@@ -1,9 +1,8 @@
 # NovaVision offline affect lexicon
 # Columns: word, valence (-1..1), arousal (0..1)
-# This is a small demo lexicon for offline use and tests. For research,
-# replace it with empirical norms: run `python scripts/download_lexicon.py`
-# (Warriner et al., 2013), or supply your own NRC-VAD TSV, then point
-# NOVAVISION_LEXICON at the file.
+# Demonstration values for offline use and tests. For empirical norms, run
+# `python scripts/download_lexicon.py` (Warriner et al., 2013), or provide a TSV
+# with the ranges above. Set NOVAVISION_LEXICON to its path.
 word	valence	arousal
 happy	0.85	0.65
 joyful	0.88	0.72

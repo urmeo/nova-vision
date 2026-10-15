@@ -33,7 +33,7 @@ def fetch_https(url: str) -> bytes:
     if not url.lower().startswith("https://"):
         raise ValueError("refusing a non-HTTPS URL; the norms back research results")
     opener = urllib.request.build_opener(_HTTPSOnlyRedirect)
-    with opener.open(url) as resp:  # noqa: S310 - HTTPS enforced on every hop above
+    with opener.open(url, timeout=30) as resp:  # noqa: S310 - HTTPS enforced on every hop above
         return resp.read()
 
 
@@ -56,12 +56,23 @@ def extract_csv(zip_bytes: bytes, member: str = CSV_MEMBER) -> str:
 
 def convert(raw: str) -> list[tuple[str, float, float]]:
     """Warriner 1..9 valence/arousal to NovaVision valence (-1..1)/arousal (0..1)."""
+    reader = csv.DictReader(io.StringIO(raw.lstrip("\ufeff")))
+    required = {"Word", "V.Mean.Sum", "A.Mean.Sum"}
+    if reader.fieldnames is None or required - set(reader.fieldnames):
+        raise ValueError("Norms CSV must contain Word, V.Mean.Sum and A.Mean.Sum columns")
     rows = []
-    for row in csv.DictReader(io.StringIO(raw)):
-        word = row["Word"].strip().lower()
-        valence = (float(row["V.Mean.Sum"]) - 5.0) / 4.0
-        arousal = (float(row["A.Mean.Sum"]) - 1.0) / 8.0
+    for row in reader:
+        try:
+            word = (row["Word"] or "").strip().lower()
+            valence = (float(row["V.Mean.Sum"]) - 5.0) / 4.0
+            arousal = (float(row["A.Mean.Sum"]) - 1.0) / 8.0
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Norms CSV line {reader.line_num} has invalid affect values") from exc
+        if not word or not (-1 <= valence <= 1 and 0 <= arousal <= 1):
+            raise ValueError(f"Norms CSV line {reader.line_num} needs a word and scores in [1, 9]")
         rows.append((word, round(valence, 4), round(arousal, 4)))
+    if not rows:
+        raise ValueError("Norms CSV contains no entries")
     return rows
 
 

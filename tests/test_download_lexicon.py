@@ -1,6 +1,7 @@
 import hashlib
 import io
 import zipfile
+from unittest.mock import Mock
 
 import download_lexicon as dl
 import pytest
@@ -41,6 +42,17 @@ def test_fetch_https_refuses_plaintext_url():
         dl.fetch_https("http://crr.ugent.be/x.zip")
 
 
+def test_fetch_https_sets_connection_deadline(monkeypatch):
+    opener = Mock()
+    opener.open.side_effect = TimeoutError("stalled download")
+    monkeypatch.setattr(dl.urllib.request, "build_opener", Mock(return_value=opener))
+
+    with pytest.raises(TimeoutError, match="stalled download"):
+        dl.fetch_https("https://example.org/norms.zip")
+
+    opener.open.assert_called_once_with("https://example.org/norms.zip", timeout=30)
+
+
 def test_extract_and_convert_roundtrip():
     raw = dl.extract_csv(_zip_bytes())
     rows = dl.convert(raw)
@@ -54,3 +66,26 @@ def test_convert_normalizes_range():
     vals = {w: (v, a) for w, v, a in rows}
     assert vals["x"] == (1.0, 1.0)
     assert vals["y"] == (-1.0, 0.0)
+
+
+def test_convert_accepts_utf8_bom():
+    assert dl.convert("\ufeff" + _CSV) == dl.convert(_CSV)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "",
+        "Word,V.Mean.Sum,A.Mean.Sum\n",
+        "Word,Valence,Arousal\nhappy,7,5\n",
+        "Word,V.Mean.Sum,A.Mean.Sum\n,7,5\n",
+        "Word,V.Mean.Sum,A.Mean.Sum\nhappy,10,5\n",
+        "Word,V.Mean.Sum,A.Mean.Sum\nhappy,7,0\n",
+        "Word,V.Mean.Sum,A.Mean.Sum\nhappy,nan,5\n",
+        "Word,V.Mean.Sum,A.Mean.Sum\nhappy,7,inf\n",
+        "Word,V.Mean.Sum,A.Mean.Sum\nhappy,7\n",
+    ],
+)
+def test_convert_rejects_invalid_norms_before_writing(body):
+    with pytest.raises(ValueError):
+        dl.convert(body)
