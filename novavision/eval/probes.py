@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import math
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -99,10 +100,16 @@ class HFImageClassifierProbe(Probe):
         known = set(EMOTIONS)
         scores: dict[str, float] = {}
         for pred in self._pipe(image, top_k=self._top_k):
-            label = pred["label"].lower()
+            try:
+                label, score = pred["label"], float(pred["score"])
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError(f"{self.model_id} produced an invalid image prediction") from exc
+            if not isinstance(label, str) or not math.isfinite(score) or not 0 <= score <= 1:
+                raise ValueError(f"{self.model_id} produced an invalid image label or probability")
+            label = label.lower()
             label = self.label_map.get(label, label)
             if label in known:
-                scores[label] = scores.get(label, 0.0) + float(pred["score"])
+                scores[label] = scores.get(label, 0.0) + score
         if not scores:
             raise RuntimeError(f"{self.model_id} produced no Ekman-mappable labels for this image")
         emotion = max(scores, key=scores.__getitem__)

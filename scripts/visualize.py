@@ -67,6 +67,10 @@ def checked_pilot(report: dict, labels: list[str]) -> list[str]:
         if any({row["intended"], row["predicted"]} - known_labels for row in subset):
             raise ValueError(f"Pilot {tier}: unknown emotion label")
         accuracy = probability(metrics[tier]["accuracy"], f"Pilot {tier} accuracy")
+        probability(metrics[tier]["macro_f1"], f"Pilot {tier} macro-F1")
+        probability(
+            metrics[tier]["shuffled_control"]["p_value"], f"Pilot {tier} shuffled-label p-value"
+        )
         observed = sum(row["intended"] == row["predicted"] for row in subset) / len(subset)
         if round(observed, 4) != accuracy:
             raise ValueError(f"Pilot {tier}: saved accuracy disagrees with records")
@@ -144,12 +148,31 @@ def canvas(title: str, subtitle: str, note: str, *, square: bool = False):
     return fig, ax
 
 
+def run_settings(report: dict) -> str:
+    config = (report.get("manifest") or {}).get("config") or {}
+    parts = []
+    if config.get("backend") == "null":
+        parts.append("Synthetic test images")
+    elif config.get("diffusion_model"):
+        parts.append(str(config["diffusion_model"]))
+    if config.get("clip_model") or config.get("probe"):
+        parts.append(str(config.get("clip_model") or config["probe"]))
+    if config.get("device") not in (None, "n/a"):
+        parts.append(str(config["device"]))
+    if config.get("width") and config.get("height"):
+        parts.append(f"{config['width']} × {config['height']}")
+    if config.get("seeds"):
+        seeds = config["seeds"]
+        parts.append(f"{seeds} seed{'s' if seeds != 1 else ''} per item")
+    return " · ".join(parts) if parts else "Run settings were not saved."
+
+
 def recovery_chart(pilot: dict):
     metrics = pilot["metrics"]
     tiers = [tier for tier in CONDITIONS if tier in metrics]
     fig, ax = canvas(
         "Pilot emotion recovery",
-        "SD-Turbo · CLIP ViT-B/32 · 256 × 256 · CPU · one seed",
+        run_settings(pilot),
         "Points: saved recovery accuracy. Lines: saved item-bootstrap 95% confidence intervals.\n"
         "Scene diagnostic uses fixed emotion scenes and is separate from the paired tiers.",
     )
@@ -188,7 +211,7 @@ def confusion_chart(pilot: dict, labels: list[str]):
     majority = counts.sum(axis=0).argmax()
     fig, ax = canvas(
         "Where the pilot probe made errors",
-        f"Emotion cues tier · CLIP ViT-B/32 · {len(records)} images · counts per cell",
+        f"Emotion cues tier · {len(records)} images · counts per cell",
         f"The probe predicted {labels[majority]} for "
         f"{counts[:, majority].sum()}/{len(records)} images.\n"
         "This is a probe measurement; it does not establish how people perceive these images.",
@@ -304,7 +327,7 @@ def tables(reports: dict) -> str:
         lines += [
             "## Pilot recovery",
             "",
-            "SD-Turbo; CLIP ViT-B/32; CPU; 256 × 256 images; two neutral subjects; one seed. "
+            run_settings(pilot),
             "Intervals are the saved item-bootstrap 95% confidence intervals.",
             "",
             "| Condition | Images | Accuracy | 95% CI | Macro-F1 | Shuffled-label p |",
@@ -319,15 +342,25 @@ def tables(reports: dict) -> str:
                 f"| `{tier}` | {row['n']} | {row['accuracy']:.2%} | {low:.2%}–{high:.2%} | "
                 f"{row['macro_f1']:.4f} | {row['shuffled_control']['p_value']:.4f} |"
             )
-        lines += [
-            "",
-            f"Uniform chance is {metrics['chance']:.2%} (1/7). "
-            "The `scene` diagnostic uses fixed emotion scenes "
-            "and is separate from the paired tiers. "
-            "The pilot has no saved `naive` measurement. "
-            "No tier has a shuffled-label p-value below .05.",
-            "",
+        lines += ["", f"Uniform chance is {metrics['chance']:.2%} (1/7)."]
+        if "scene" in metrics:
+            lines.append(
+                "The `scene` diagnostic uses fixed emotion scenes "
+                "and is separate from the paired tiers."
+            )
+        if "naive" not in metrics:
+            lines.append("The pilot has no saved `naive` measurement.")
+        significant = [
+            tier
+            for tier in CONDITIONS
+            if tier in metrics and metrics[tier]["shuffled_control"]["p_value"] < 0.05
         ]
+        lines.append(
+            f"Tiers with shuffled-label p < .05: {', '.join(significant)}."
+            if significant
+            else "No measured tier has a shuffled-label p-value below .05."
+        )
+        lines.append("")
     lines += [
         "## Probe validation",
         "",

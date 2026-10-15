@@ -13,6 +13,13 @@ def _check(y_true: Sequence[object], y_pred: Sequence[object]) -> None:
         raise ValueError("y_true and y_pred must be the same length")
 
 
+def _check_resampling(n: int, alpha: float = 0.05) -> None:
+    if isinstance(n, bool) or not isinstance(n, int) or n < 1:
+        raise ValueError("n must be a positive integer")
+    if not np.isfinite(alpha) or not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1")
+
+
 def _check_labels(y_true: Sequence[str], y_pred: Sequence[str], labels: Sequence[str]) -> None:
     known = set(labels)
     unknown = (set(y_true) | set(y_pred)) - known
@@ -33,6 +40,7 @@ def permutation_test(
 ) -> dict[str, float | list[float]]:
     "Shuffled-label control for circularity: is recovery above random targets?"
     _check(y_true, y_pred)
+    _check_resampling(n)
     yt = np.asarray(list(y_true))
     yp = np.asarray(list(y_pred))
     if len(yt) < 2:
@@ -47,7 +55,7 @@ def permutation_test(
         "accuracy": round(observed, 4),
         "null_mean": round(float(null.mean()), 4),
         "null_ci": [round(float(lo), 4), round(float(hi), 4)],
-        "p_value": round(p, 4),
+        "p_value": p,
     }
 
 
@@ -206,6 +214,7 @@ def bootstrap_corr_ci(
         raise ValueError(f"unknown method '{method}', expected 'spearman' or 'pearson'")
     corr = spearman if method == "spearman" else pearson
     _check(x, y)
+    _check_resampling(n, alpha)
     xa = np.asarray(x, dtype=float)
     ya = np.asarray(y, dtype=float)
     if len(xa) < 3 or not (np.isfinite(xa).all() and np.isfinite(ya).all()):
@@ -227,6 +236,7 @@ def bootstrap_ci(
     values: Sequence[float], *, n: int = 2000, alpha: float = 0.05, seed: int = 0
 ) -> tuple[float, float]:
     """Percentile bootstrap CI for the mean, resampling over items."""
+    _check_resampling(n, alpha)
     arr = np.asarray(values, dtype=float)
     if len(arr) < 2:
         return float("nan"), float("nan")
@@ -265,8 +275,7 @@ def paired_binary_test(
 ) -> dict[str, float]:
     "Exact McNemar p-value and a paired percentile-bootstrap interval for mean a - b."
     da, db = _binary_pair(a, b)
-    if isinstance(n, bool) or not isinstance(n, int) or n < 1:
-        raise ValueError("n must be a positive integer")
+    _check_resampling(n)
     diff = da - db
     if len(diff) == 0:
         return {

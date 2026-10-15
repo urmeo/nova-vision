@@ -160,3 +160,65 @@ def test_invalid_optional_pilot_is_rejected(source_dir):
     (source_dir / "results.json").write_text("{broken")
     with pytest.raises(ValueError, match="Invalid JSON.*results.json"):
         visualize.load_saved_results(source_dir)
+
+
+def test_pilot_figures_do_not_invent_missing_run_settings(pilot):
+    recovery = visualize.recovery_chart(pilot)
+    confusion = visualize.confusion_chart(pilot, ["anger", "joy"])
+    try:
+        assert recovery.texts[1].get_text() == "Run settings were not saved."
+        assert "CLIP" not in confusion.texts[1].get_text()
+    finally:
+        plt.close(recovery)
+        plt.close(confusion)
+
+
+def test_pilot_captions_use_saved_run_settings(reports, pilot):
+    pilot["manifest"] = {
+        "config": {
+            "backend": "diffusers",
+            "diffusion_model": "example/generator",
+            "clip_model": "example/probe",
+            "device": "cuda",
+            "width": 512,
+            "height": 768,
+            "seeds": 3,
+        }
+    }
+    reports["results.json"] = pilot
+    expected = "example/generator · example/probe · cuda · 512 × 768 · 3 seeds per item"
+    figure = visualize.recovery_chart(pilot)
+    try:
+        assert figure.texts[1].get_text() == expected
+    finally:
+        plt.close(figure)
+    content = visualize.tables(reports)
+    assert expected in content
+    assert "SD-Turbo" not in content
+    assert "two neutral subjects" not in content
+
+
+def test_null_run_is_described_as_synthetic():
+    report = {"manifest": {"config": {"backend": "null", "diffusion_model": "unused/model"}}}
+    assert visualize.run_settings(report) == "Synthetic test images"
+
+
+def test_pilot_verdict_uses_available_tiers_and_p_values(reports, pilot):
+    pilot["metrics"]["naive"] = deepcopy(pilot["metrics"]["emotion"])
+    pilot["metrics"]["naive"]["shuffled_control"]["p_value"] = 0.01
+    reports["results.json"] = pilot
+
+    content = visualize.tables(reports)
+
+    assert "| `naive` | 2 |" in content
+    assert "Tiers with shuffled-label p < .05: naive." in content
+    assert "no saved `naive` measurement" not in content
+    assert "No measured tier" not in content
+    assert "scene` diagnostic" not in content
+
+
+@pytest.mark.parametrize("value", [-0.1, 1.1, float("nan"), None])
+def test_invalid_pilot_p_values_are_rejected(reports, pilot, value):
+    pilot["metrics"]["emotion"]["shuffled_control"]["p_value"] = value
+    with pytest.raises(ValueError, match="Pilot emotion shuffled-label p-value"):
+        visualize.checked_pilot(pilot, reports["probe_validation.json"]["labels"])

@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from PIL import Image
 
@@ -139,3 +141,112 @@ def test_load_hf_dataset_fails_loudly_when_nothing_maps(monkeypatch):
     _stub_datasets(monkeypatch, rows)
     with pytest.raises(ValueError, match="label-key"):
         validate_probe.load_hf_dataset("stub", n=1)
+
+
+@pytest.mark.parametrize("kind", ["clip", "hf"])
+def test_validation_cli_pins_and_records_resolved_probe_revision(tmp_path, monkeypatch, kind):
+    from novavision.eval import probes
+
+    calls = []
+    resolved = "a" * 40
+    model = "org/image-model" if kind == "hf" else "org/clip-model"
+
+    class PinnedProbe(FakeProbe):
+        def __init__(self, **kwargs):
+            calls.append(kwargs)
+
+    monkeypatch.setattr(probes, "CLIPProbe", PinnedProbe)
+    monkeypatch.setattr(probes, "HFImageClassifierProbe", PinnedProbe)
+    monkeypatch.setattr(
+        validate_probe, "load_image_folder", lambda root: [(Image.new("RGB", (8, 8)), "joy")]
+    )
+    resolutions = []
+
+    def resolve(model_id, revision):
+        resolutions.append((model_id, revision))
+        return resolved
+
+    monkeypatch.setattr(validate_probe, "resolve_model_revision", resolve)
+    out = tmp_path / "validation.json"
+    model_flag = "--probe-model" if kind == "hf" else "--clip-model"
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "validate_probe.py",
+            "--images-dir",
+            "unused",
+            "--probe",
+            kind,
+            model_flag,
+            model,
+            "--probe-revision",
+            "release",
+            "--out",
+            str(out),
+        ],
+    )
+    validate_probe.main()
+
+    assert resolutions == [(model, "release")]
+    assert calls == [{"model_id": model, "revision": resolved}]
+    report = json.loads(out.read_text())
+    assert report["model"] == model
+    assert report["model_revision"] == resolved
+    assert report["requested_model_revision"] == "release"
+
+
+def test_validation_cli_default_probe_is_pinned_without_hub_access(tmp_path, monkeypatch):
+    import sys
+    from types import SimpleNamespace
+
+    from novavision.config import CLIP_MODEL, CLIP_REVISION
+    from novavision.eval import probes
+
+    calls = []
+
+    class PinnedProbe(FakeProbe):
+        def __init__(self, **kwargs):
+            calls.append(kwargs)
+
+    monkeypatch.setitem(
+        sys.modules,
+        "huggingface_hub",
+        SimpleNamespace(model_info=lambda *a, **kw: pytest.fail("Hub contacted")),
+    )
+    monkeypatch.setattr(probes, "CLIPProbe", PinnedProbe)
+    monkeypatch.setattr(
+        validate_probe, "load_image_folder", lambda root: [(Image.new("RGB", (8, 8)), "joy")]
+    )
+    out = tmp_path / "validation.json"
+    monkeypatch.setattr(
+        "sys.argv", ["validate_probe.py", "--images-dir", "unused", "--out", str(out)]
+    )
+
+    validate_probe.main()
+
+    assert calls == [{"model_id": CLIP_MODEL, "revision": CLIP_REVISION}]
+    report = json.loads(out.read_text())
+    assert report["model_revision"] == CLIP_REVISION
+    assert report["requested_model_revision"] is None
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["--probe", "hf"],
+        ["--probe", "hf", "--probe-model", "org/model", "--clip-revision", "main"],
+        ["--probe-model", "org/model"],
+        ["--clip-revision", "main", "--probe-revision", "release"],
+        ["--hf-dataset", "org/dataset"],
+    ],
+)
+def test_validation_cli_rejects_ignored_or_conflicting_options_before_loading(
+    monkeypatch, arguments
+):
+    monkeypatch.setattr(
+        validate_probe, "resolve_model_revision", lambda *a: pytest.fail("model resolved")
+    )
+    monkeypatch.setattr("sys.argv", ["validate_probe.py", "--images-dir", "unused", *arguments])
+    with pytest.raises(SystemExit) as exc:
+        validate_probe.main()
+    assert exc.value.code == 2

@@ -9,6 +9,7 @@ from pathlib import Path
 from novavision.config import CLIP_MODEL, CLIP_REVISION, default_revision
 from novavision.eval.metrics import accuracy, confusion_matrix, macro_f1
 from novavision.eval.probes import image_digest
+from novavision.revisions import resolve_model_revision
 from novavision.taxonomy import EMOTIONS
 
 _EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
@@ -134,8 +135,9 @@ def clip_revision_for(args) -> str | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Validate a probe on labelled images")
-    parser.add_argument("--images-dir", default=None, help="root/<emotion>/*.jpg")
-    parser.add_argument("--hf-dataset", default=None, help="labelled HF image dataset")
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--images-dir", default=None, help="root/<emotion>/*.jpg")
+    source.add_argument("--hf-dataset", default=None, help="labelled HF image dataset")
     parser.add_argument("--n", type=int, default=200, help="sample size for --hf-dataset")
 
     parser.add_argument("--split", default="train", help="HF dataset split")
@@ -155,10 +157,24 @@ def main() -> None:
         default=None,
         help="model revision; defaults to the pinned revision for the default model only",
     )
+    parser.add_argument("--probe-revision", default=None, help="probe model commit, branch or tag")
     parser.add_argument("--out", default="outputs/generated/probe_validation.json")
     args = parser.parse_args()
 
     from novavision.eval.probes import CLIPProbe, HFImageClassifierProbe
+
+    if args.probe == "hf" and not args.probe_model:
+        parser.error("--probe hf requires --probe-model")
+    if args.probe == "hf" and args.clip_revision:
+        parser.error("--clip-revision applies only to --probe clip; use --probe-revision")
+    if args.probe == "clip" and args.probe_model:
+        parser.error("--probe-model applies only to --probe hf; use --clip-model")
+    if args.clip_revision and args.probe_revision and args.clip_revision != args.probe_revision:
+        parser.error("--clip-revision and --probe-revision must agree when both are supplied")
+    model = args.probe_model if args.probe == "hf" else args.clip_model
+    requested_revision = args.probe_revision or args.clip_revision
+    reference = requested_revision or (clip_revision_for(args) if args.probe == "clip" else None)
+    revision = resolve_model_revision(model, reference)
 
     if args.hf_dataset:
         pairs = load_hf_dataset(
@@ -170,24 +186,20 @@ def main() -> None:
             image_key=args.image_key,
             label_key=args.label_key,
         )
-    elif args.images_dir:
-        pairs = load_image_folder(args.images_dir)
     else:
-        parser.error("pass --hf-dataset or --images-dir")
+        pairs = load_image_folder(args.images_dir)
 
     from novavision.eval.probes import Probe
 
     probe: Probe
     if args.probe == "hf":
-        if not args.probe_model:
-            parser.error("--probe hf requires --probe-model")
-        probe = HFImageClassifierProbe(model_id=args.probe_model)
-        model = args.probe_model
+        probe = HFImageClassifierProbe(model_id=model, revision=revision)
     else:
-        model = args.clip_model
-        probe = CLIPProbe(model_id=model, revision=clip_revision_for(args))
+        probe = CLIPProbe(model_id=model, revision=revision)
     report = validate(probe, pairs)
     report["model"] = model
+    report["model_revision"] = revision
+    report["requested_model_revision"] = requested_revision
     report["source"] = args.hf_dataset or args.images_dir
 
     if args.hf_dataset:

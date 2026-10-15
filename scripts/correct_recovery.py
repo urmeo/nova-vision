@@ -44,10 +44,20 @@ def _apparent_recovery(records: list[dict], tier: str) -> dict[str, float]:
 
 
 def correct(results: dict, validation: dict, tier: str) -> dict:
-    run_model = results.get("manifest", {}).get("config", {}).get("clip_model")
+    manifest = results.get("manifest", {})
+    config = manifest.get("config", {})
+    run_model = config.get("clip_model")
     validation_model = validation.get("model")
     if run_model and validation_model and run_model != validation_model:
         raise ValueError("Run and validation probe models differ")
+    revisions = manifest.get("model_revisions", {})
+    run_revision = revisions.get("probe") or config.get("probe_revision")
+    probe_name = config.get("probe", "clip")
+    if not run_revision and (probe_name == "clip" or str(probe_name).startswith("clip:")):
+        run_revision = revisions.get("clip") or config.get("clip_revision")
+    validation_revision = validation.get("model_revision")
+    if run_revision and validation_revision and run_revision != validation_revision:
+        raise ValueError("Run and validation probe revisions differ")
     labels = list(validation.get("labels", EMOTIONS))
     if len(labels) != len(EMOTIONS) or set(labels) != set(EMOTIONS):
         raise ValueError("Validation labels must contain each canonical emotion exactly once")

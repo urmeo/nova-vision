@@ -59,6 +59,26 @@ def test_hf_probe_label_coverage_check():
         HFImageClassifierProbe("fake/model")._check_label_coverage({0: "cat"})
 
 
+@pytest.mark.parametrize("label", ["joy", "unmapped"])
+@pytest.mark.parametrize("score", [float("nan"), float("inf"), float("-inf"), -0.1, 1.1, None])
+def test_hf_probe_rejects_invalid_probabilities_before_choosing_a_label(label, score):
+    probe = HFImageClassifierProbe("fake/model")
+    probe._pipe = lambda image, **kwargs: [
+        {"label": label, "score": score},
+        {"label": "fear", "score": 0.99},
+    ]
+    with pytest.raises(ValueError, match="invalid image"):
+        probe.recover(_img())
+
+
+@pytest.mark.parametrize("prediction", [{"label": None, "score": 0.99}, {"label": "joy"}, None])
+def test_hf_probe_rejects_malformed_predictions(prediction):
+    probe = HFImageClassifierProbe("fake/model")
+    probe._pipe = lambda image, **kwargs: [prediction]
+    with pytest.raises(ValueError, match="invalid image"):
+        probe.recover(_img())
+
+
 @pytest.mark.parametrize("device", ["cpu", "cuda", "cuda:1", "mps", None])
 def test_hf_probe_preserves_requested_device(monkeypatch, device):
     received = []

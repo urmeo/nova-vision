@@ -81,6 +81,78 @@ def test_correction_rejects_mismatched_probe_models():
         )
 
 
+def test_correction_rejects_different_commits_of_the_same_probe_model():
+    results = {
+        "records": _records(0.5),
+        "manifest": {
+            "config": {"clip_model": "org/probe"},
+            "model_revisions": {"probe": "a" * 40},
+        },
+    }
+    validation = {
+        "confusion": _identity_confusion(),
+        "model": "org/probe",
+        "model_revision": "b" * 40,
+    }
+    with pytest.raises(ValueError, match="probe revisions differ"):
+        cr.correct(results, validation, "emotion")
+
+
+def test_correction_accepts_matching_commits_and_legacy_unrecorded_revisions():
+    results = {
+        "records": _records(0.5),
+        "manifest": {"config": {"clip_model": "org/probe", "probe_revision": "a" * 40}},
+    }
+    validation = {
+        "confusion": _identity_confusion(),
+        "model": "org/probe",
+        "model_revision": "a" * 40,
+    }
+    assert cr.correct(results, validation, "emotion")["corrected_recovery"] == 0.5
+    del validation["model_revision"]
+    assert cr.correct(results, validation, "emotion")["corrected_recovery"] == 0.5
+
+
+@pytest.mark.parametrize("probe_name", [None, "clip", "clip:vit-base-patch32"])
+@pytest.mark.parametrize("revision_source", ["manifest", "config"])
+def test_correction_checks_legacy_recorded_clip_revisions(probe_name, revision_source):
+    config = {"clip_model": "org/probe"}
+    if probe_name is not None:
+        config["probe"] = probe_name
+    manifest = {"config": config}
+    if revision_source == "manifest":
+        manifest["model_revisions"] = {"clip": "a" * 40}
+    else:
+        config["clip_revision"] = "a" * 40
+    results = {"records": _records(0.5), "manifest": manifest}
+    validation = {
+        "confusion": _identity_confusion(),
+        "model": "org/probe",
+        "model_revision": "b" * 40,
+    }
+
+    with pytest.raises(ValueError, match="probe revisions differ"):
+        cr.correct(results, validation, "emotion")
+    validation["model_revision"] = "a" * 40
+    assert cr.correct(results, validation, "emotion")["corrected_recovery"] == 0.5
+
+
+def test_correction_does_not_apply_an_auxiliary_clip_revision_to_an_hf_probe():
+    results = {
+        "records": _records(0.5),
+        "manifest": {
+            "config": {"clip_model": "org/image-probe", "probe": "img:image-probe"},
+            "model_revisions": {"clip": "a" * 40},
+        },
+    }
+    validation = {
+        "confusion": _identity_confusion(),
+        "model": "org/image-probe",
+        "model_revision": "b" * 40,
+    }
+    assert cr.correct(results, validation, "emotion")["corrected_recovery"] == 0.5
+
+
 @pytest.mark.parametrize("bad", [float("nan"), float("inf"), -1])
 def test_correction_rejects_invalid_confusion_counts(bad):
     confusion = _identity_confusion()
