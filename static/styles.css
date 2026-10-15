@@ -668,6 +668,7 @@ select:focus + .select-arrow {
     color: #64748b;
     line-height: 1.7;
     font-style: italic;
+    overflow-wrap: anywhere;
 }
 
 @keyframes fadeInUp {
@@ -1652,6 +1653,8 @@ select:focus + .select-arrow {
 
 .modifier-content {
     flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .modifier-text {

@@ -72,6 +72,10 @@ def _valid_text(data) -> tuple[str, str | None]:
         return "", f"Text must be {MIN_TEXT}-{MAX_TEXT} characters."
 
     text = _CONTROL_CHARS.sub(" ", raw).strip()
+    try:
+        text.encode("utf-8")
+    except UnicodeEncodeError:
+        return "", "Text must contain valid Unicode characters."
     if not (MIN_TEXT <= len(text) <= MAX_TEXT):
         return text, f"Text must be {MIN_TEXT}-{MAX_TEXT} characters."
     return text, None

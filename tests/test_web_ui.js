@@ -481,6 +481,38 @@ test('analysis and generation reject text outside the API length limits', async 
     assert.deepEqual(app.errors, []);
 });
 
+test('Unicode text uses the API character limits for analysis and generation', async () => {
+    const requests = [];
+    const app = createApp(async (url, options) => {
+        const request = JSON.parse(options.body);
+        requests.push({ url, text: request.text });
+        return { json: async () => generation(request.text, request.seed ?? 1) };
+    });
+    const input = app.getElementById('emotionInput');
+    const nativeLimit = Number(html.match(/id="emotionInput"[^>]*maxlength="(\d+)"/)[1]);
+
+    for (const count of [2, 3, 2000, 2001]) {
+        const text = '😀'.repeat(count);
+        input.value = text;
+        await input.dispatch('input');
+        const allowed = count >= 3 && count <= 2000;
+        assert.equal(app.getElementById('generateBtn').classList.contains('ready'), allowed);
+        assert.equal(app.timers.size, allowed ? 1 : 0);
+        app.timers.clear();
+        const before = requests.length;
+        await app.api.analyzeLive(text);
+        await app.api.generateImage();
+        assert.equal(requests.length - before, allowed ? 2 : 0);
+        if (allowed) {
+            assert(text.length <= nativeLimit, 'the textarea must accept valid API text');
+            assert.equal(requests.at(-2).text, text);
+            assert.equal(requests.at(-1).text, text);
+        }
+    }
+
+    assert.deepEqual(app.errors, []);
+});
+
 test('failed generation keeps the previous result and clears the loading state', async () => {
     let requests = 0;
     const app = createApp(async () => ({ json: async () => ++requests === 1

@@ -56,6 +56,20 @@ def test_non_string_text_is_rejected(client):
             assert client.post(route, json={"text": bad}).status_code == 400
 
 
+@pytest.mark.parametrize("route", ["/api/analyze", "/api/generate"])
+@pytest.mark.parametrize("text", ["\ud800hi", "hi\udfff"])
+def test_unpaired_surrogate_text_is_rejected_before_pipeline(client, monkeypatch, route, text):
+    def unexpected_pipeline():
+        pytest.fail("Invalid Unicode must not reach the models.")
+
+    monkeypatch.setattr(server, "pipeline", unexpected_pipeline)
+
+    response = client.post(route, json={"text": text})
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Text must contain valid Unicode characters."}
+
+
 def test_generate_ok(client):
     resp = client.post(
         "/api/generate", json={"text": "i feel great", "style": "artistic", "seed": 5}

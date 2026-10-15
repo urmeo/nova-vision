@@ -126,7 +126,8 @@ function updateLiveEmotions(emotions, primaryEmotion, confidence) {
 async function analyzeLive(text) {
     if (isPreview) return;
     text = text.trim();
-    if (text.length < minTextLength || text.length > maxTextLength) {
+    const textLength = [...text].length;
+    if (textLength < minTextLength || textLength > maxTextLength) {
         resetToEmpty();
         liveStatusText.textContent = `Use ${minTextLength}–${maxTextLength} characters`;
         return;
@@ -175,13 +176,14 @@ emotionInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
 
     const text = emotionInput.value.trim();
+    const textLength = [...text].length;
 
-    if (text.length < minTextLength) {
+    if (textLength < minTextLength) {
         resetToEmpty();
         generateBtn.classList.remove('ready');
         return;
     }
-    if (text.length > maxTextLength) {
+    if (textLength > maxTextLength) {
         resetToEmpty();
         generateBtn.classList.remove('ready');
         liveStatusText.textContent = `Use ${minTextLength}–${maxTextLength} characters`;
@@ -589,7 +591,8 @@ async function generateImage() {
         emotionInput.focus();
         return;
     }
-    if (text.length < minTextLength || text.length > maxTextLength) {
+    const textLength = [...text].length;
+    if (textLength < minTextLength || textLength > maxTextLength) {
         showError(`Enter ${minTextLength}–${maxTextLength} characters.`,
             'Describe a feeling, memory, or scene.');
         emotionInput.focus();
