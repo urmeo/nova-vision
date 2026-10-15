@@ -144,4 +144,3 @@ jobs:
           pip install -e ".[app,ml,research,dev]" pip-audit
       - name: Audit the installed environment
         run: pip-audit --desc
-        continue-on-error: true
