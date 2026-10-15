@@ -411,14 +411,16 @@
                 <a class="pipeline-diagram" href="assets/pipeline.svg" aria-describedby="pipelineDescription">
                     <picture>
                         <source media="(max-width: 900px)" srcset="assets/pipeline-mobile.svg" type="image/svg+xml" width="480" height="1968">
-                        <img src="assets/pipeline.svg" alt="NovaVision pipeline: four app steps and three experiment steps. Open the full-size diagram." width="1280" height="864" loading="lazy" decoding="async">
+                        <img src="assets/pipeline.svg" alt="NovaVision signal flow: classification and word scoring feed the affect blend and image prompt. Separate experiments compare paired outputs with known targets. Open the full-size diagram." width="1440" height="1120" loading="lazy" decoding="async">
                     </picture>
                 </a>
                 <figcaption class="visually-hidden" id="pipelineDescription">
-                    The app follows Write text → Analyze text → Build prompt → Render image, then returns the image, prompt, and run details.
+                    Text branches into emotion classification and word scoring. Label priors and word scores blend into valence and arousal estimates.
+                    Original text and selected style also enter the prompt directly. The renderer returns an image, prompt, seed, and backend details.
                     Neutral uses raw prompts; other labels use affect prompts. The default backend creates synthetic test images.
                     Experiments follow Set targets → Generate pairs → Probe + compare. They reuse prompt building and rendering with raw, naive, emotion, and affect prompts, using the same seed and settings.
-                    The image probe estimates emotion and affect, compares them with known targets, and saves records and charts. CLIP is the default probe. Its estimates are not human ratings.
+                    The image probe estimates emotion and affect. The experiment runner compares these estimates with known targets and saves records and charts.
+                    CLIP is the default probe. Its estimates are not human ratings.
                 </figcaption>
             </figure>
 
@@ -443,7 +445,8 @@
                 <p class="pipeline-evidence-note">Item-bootstrap 95% confidence intervals. These are model predictions, not human ratings.</p>
             </aside>
             <div class="pipeline-links">
-                <a href="https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=24-2">Figma pipeline</a>
+                <a href="assets/pipeline.svg">Full signal-flow diagram</a>
+                <a href="https://www.figma.com/design/6lh7NsSYszXlyDrk6I1IaU?node-id=14-2">Edit in Figma</a>
                 <a href="https://github.com/urmeo/nova-vision/blob/main/docs/results-tables.md">Saved metric tables</a>
             </div>
         </div>

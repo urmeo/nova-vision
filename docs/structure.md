@@ -10,6 +10,7 @@
 | `notebooks/` | Notebook for checking saved probe and planning reports and running an optional new pilot. |
 | `docs/` | Project documentation and the benchmark submission schema. |
 | `docs/assets/` | Pipeline diagrams, screenshots, result charts, and videos with their viewing page and captions. |
+| `figma/` | Editable signal-flow SVG and links to the Figma source. |
 | `tests/` | Python and browser-script tests, plus small test fixtures. |
 | `outputs/results/` | Saved probe predictions, recovery correction, and planning simulation. |
 | `outputs/figures/` | Figures and interface examples included with the project. |
