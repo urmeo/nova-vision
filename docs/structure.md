@@ -63,6 +63,13 @@ Pass full commit hashes for offline runs, or use an existing cached snapshot.
 Local model directories are not supported by revision-pinned experiments.
 `--emotion-model` and `--emotion-revision` apply to the text track.
 
+`python -m novavision.eval.validate_probe` requires one source: `--images-dir` or
+`--hf-dataset`. Use `--probe-revision` for CLIP or HF models; `--clip-revision`
+is the CLIP alias. Reports save the resolved commit in `model_revision` and the
+requested reference in `requested_model_revision`. `scripts/correct_recovery.py`
+rejects conflicting recorded probe revisions. Historical reports without revisions
+remain usable; their model revisions are unverified.
+
 Hosted inference cannot select a generator revision, so its diffusion revision
 stays unknown and `--diffusion-revision` requires the local `diffusers` backend.
 `--hf-timeout` sets the hosted experiment deadline in seconds (default: 120).
