@@ -8,7 +8,7 @@ from novavision.eval.metrics import mcnemar_exact, paired_binary_test, paired_bo
 
 
 def _exhaustive_p_value(a, b):
-    differences = [x - y for x, y in zip(a, b) if x != y]
+    differences = [x - y for x, y in zip(a, b, strict=True) if x != y]
     observed = abs(sum(differences))
     outcomes = list(itertools.product((-1, 1), repeat=len(differences)))
     return sum(abs(sum(outcome)) >= observed for outcome in outcomes) / len(outcomes)

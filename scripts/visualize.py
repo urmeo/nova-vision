@@ -13,9 +13,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import PercentFormatter
-from render_results import SOURCES, checked_probe
 
-from novavision.eval.metrics import confusion_matrix
+from novavision.eval.metrics import accuracy, confusion_matrix
 from novavision.prompting import TIERS
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +26,10 @@ NAMES = {
     "affect": "Affect cues",
     "scene": "Scene diagnostic",
 }
+SOURCES = (
+    ("Faces", "probe_validation.json", "probe_validation_l14.json"),
+    ("Scenes", "probe_validation_scene.json", "probe_validation_scene_l14.json"),
+)
 PROBES = {name: (first, second) for name, first, second in SOURCES}
 INK, TEAL, CORAL = "#163858", "#168778", "#c76b47"
 
@@ -49,6 +52,21 @@ def probability(value, name: str) -> float:
     if not np.isfinite(value) or not 0 <= value <= 1:
         raise ValueError(f"{name} must be a finite number between 0 and 1")
     return float(value)
+
+
+def checked_probe(report: dict) -> tuple[float, np.ndarray]:
+    labels, gold, predicted = (report[key] for key in ("labels", "gold", "predictions"))
+    if not gold or len(gold) != len(predicted) or report["n"] != len(gold):
+        raise ValueError("Saved prediction counts disagree")
+    if len(set(labels)) != len(labels) or (set(gold) | set(predicted)) - set(labels):
+        raise ValueError("Saved labels disagree")
+    counts = confusion_matrix(gold, predicted, labels)
+    score = accuracy(gold, predicted)
+    if not np.array_equal(counts, report["confusion"]):
+        raise ValueError("Saved confusion counts disagree with predictions")
+    if round(score, 4) != report["accuracy"]:
+        raise ValueError("Saved accuracy disagrees with predictions")
+    return score, counts
 
 
 def checked_pilot(report: dict, labels: list[str]) -> list[str]:
@@ -220,7 +238,8 @@ def confusion_chart(pilot: dict, labels: list[str]):
     ax.imshow(counts, cmap="GnBu", vmin=0, vmax=max(1, counts.max()))
     ax.set_xticks(range(len(labels)), labels, rotation=35, ha="right")
     ax.set_yticks(
-        range(len(labels)), [f"{label} (n={n})" for label, n in zip(labels, counts.sum(axis=1))]
+        range(len(labels)),
+        [f"{label} (n={n})" for label, n in zip(labels, counts.sum(axis=1), strict=True)],
     )
     ax.set(xlabel="Predicted emotion", ylabel="Intended emotion")
     for i, row in enumerate(counts):
@@ -275,10 +294,10 @@ def planning_chart(report: dict):
     x = [row["recovery_accuracy"] for row in rows]
     y = [row["n_for_80pct_power"] for row in rows]
     ax.plot(x, y, "o-", color=TEAL, lw=2, markersize=8)
-    for accuracy, size in zip(x, y):
+    for recovery_accuracy, size in zip(x, y, strict=True):
         ax.annotate(
             str(size),
-            (accuracy, size),
+            (recovery_accuracy, size),
             xytext=(0, 11),
             textcoords="offset points",
             ha="center",

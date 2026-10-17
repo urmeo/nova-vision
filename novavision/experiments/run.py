@@ -576,7 +576,7 @@ def _summarize(records, conditions) -> dict:
             continue
         y_true = [record["intended"] for record in tier_records]
         y_pred = [record["predicted"] for record in tier_records]
-        correct = [int(t == p) for t, p in zip(y_true, y_pred)]
+        correct = [int(t == p) for t, p in zip(y_true, y_pred, strict=True)]
         lo, hi = bootstrap_ci(correct)
         intended_valence, recovered_valence = (
             _col(tier_records, "intended_valence"),
@@ -588,6 +588,7 @@ def _summarize(records, conditions) -> dict:
         )
 
         clip = [record["clip_t"] for record in tier_records if _finite(record["clip_t"])]
+        collapse = prediction_collapse(y_pred)
         valence_low, valence_high = bootstrap_corr_ci(intended_valence, recovered_valence)
         arousal_low, arousal_high = bootstrap_corr_ci(intended_arousal, recovered_arousal)
         summary[tier] = {
@@ -604,7 +605,7 @@ def _summarize(records, conditions) -> dict:
             "arousal_mae": round(mae(intended_arousal, recovered_arousal), 4),
             "clip_t": round(sum(clip) / len(clip), 4) if clip else float("nan"),
             "majority_baseline": round(majority_baseline(y_true), 4),
-            "collapse": _round_collapse(prediction_collapse(y_pred)),
+            "collapse": {**collapse, "rate": round(collapse["rate"], 4)},
             "shuffled_control": permutation_test(y_true, y_pred),
             "n": len(tier_records),
         }
@@ -614,14 +615,6 @@ def _summarize(records, conditions) -> dict:
     if classification_accuracy is not None:
         summary["classification_accuracy"] = classification_accuracy
     return summary
-
-
-def _round_collapse(collapse: dict) -> dict:
-    return {
-        "label": collapse["label"],
-        "rate": round(float(collapse["rate"]), 4),
-        "distinct": collapse["distinct"],
-    }
 
 
 def _probe_health(records) -> dict:

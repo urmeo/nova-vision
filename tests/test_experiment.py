@@ -386,7 +386,7 @@ def test_save_images_provides_verified_originals_for_hosted_human_study(tmp_path
     payload = json.loads((tmp_path / "results.json").read_text())
     assert payload["manifest"]["config"]["save_images"] is True
     assert len(measured) == len(payload["records"])
-    for record, digest in zip(payload["records"], measured):
+    for record, digest in zip(payload["records"], measured, strict=True):
         source = tmp_path / record["image_path"]
         assert record["image_path"].startswith("images/")
         with Image.open(source) as image:

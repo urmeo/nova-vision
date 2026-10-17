@@ -34,7 +34,9 @@ def plot_confusion(matrix: np.ndarray, labels, path: str | Path, title: str = ""
     fig, ax = plt.subplots(figsize=(5.5, 5))
     ax.imshow(np.ma.masked_invalid(norm), cmap=cmap, vmin=0, vmax=1)
     ax.set_xticks(range(len(labels)), labels, rotation=45, ha="right")
-    yticklabels = [lab if n else f"{lab} (n=0)" for lab, n in zip(labels, row_n.ravel())]
+    yticklabels = [
+        lab if n else f"{lab} (n=0)" for lab, n in zip(labels, row_n.ravel(), strict=True)
+    ]
     ax.set_yticks(range(len(labels)), yticklabels)
     ax.set_xlabel("recovered")
     ax.set_ylabel("intended")

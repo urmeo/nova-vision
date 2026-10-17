@@ -75,7 +75,7 @@ def _report(**changes):
 
 def _run_comparison(tmp_path, monkeypatch, report_a, report_b):
     paths = [tmp_path / "a.json", tmp_path / "b.json"]
-    for path, report in zip(paths, (report_a, report_b)):
+    for path, report in zip(paths, (report_a, report_b), strict=True):
         path.write_text(json.dumps(report))
     monkeypatch.setattr("sys.argv", ["compare_probes.py", *(str(path) for path in paths)])
     compare_probes.main()

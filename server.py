@@ -190,7 +190,7 @@ def generate():
 if __name__ == "__main__":
     host = resolve_host()
     port = int(os.getenv("PORT", "8000"))
-    if host == "0.0.0.0":  # noqa: S104 - explicit operator opt-in
+    if host == "0.0.0.0":
         logger.warning(
             "Binding 0.0.0.0 (public). Set NOVA_API_TOKEN to protect /api/generate, and "
             "use a WSGI server (python -m gunicorn --workers 1 server:app); Flask's built-in "

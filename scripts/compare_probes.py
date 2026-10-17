@@ -15,8 +15,8 @@ def mcnemar_exact(gold: Sequence[str], pred_a: Sequence[str], pred_b: Sequence[s
     """Two-sided exact McNemar on per-item correctness of two paired runs."""
     if len(gold) != len(pred_a) or len(gold) != len(pred_b):
         raise ValueError("Paired gold and prediction arrays must have equal lengths")
-    correct_a = [g == p for g, p in zip(gold, pred_a)]
-    correct_b = [g == p for g, p in zip(gold, pred_b)]
+    correct_a = [g == p for g, p in zip(gold, pred_a, strict=True)]
+    correct_b = [g == p for g, p in zip(gold, pred_b, strict=True)]
     return binary_mcnemar_exact(correct_a, correct_b)
 
 

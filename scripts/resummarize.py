@@ -32,7 +32,7 @@ def resummarize(
     payload.setdefault("manifest", {})["reanalysis"] = {
         "git_sha": git_sha(),
         "note": "metrics/diagnostics recomputed from the original records; no images regenerated",
-        "packages": {pkg: package_version(pkg) for pkg in ("numpy",)},
+        "packages": {"numpy": package_version("numpy")},
     }
     destination = Path(out) if out is not None else path
     destination.parent.mkdir(parents=True, exist_ok=True)

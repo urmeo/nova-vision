@@ -1,4 +1,4 @@
-"Prompt synthesis: emotion as a modifier on independent content."
+"Build image prompts for each conditioning tier."
 
 from __future__ import annotations
 
@@ -85,15 +85,16 @@ def build_prompt(
     mood = EMOTION_MOODS.get(emotion, EMOTION_MOODS[NEUTRAL])
 
     if tier == "raw":
-        parts = [content, style_description, QUALITY]
+        parts = [content]
     elif tier == "naive":
-        parts = [content, emotion, style_description, QUALITY]
+        parts = [content, emotion]
     elif tier == "emotion":
-        parts = [content, mood, style_description, QUALITY]
+        parts = [content, mood]
     elif tier == "affect":
-        parts = [content, mood, va_descriptors(valence, arousal), style_description, QUALITY]
+        parts = [content, mood, va_descriptors(valence, arousal)]
     else:
         scene = EMOTION_SCENES.get(emotion, EMOTION_SCENES[NEUTRAL])
-        parts = [scene, style_description, QUALITY]
+        parts = [scene]
 
+    parts.extend((style_description, QUALITY))
     return ", ".join(part for part in parts if part)

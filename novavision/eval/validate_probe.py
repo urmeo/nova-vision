@@ -161,7 +161,7 @@ def main() -> None:
     parser.add_argument("--out", default="outputs/generated/probe_validation.json")
     args = parser.parse_args()
 
-    from novavision.eval.probes import CLIPProbe, HFImageClassifierProbe
+    from novavision.eval.probes import CLIPProbe, HFImageClassifierProbe, Probe
 
     if args.probe == "hf" and not args.probe_model:
         parser.error("--probe hf requires --probe-model")
@@ -188,8 +188,6 @@ def main() -> None:
         )
     else:
         pairs = load_image_folder(args.images_dir)
-
-    from novavision.eval.probes import Probe
 
     probe: Probe
     if args.probe == "hf":

@@ -3,7 +3,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import pytest
-import render_results as renderer
+import visualize as renderer
 
 ROOT = Path(__file__).resolve().parents[1]
 

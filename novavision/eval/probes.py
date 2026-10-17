@@ -217,7 +217,7 @@ class CLIPProbe(Probe):
 
         similarities = (image_features @ emotion_features.T).squeeze(0).cpu().numpy()
         probabilities = _softmax(self._scale * similarities)
-        scores = {label: float(p) for label, p in zip(labels, probabilities)}
+        scores = {label: float(p) for label, p in zip(labels, probabilities, strict=True)}
         emotion = labels[int(probabilities.argmax())]
 
         valence = self._expected(image_features, valence_features, VALENCE_LADDER)

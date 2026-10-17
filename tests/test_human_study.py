@@ -1,3 +1,4 @@
+import csv
 import json
 
 import pytest
@@ -10,6 +11,11 @@ from novavision.experiments.manifest import build_manifest
 from novavision.generation.base import NullBackend
 from novavision.prompting import NEGATIVE_PROMPT, build_prompt
 from novavision.taxonomy import EMOTIONS
+
+
+def _read_csv(path):
+    with path.open(encoding="utf-8", newline="") as source:
+        return list(csv.DictReader(source))
 
 
 def _replayable_payload(records, width=64, height=64):
@@ -81,14 +87,17 @@ def test_build_sheet_and_analyze(tmp_path):
     assert (study / "key.csv").exists()
     assert len(list((study / "images").glob("*.png"))) == 7
 
-    key = list(human_study._read_csv(study / "key.csv"))
-    template = human_study._read_csv(study / "ratings_template.csv")
+    key = _read_csv(study / "key.csv")
+    template = _read_csv(study / "ratings_template.csv")
     assert all(set(record) == {*human_study._IDENTITY_FIELDS, "emotion"} for record in template)
     rated = study / "rated.csv"
     human_study._write_csv(
         rated,
         [*human_study._IDENTITY_FIELDS, "emotion"],
-        [{**record, "emotion": target["probe"]} for record, target in zip(template, key)],
+        [
+            {**record, "emotion": target["probe"]}
+            for record, target in zip(template, key, strict=True)
+        ],
     )
     result = human_study.analyze(rated, study / "key.csv")
     assert result["n_rated"] == 7
@@ -208,7 +217,7 @@ def test_build_sheet_refuses_nondeterministic_backend(tmp_path):
 
 def test_build_sheet_reports_per_class_counts(tmp_path):
     study = human_study.build_sheet(_fake_results(tmp_path), n=4, seed=0)
-    counts = human_study._read_csv(study / "counts.csv")
+    counts = _read_csv(study / "counts.csv")
     assert {r["emotion"] for r in counts} == set(EMOTIONS)
     assert sum(int(r["n"]) for r in counts) == 4
     assert not (study / "README.md").exists()
@@ -295,7 +304,7 @@ def test_build_sheet_uses_verified_original_and_custom_destination(tmp_path, mon
     destination = tmp_path / "separate" / "study"
     study = human_study.build_sheet(tmp_path, n=1, out=destination)
     assert study == destination
-    image_path = study / human_study._read_csv(study / "key.csv")[0]["image"]
+    image_path = study / _read_csv(study / "key.csv")[0]["image"]
     assert run._image_digest(Image.open(image_path)) == run._image_digest(
         Image.open(tmp_path / "original.png")
     )
@@ -392,7 +401,7 @@ def test_existing_destination_is_refused_before_results_or_backend_work(
 def test_rebuilding_does_not_overwrite_images_key_or_completed_ratings(tmp_path):
     (tmp_path / "results.json").write_text(json.dumps(_saved_original_payload(tmp_path)))
     study = human_study.build_sheet(tmp_path, n=1)
-    template = human_study._read_csv(study / "ratings_template.csv")
+    template = _read_csv(study / "ratings_template.csv")
     template[0]["emotion"] = "fear"
     human_study._write_csv(
         study / "rated.csv", [*human_study._IDENTITY_FIELDS, "emotion"], template
@@ -406,12 +415,12 @@ def test_rebuilding_does_not_overwrite_images_key_or_completed_ratings(tmp_path)
 def test_fresh_studies_have_distinct_identities_bound_to_verified_pixels(tmp_path):
     (tmp_path / "results.json").write_text(json.dumps(_saved_original_payload(tmp_path)))
     studies = [human_study.build_sheet(tmp_path, n=1, out=tmp_path / name) for name in ("a", "b")]
-    keys = [human_study._read_csv(study / "key.csv")[0] for study in studies]
+    keys = [_read_csv(study / "key.csv")[0] for study in studies]
     assert keys[0]["study_id"] != keys[1]["study_id"]
     assert keys[0]["id"] != keys[1]["id"]
     assert keys[0]["image_pixel_sha256"] == keys[1]["image_pixel_sha256"]
-    for study, key in zip(studies, keys):
-        template = human_study._read_csv(study / "ratings_template.csv")[0]
+    for study, key in zip(studies, keys, strict=True):
+        template = _read_csv(study / "ratings_template.csv")[0]
         assert all(template[field] == key[field] for field in human_study._IDENTITY_FIELDS)
         assert template["id"].startswith(template["study_id"] + "-")
         with Image.open(study / template["image"]) as image:
@@ -540,7 +549,7 @@ def test_analyze_refuses_mixed_studies(tmp_path, mixed_file):
 def test_analyze_verifies_available_study_images(tmp_path, mutation):
     (tmp_path / "results.json").write_text(json.dumps(_saved_original_payload(tmp_path)))
     study = human_study.build_sheet(tmp_path, n=1)
-    identity = human_study._read_csv(study / "key.csv")[0]
+    identity = _read_csv(study / "key.csv")[0]
     image_path = study / identity["image"]
     if mutation == "changed":
         Image.new("RGB", (8, 8), "red").save(image_path)

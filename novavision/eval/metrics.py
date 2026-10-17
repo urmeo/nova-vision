@@ -31,7 +31,7 @@ def accuracy(y_true: Sequence[str], y_pred: Sequence[str]) -> float:
     _check(y_true, y_pred)
     if not y_true:
         return float("nan")
-    correct = sum(t == p for t, p in zip(y_true, y_pred))
+    correct = sum(t == p for t, p in zip(y_true, y_pred, strict=True))
     return correct / len(y_true)
 
 
@@ -66,7 +66,7 @@ def confusion_matrix(
     _check_labels(y_true, y_pred, labels)
     index = {label: i for i, label in enumerate(labels)}
     matrix = np.zeros((len(labels), len(labels)), dtype=int)
-    for t, p in zip(y_true, y_pred):
+    for t, p in zip(y_true, y_pred, strict=True):
         matrix[index[t], index[p]] += 1
     return matrix
 
@@ -98,9 +98,9 @@ def macro_f1(y_true: Sequence[str], y_pred: Sequence[str], labels: Sequence[str]
         return float("nan")
     scores = []
     for label in present:
-        tp = sum(t == label and p == label for t, p in zip(y_true, y_pred))
-        fp = sum(t != label and p == label for t, p in zip(y_true, y_pred))
-        fn = sum(t == label and p != label for t, p in zip(y_true, y_pred))
+        tp = sum(t == label and p == label for t, p in zip(y_true, y_pred, strict=True))
+        fp = sum(t != label and p == label for t, p in zip(y_true, y_pred, strict=True))
+        fn = sum(t == label and p != label for t, p in zip(y_true, y_pred, strict=True))
         precision = tp / (tp + fp) if tp + fp else 0.0
         recall = tp / (tp + fn) if tp + fn else 0.0
         f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
@@ -115,7 +115,7 @@ def cohen_kappa(a: Sequence[str], b: Sequence[str], labels: Sequence[str]) -> fl
     if not a:
         return float("nan")
     size = len(a)
-    observed = sum(x == y for x, y in zip(a, b)) / size
+    observed = sum(x == y for x, y in zip(a, b, strict=True)) / size
     counts_a, counts_b = Counter(a), Counter(b)
     expected = sum((counts_a[label] / size) * (counts_b[label] / size) for label in labels)
     if expected == 1.0:

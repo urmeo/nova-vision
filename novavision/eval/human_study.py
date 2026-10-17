@@ -14,6 +14,7 @@ from uuid import UUID, uuid4
 
 from novavision.data import load_content_bank
 from novavision.eval.metrics import accuracy, cohen_kappa
+from novavision.eval.probes import image_digest
 from novavision.generation import get_backend
 from novavision.prompting import NEGATIVE_PROMPT, build_prompt
 from novavision.taxonomy import EMOTIONS
@@ -127,7 +128,6 @@ def build_sheet(
     from PIL import Image
 
     from novavision.determinism import set_determinism
-    from novavision.experiments.run import _image_digest, _seed
 
     if rebuild:
         _verify_rebuild_provenance(data)
@@ -175,8 +175,8 @@ def build_sheet(
                 with Image.open(source) as saved:
                     image = saved.convert("RGB")
             else:
-                image = _rebuild_image(record, bank, gen, config, style, _seed)
-            digest = _image_digest(image)
+                image = _rebuild_image(record, bank, gen, config, style)
+            digest = image_digest(image)
             if digest != record["image_pixel_sha256"]:
                 raise ValueError("Image pixel digest differs from the image the probe scored")
             image_id = f"{study_id}-{index:03d}"
@@ -208,7 +208,9 @@ def build_sheet(
     return study
 
 
-def _rebuild_image(record, bank, gen, config, style, seed_fn):
+def _rebuild_image(record, bank, gen, config, style):
+    from novavision.experiments.run import _seed
+
     index = _record_index(record, bank)
     emotion_index = EMOTIONS.index(record["intended"])
 
@@ -224,7 +226,7 @@ def _rebuild_image(record, bank, gen, config, style, seed_fn):
         prompt,
         width=config["width"],
         height=config["height"],
-        seed=seed_fn(config["base_seed"], index, emotion_index, record["seed"]),
+        seed=_seed(config["base_seed"], index, emotion_index, record["seed"]),
         negative_prompt=NEGATIVE_PROMPT,
     )
 
@@ -279,11 +281,6 @@ def _write_csv(path, fields, rows):
         writer.writerows(rows)
 
 
-def _read_csv(path):
-    with open(path, encoding="utf-8", newline="") as fh:
-        return list(csv.DictReader(fh))
-
-
 def _read_by_id(path, labels: tuple[str, ...]) -> dict[str, dict]:
     records = {}
     study_ids = set()
@@ -331,8 +328,6 @@ def _read_by_id(path, labels: tuple[str, ...]) -> dict[str, dict]:
 def _verify_study_images(study: Path, key: dict[str, dict]) -> None:
     from PIL import Image
 
-    from novavision.experiments.run import _image_digest
-
     images = study / "images"
     if not images.exists() and not images.is_symlink():
         return
@@ -342,7 +337,7 @@ def _verify_study_images(study: Path, key: dict[str, dict]) -> None:
             raise ValueError(f"Study image is missing: {image_id}")
         try:
             with Image.open(image_path) as image:
-                digest = _image_digest(image)
+                digest = image_digest(image)
         except OSError as exc:
             raise ValueError(f"Study image cannot be read: {image_id}") from exc
         if digest != record["image_pixel_sha256"]:
