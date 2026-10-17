@@ -1,8 +1,5 @@
 const isPreview = document.documentElement.dataset.preview === 'true';
-const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
 const navbar = document.getElementById('navbar');
-const heroTitle = document.querySelector('.app-header-title');
-const heroSubtitle = document.querySelector('.app-header-subtitle');
 const navLinks = document.querySelectorAll('.nav-links a');
 const sections = document.querySelectorAll('section[id], .analysis-section[id], .prompt-engineering-section[id]');
 
@@ -24,37 +21,11 @@ function updateActiveNav() {
 }
 
 window.addEventListener('scroll', () => {
-    const scrollY = window.scrollY;
-
-    navbar.classList.toggle('scrolled', scrollY > 50);
-
-    if (!reducedMotion?.matches && scrollY < 400) {
-        const parallaxAmount = scrollY * 0.15;
-        const opacityAmount = Math.max(0, 1 - (scrollY / 300));
-        if (heroTitle) {
-            heroTitle.style.transform = `translateY(${parallaxAmount}px)`;
-            heroTitle.style.opacity = opacityAmount;
-        }
-        if (heroSubtitle) {
-            heroSubtitle.style.transform = `translateY(${parallaxAmount * 0.8}px)`;
-            heroSubtitle.style.opacity = opacityAmount;
-        }
-    }
-
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
     updateActiveNav();
 }, { passive: true });
 
 updateActiveNav();
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-        }
-    });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
 const liveStatus = document.getElementById('liveStatus');
 const liveStatusText = document.getElementById('liveStatusText');
@@ -62,7 +33,6 @@ const liveEmotionBars = document.getElementById('liveEmotionBars');
 const liveTip = document.getElementById('liveTip');
 let debounceTimer = null;
 let liveAnalysisController = null;
-let liveAnalysisVersion = 0;
 
 const emotionOrder = ['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'neutral'];
 const minTextLength = 3;
@@ -73,7 +43,6 @@ function formatEmotionName(emotion) {
 }
 
 function cancelLiveAnalysis() {
-    liveAnalysisVersion += 1;
     if (liveAnalysisController) liveAnalysisController.abort();
     liveAnalysisController = null;
 }
@@ -138,7 +107,6 @@ async function analyzeLive(text) {
     liveStatusText.textContent = 'Analyzing...';
 
     const controller = new AbortController();
-    const version = liveAnalysisVersion;
     liveAnalysisController = controller;
     try {
         const response = await fetch('/api/analyze', {
@@ -149,7 +117,7 @@ async function analyzeLive(text) {
         });
 
         const data = await response.json();
-        if (controller.signal.aborted || version !== liveAnalysisVersion) return;
+        if (controller.signal.aborted) return;
 
         if (data.success) {
             updateLiveEmotions(data.emotions, data.primary_emotion, data.confidence);
@@ -158,7 +126,7 @@ async function analyzeLive(text) {
             liveStatusText.textContent = 'Analysis unavailable';
         }
     } catch (error) {
-        if (controller.signal.aborted || version !== liveAnalysisVersion) return;
+        if (controller.signal.aborted) return;
         console.error('Live analysis error:', error);
         liveStatus.classList.remove('analyzing');
         liveStatusText.textContent = 'Analysis unavailable';
@@ -573,10 +541,6 @@ function displayGeneration(data) {
         bar.append(name, track, value);
         emotionBars.appendChild(bar);
     });
-
-    const promptTextEl = document.getElementById('promptText');
-    promptTextEl.classList.remove('default');
-    promptTextEl.textContent = '"' + data.prompt + '"';
 
     document.getElementById('userInputDisplay').textContent = data.original_text;
     document.getElementById('enhancedPromptDisplay').textContent = data.prompt;

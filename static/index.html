@@ -25,8 +25,8 @@
     </nav>
 
     <header class="app-header">
-        <h1 class="app-header-title fade-in">NovaVision</h1>
-        <p class="app-header-subtitle fade-in">Generate images from text and emotion labels</p>
+        <h1 class="app-header-title">NovaVision</h1>
+        <p class="app-header-subtitle">Generate images from text and emotion labels</p>
     </header>
 
     <main>
@@ -63,7 +63,7 @@
 
     <section id="try-it">
         <div class="section-container">
-            <div class="app-container fade-in">
+            <div class="app-container">
                 <div class="app-card input-card">
                     <div class="form-group">
                         <label class="form-label" for="emotionInput">Describe a feeling, memory, or scene</label>
@@ -77,7 +77,7 @@
                                 <button class="example-chip" data-prompt="Cozy coffee shop on a rainy day">Cozy coffee shop</button>
                             </div>
                         </div>
-                        <div class="live-emotions" id="liveEmotions">
+                        <div class="live-emotions">
                             <div class="live-emotions-header">
                                 <span class="live-emotions-title">Text emotion scores</span>
                                 <span class="live-emotions-status" id="liveStatus" role="status">
@@ -87,37 +87,37 @@
                             </div>
                             <div class="live-emotion-bars muted" id="liveEmotionBars">
                                 <div class="live-emotion-bar">
-                                    <span class="live-emotion-name" data-emotion="joy">Joy</span>
+                                    <span class="live-emotion-name">Joy</span>
                                     <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
                                     <span class="live-emotion-value">0%</span>
                                 </div>
                                 <div class="live-emotion-bar">
-                                    <span class="live-emotion-name" data-emotion="sadness">Sadness</span>
+                                    <span class="live-emotion-name">Sadness</span>
                                     <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
                                     <span class="live-emotion-value">0%</span>
                                 </div>
                                 <div class="live-emotion-bar">
-                                    <span class="live-emotion-name" data-emotion="anger">Anger</span>
+                                    <span class="live-emotion-name">Anger</span>
                                     <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
                                     <span class="live-emotion-value">0%</span>
                                 </div>
                                 <div class="live-emotion-bar">
-                                    <span class="live-emotion-name" data-emotion="fear">Fear</span>
+                                    <span class="live-emotion-name">Fear</span>
                                     <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
                                     <span class="live-emotion-value">0%</span>
                                 </div>
                                 <div class="live-emotion-bar">
-                                    <span class="live-emotion-name" data-emotion="surprise">Surprise</span>
+                                    <span class="live-emotion-name">Surprise</span>
                                     <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
                                     <span class="live-emotion-value">0%</span>
                                 </div>
                                 <div class="live-emotion-bar">
-                                    <span class="live-emotion-name" data-emotion="disgust">Disgust</span>
+                                    <span class="live-emotion-name">Disgust</span>
                                     <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
                                     <span class="live-emotion-value">0%</span>
                                 </div>
                                 <div class="live-emotion-bar">
-                                    <span class="live-emotion-name" data-emotion="neutral">Neutral</span>
+                                    <span class="live-emotion-name">Neutral</span>
                                     <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
                                     <span class="live-emotion-value">0%</span>
                                 </div>
@@ -264,16 +264,16 @@
                     </svg>
                     <span>Text analysis</span>
                 </div>
-                <div class="analysis-content" id="analysisContent">
-                    <p id="analysisScope" class="analysis-scope">The classifier scores emotion labels in text. Valence and arousal combine word scores with preset values for each label. These estimates have not been validated against human feelings.</p>
+                <div class="analysis-content">
+                    <p class="analysis-scope">The classifier scores emotion labels in text. Valence and arousal combine word scores with preset values for each label. These estimates have not been validated against human feelings.</p>
 
-                    <div class="primary-emotion-display" id="primaryEmotionSection">
+                    <div class="primary-emotion-display">
                         <span class="primary-emotion-label">Leading label:</span>
                         <span class="primary-emotion-value default" id="primaryEmotion">Neutral</span>
                         <span class="primary-emotion-confidence" id="primaryConfidence">--</span>
                     </div>
 
-                    <div class="dimension-indicators" id="dimensionSection">
+                    <div class="dimension-indicators">
                         <div class="dimension-item">
                             <div class="dimension-label">Valence</div>
                             <div class="dimension-value neutral" id="valenceDisplay">Neutral<span class="dimension-number">(0.0)</span></div>
@@ -288,7 +288,7 @@
                         </div>
                     </div>
 
-                    <div class="all-emotions-grid" id="allEmotionsSection">
+                    <div class="all-emotions-grid">
                         <h4 class="emotion-scores-label">Label scores</h4>
                         <div id="emotionBars">
                             <div class="emotion-bar">
@@ -328,11 +328,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="prompt-section" id="promptSection">
-                        <div class="prompt-label">Generation prompt</div>
-                        <p class="prompt-text default" id="promptText">The generation prompt will appear here.</p>
-                    </div>
                 </div>
             </div>
 
@@ -343,7 +338,7 @@
                     </svg>
                     <span>How the prompt is built</span>
                 </div>
-                <div class="prompt-engineering-content" id="promptEngineeringContent">
+                <div class="prompt-engineering-content">
                     <div class="prompt-comparison">
                         <div class="prompt-column">
                             <div class="prompt-column-header">
@@ -371,27 +366,25 @@
                     </div>
                     <div class="modifiers-section">
                         <div class="modifiers-title">Prompt components</div>
-                        <div id="modifiersList">
-                            <div class="modifier-item">
-                                <span class="modifier-badge user">Text</span>
-                                <div class="modifier-content">
-                                    <div class="modifier-text" id="modUserText">-</div>
-                                    <div class="modifier-description">Your original description</div>
-                                </div>
+                        <div class="modifier-item">
+                            <span class="modifier-badge user">Text</span>
+                            <div class="modifier-content">
+                                <div class="modifier-text" id="modUserText">-</div>
+                                <div class="modifier-description">Your original description</div>
                             </div>
-                            <div class="modifier-item">
-                                <span class="modifier-badge style">Style</span>
-                                <div class="modifier-content">
-                                    <div class="modifier-text" id="modStyleText">-</div>
-                                    <div class="modifier-description">Terms for the selected style</div>
-                                </div>
+                        </div>
+                        <div class="modifier-item">
+                            <span class="modifier-badge style">Style</span>
+                            <div class="modifier-content">
+                                <div class="modifier-text" id="modStyleText">-</div>
+                                <div class="modifier-description">Terms for the selected style</div>
                             </div>
-                            <div class="modifier-item">
-                                <span class="modifier-badge quality">Fixed</span>
-                                <div class="modifier-content">
-                                    <div class="modifier-text">"masterpiece, highly detailed, sharp focus, professional"</div>
-                                    <div class="modifier-description">Terms added to every generation prompt</div>
-                                </div>
+                        </div>
+                        <div class="modifier-item">
+                            <span class="modifier-badge quality">Fixed</span>
+                            <div class="modifier-content">
+                                <div class="modifier-text">"masterpiece, highly detailed, sharp focus, professional"</div>
+                                <div class="modifier-description">Terms added to every generation prompt</div>
                             </div>
                         </div>
                     </div>
@@ -407,7 +400,7 @@
                 <h2 id="pipelineTitle">From text to an image</h2>
             </header>
 
-            <figure class="pipeline-figure">
+            <figure>
                 <a class="pipeline-diagram" href="assets/pipeline.svg" aria-describedby="pipelineDescription">
                     <picture>
                         <source media="(max-width: 900px)" srcset="assets/pipeline-mobile.svg" type="image/svg+xml" width="480" height="1968">
@@ -454,15 +447,15 @@
 
     <section id="about">
         <div class="section-container">
-            <div class="section-header fade-in">
+            <div class="section-header">
                 <h2 class="section-title">About NovaVision</h2>
             </div>
-            <div class="about-content fade-in">
+            <div class="about-content">
                 <p class="about-text">
                     NovaVision is a prototype for image prompts guided by text emotion labels.
                     It supports local diffusion models, hosted image generation, and synthetic test images.
                 </p>
-                <div class="tech-stack fade-in" data-delay="1">
+                <div class="tech-stack">
                     <span class="tech-badge">Python</span>
                     <span class="tech-badge">PyTorch</span>
                     <span class="tech-badge">Transformers</span>

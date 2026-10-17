@@ -122,7 +122,6 @@ function createApp(fetch, preview = false) {
                 if (tag === 'canvas') reportCanvases.push(element);
                 return element;
             },
-            querySelector: () => null,
             querySelectorAll: selector => {
                 if (selector === '.history-thumbnail') {
                     return getElementById('historyThumbnails').children.filter(el => el.classList.contains('history-thumbnail'));
@@ -134,7 +133,6 @@ function createApp(fetch, preview = false) {
             }
         },
         window: { scrollY: 0, addEventListener() {} },
-        IntersectionObserver: class { observe() {} },
         Image: class {
             set src(value) { this.source = value; this.onload?.(); }
             get src() { return this.source; }
@@ -251,7 +249,7 @@ test('history selection restores analysis, seed, image and report downloads', as
 
     assert.equal(app.getElementById('generatedImage').src, 'data:image/png;base64,older');
     assert.equal(app.getElementById('primaryEmotion').textContent, 'Sadness');
-    assert.equal(app.getElementById('promptText').textContent, '"Prompt for older"');
+    assert.equal(app.getElementById('enhancedPromptDisplay').textContent, 'Prompt for older');
     assert.equal(app.getElementById('userInputDisplay').textContent, 'older');
     assert.equal(app.getElementById('lastSeedValue').textContent, '123');
     assert.equal(app.getElementById('generationBackend').textContent, 'Test image · null backend');

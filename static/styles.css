@@ -33,16 +33,6 @@ body {
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    animation: pageLoad 0.6s ease-out;
-}
-
-@keyframes pageLoad {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
 }
 
 nav {
@@ -95,7 +85,7 @@ nav.scrolled {
     font-weight: 500;
     color: #64748b;
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     cursor: pointer;
 }
@@ -132,8 +122,6 @@ nav.scrolled {
 }
 
 .app-header {
-    transform-style: preserve-3d;
-    perspective: 1000px;
     text-align: center;
     padding-top: 120px;
     padding-bottom: 48px;
@@ -540,7 +528,6 @@ select:focus + .select-arrow {
 
 .image-display img:hover {
     transform: scale(1.02);
-    cursor: zoom-in;
 }
 
 .image-display.has-image {
@@ -563,15 +550,6 @@ select:focus + .select-arrow {
 
 .placeholder-text {
     font-size: 15px;
-}
-
-.image-display.generating .placeholder-icon {
-    animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.7; }
 }
 
 .analysis-section {
@@ -605,7 +583,8 @@ select:focus + .select-arrow {
     filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.2));
 }
 
-.analysis-content {
+.analysis-content,
+.prompt-engineering-content {
     display: block;
     margin-top: 0;
     padding: 24px;
@@ -663,14 +642,6 @@ select:focus + .select-arrow {
     text-align: right;
 }
 
-.prompt-text {
-    font-size: 14px;
-    color: #64748b;
-    line-height: 1.7;
-    font-style: italic;
-    overflow-wrap: anywhere;
-}
-
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -725,11 +696,6 @@ select:focus + .select-arrow {
 
 .dimension-value.neutral {
     color: #94a3b8;
-}
-
-.prompt-text.default {
-    color: #94a3b8;
-    font-style: italic;
 }
 
 .dimension-indicators {
@@ -818,20 +784,6 @@ select:focus + .select-arrow {
 
 .all-emotions-grid {
     margin-bottom: 20px;
-}
-
-.prompt-section {
-    padding-top: 16px;
-    border-top: 1px solid #e2e8f0;
-}
-
-.prompt-label {
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #64748b;
-    margin-bottom: 12px;
 }
 
 .live-emotions {
@@ -993,6 +945,7 @@ select:focus + .select-arrow {
 
 .download-actions {
     display: none;
+    flex-wrap: wrap;
     gap: 12px;
     padding: 16px;
     border-top: 1px solid #e2e8f0;
@@ -1087,11 +1040,12 @@ select:focus + .select-arrow {
     color: #6366f1;
 }
 
-.regenerate-btn {
+.regenerate-btn,
+.download-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     padding: 12px 16px;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
@@ -1105,7 +1059,13 @@ select:focus + .select-arrow {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
-.regenerate-btn:hover {
+.regenerate-btn {
+    flex-grow: 1;
+    gap: 6px;
+}
+
+.regenerate-btn:hover,
+.download-btn:hover {
     border-color: #6366f1;
     color: #6366f1;
     box-shadow: 0 6px 16px rgba(99, 102, 241, 0.2);
@@ -1121,11 +1081,13 @@ select:focus + .select-arrow {
     to { transform: rotate(360deg); }
 }
 
-.regenerate-btn:active {
+.regenerate-btn:active,
+.download-btn:active {
     transform: translateY(0) scale(0.98);
 }
 
-.regenerate-btn svg {
+.regenerate-btn svg,
+.download-btn svg {
     width: 16px;
     height: 16px;
 }
@@ -1156,7 +1118,7 @@ select:focus + .select-arrow {
     font-size: 12px;
     color: #64748b;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
@@ -1429,7 +1391,7 @@ select:focus + .select-arrow {
     border: 2px solid transparent;
     padding: 0;
     background: transparent;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     flex-shrink: 0;
@@ -1455,37 +1417,9 @@ select:focus + .select-arrow {
 
 .download-btn {
     flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    background: #fff;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-}
-
-.download-btn:hover {
-    border-color: #6366f1;
-    color: #6366f1;
-    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.2);
-    transform: translateY(-2px);
-}
-
-.download-btn:active {
-    transform: translateY(0) scale(0.98);
 }
 
 .download-btn svg {
-    width: 16px;
-    height: 16px;
     transition: transform 0.3s ease;
 }
 
@@ -1515,14 +1449,7 @@ select:focus + .select-arrow {
 }
 
 .prompt-engineering-content {
-    display: block;
-    margin-top: 0;
-    padding: 24px;
-    background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
 }
 
 .prompt-comparison {
@@ -1973,47 +1900,15 @@ footer::before {
     color: #94a3b8;
 }
 
-.fade-in {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.fade-in.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.fade-in[data-delay="1"] { transition-delay: 0.1s; }
-.fade-in[data-delay="2"] { transition-delay: 0.2s; }
-.fade-in[data-delay="3"] { transition-delay: 0.3s; }
-.fade-in[data-delay="4"] { transition-delay: 0.4s; }
-
-.app-header-title,
-.app-header-subtitle {
-    transform: translateZ(0);
-    will-change: transform;
-}
-
 *:focus-visible {
     outline: 2px solid rgba(124, 58, 237, 0.5);
     outline-offset: 2px;
-}
-
-.tech-badge,
-.nav-links a,
-.footer-logo,
-.history-thumbnail,
-.example-chip {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (max-width: 968px) {
     .app-container {
         grid-template-columns: 1fr;
     }
-
 }
 
 @media (max-width: 768px) {
@@ -2068,17 +1963,5 @@ footer::before {
     *::after {
         animation: none !important;
         transition: none !important;
-    }
-
-    .fade-in,
-    .fade-in.visible {
-        opacity: 1;
-        transform: none;
-    }
-
-    .app-header-title,
-    .app-header-subtitle {
-        opacity: 1 !important;
-        transform: none !important;
     }
 }
