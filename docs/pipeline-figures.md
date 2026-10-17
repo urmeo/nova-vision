@@ -11,10 +11,9 @@
 Edit the Figma frames and export both formats when the method or labels change.
 Keep the captions and README alt text consistent with the exports.
 The [repository Figma files](../figma/) include a text-preserving SVG of the
-signal-flow frame. The published SVG uses outlines for consistent rendering.
-PNG exports use 1.5× scale. Published SVG text uses outlines to preserve the layout without
-installed fonts. Keep the SVG title, description, and accessible image role when
-replacing an export; the text equivalents below supply the full explanation.
+signal-flow frame. Published SVGs use text outlines to preserve the layout without
+installed fonts; PNGs use 1.5× scale. Keep the SVG title, description, and accessible
+image role when replacing an export. Text equivalents appear below.
 The README and website select the mobile figure on screens up to 900 pixels wide.
 
 ## Method shown
