@@ -10,7 +10,7 @@ A Python prototype for turning English text into image prompts with emotion, pal
 
 Keywords: **Python · PyTorch · Transformers · Diffusers · NumPy · Pillow · Flask · Figma**
 
-The [public website](https://urmeo.github.io/nova-vision/) is a static preview. Run the Python server for text analysis and image generation.
+The website is a static preview. Run the Python server for text analysis and image generation.
 
 ## Video
 
