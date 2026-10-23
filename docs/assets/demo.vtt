@@ -1,0 +1,53 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:03.965 position:50% size:90% align:center
+Local Python app · SD-Turbo
+Apple MPS with CPU offloading
+
+00:00:04.065 --> 00:00:11.065 position:50% size:90% align:center
+Enter an English description.
+The classifier scores seven emotion labels.
+
+00:00:13.215 --> 00:00:19.314 position:50% size:90% align:center
+Choose a style and an optional seed.
+This run uses Nature and seed 17.
+
+00:00:19.414 --> 00:00:26.414 position:50% size:90% align:center
+Generate a 512 × 512 image with SD-Turbo.
+
+00:00:42.684 --> 00:00:48.492 position:50% size:90% align:center
+Review the generated image.
+
+00:00:48.592 --> 00:00:55.194 position:50% size:90% align:center
+Review text emotion scores,
+valence and arousal estimates.
+
+00:00:55.294 --> 00:01:01.899 position:50% size:90% align:center
+Inspect the prompt built from your text,
+style, color and lighting cues.
+
+00:01:01.999 --> 00:01:06.682 position:50% size:90% align:center
+Download the generated image as a PNG.
+
+00:01:06.782 --> 00:01:11.162 position:50% size:90% align:center
+Download a report with the image,
+prompt and analysis.
+
+00:01:11.262 --> 00:01:18.262 position:50% size:90% align:center
+Try a new seed while keeping
+the same text and style.
+
+00:01:31.724 --> 00:01:36.836 position:50% size:90% align:center
+Review the new image.
+The text and style stay the same.
+
+00:01:36.936 --> 00:01:42.253 position:50% size:90% align:center
+Select an earlier image to restore
+its prompt, scores and seed.
+
+00:01:42.353 --> 00:01:48.957 position:50% size:90% align:center
+Analyze text → build a prompt →
+generate an image.
+
+00:01:49.057 --> 00:01:53.660 position:50% size:90% align:center
+Return to the selected image.

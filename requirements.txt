@@ -1,0 +1,13 @@
+accelerate>=0.30
+certifi>=2026.10.19
+diffusers>=0.27
+flask>=3.0
+flask-cors>=4.0
+gunicorn>=21
+huggingface-hub>=0.23
+numpy>=1.24
+pillow>=13.0
+pydantic>=2.5
+pydantic-settings>=2.5
+torch>=2.14.1
+transformers>=4.40

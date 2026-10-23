@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" data-preview="true">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'">
+    <title>NovaVision - Emotion-guided image generation</title>
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body>
+
+    <nav id="navbar" aria-label="Main navigation">
+        <div class="nav-container">
+            <span class="nav-logo">NovaVision</span>
+            <div class="nav-links">
+                <a href="#try-it">Generate</a>
+                <a href="#analysisSection">Analysis</a>
+                <a href="#prompt-section">Prompt</a>
+                <a href="#how-it-works">How it works</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="app-header">
+        <h1 class="app-header-title">NovaVision</h1>
+        <p class="app-header-subtitle">Generate images from text and emotion labels</p>
+    </header>
+
+    <main>
+
+    <section id="try-it">
+        <div class="section-container">
+            <div class="app-container">
+                <div class="app-card input-card">
+                    <div class="form-group">
+                        <label class="form-label" for="emotionInput">Describe a feeling, memory, or scene</label>
+                        <textarea id="emotionInput" minlength="3" maxlength="4000" placeholder="For example: I feel peaceful watching the sunset."></textarea>
+                        <div class="example-prompts">
+                            <div class="example-prompts-label">Try these examples:</div>
+                            <div class="example-chips">
+                                <button class="example-chip" data-prompt="I feel peaceful watching the sunset">Peaceful sunset</button>
+                                <button class="example-chip" data-prompt="Excited about starting a new adventure">New adventure</button>
+                                <button class="example-chip" data-prompt="A majestic lion in the savanna">Majestic lion</button>
+                                <button class="example-chip" data-prompt="Cozy coffee shop on a rainy day">Cozy coffee shop</button>
+                            </div>
+                        </div>
+                        <div class="live-emotions">
+                            <div class="live-emotions-header">
+                                <span class="live-emotions-title">Text emotion scores</span>
+                                <span class="live-emotions-status" id="liveStatus" role="status">
+                                    <span class="dot"></span>
+                                    <span id="liveStatusText">Ready</span>
+                                </span>
+                            </div>
+                            <div class="live-emotion-bars muted" id="liveEmotionBars">
+                                <div class="live-emotion-bar">
+                                    <span class="live-emotion-name">Joy</span>
+                                    <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
+                                    <span class="live-emotion-value">—</span>
+                                </div>
+                                <div class="live-emotion-bar">
+                                    <span class="live-emotion-name">Sadness</span>
+                                    <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
+                                    <span class="live-emotion-value">—</span>
+                                </div>
+                                <div class="live-emotion-bar">
+                                    <span class="live-emotion-name">Anger</span>
+                                    <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
+                                    <span class="live-emotion-value">—</span>
+                                </div>
+                                <div class="live-emotion-bar">
+                                    <span class="live-emotion-name">Fear</span>
+                                    <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
+                                    <span class="live-emotion-value">—</span>
+                                </div>
+                                <div class="live-emotion-bar">
+                                    <span class="live-emotion-name">Surprise</span>
+                                    <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
+                                    <span class="live-emotion-value">—</span>
+                                </div>
+                                <div class="live-emotion-bar">
+                                    <span class="live-emotion-name">Disgust</span>
+                                    <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
+                                    <span class="live-emotion-value">—</span>
+                                </div>
+                                <div class="live-emotion-bar">
+                                    <span class="live-emotion-name">Neutral</span>
+                                    <div class="live-emotion-track"><div class="live-emotion-fill muted"></div></div>
+                                    <span class="live-emotion-value">—</span>
+                                </div>
+                            </div>
+                            <div class="live-emotions-tip" id="liveTip">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                These scores estimate emotion labels in text.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="styleSelect">Visual style</label>
+                        <div class="select-wrapper">
+                            <select id="styleSelect">
+                                <option value="artistic">Artistic</option>
+                                <option value="nature">Nature</option>
+                                <option value="abstract">Abstract</option>
+                                <option value="dreamscape">Dreamscape</option>
+                                <option value="photorealistic">Photorealistic</option>
+                            </select>
+                            <span class="select-arrow">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="advanced-settings">
+                        <button class="advanced-toggle" id="advancedToggle" aria-expanded="false" aria-controls="advancedContent">
+                            <span>Advanced settings</span>
+                            <svg viewBox="0 0 16 16" fill="none">
+                                <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                        <div class="advanced-content" id="advancedContent">
+                            <div class="seed-control">
+                                <label class="seed-label" for="seedInput">Seed:</label>
+                                <input type="text" class="seed-input" id="seedInput" placeholder="Random (leave empty)">
+                                <button class="copy-seed-btn" id="copySeedBtn" aria-live="polite">Copy seed</button>
+                            </div>
+                            <div class="seed-control">
+                                <label class="seed-label" for="tokenInput">API token:</label>
+                                <input type="password" class="seed-input" id="tokenInput" placeholder="Required for a public server" autocomplete="off">
+                            </div>
+                            <div class="used-seed-display" id="usedSeedDisplay">Last used seed: <span id="lastSeedValue">-</span></div>
+                        </div>
+                    </div>
+
+                    <button class="generate-btn" id="generateBtn">
+                        <span class="spinner"></span>
+                        <span class="btn-text">Generate image</span>
+                    </button>
+                    <p class="preview-note" id="previewNotice" hidden>
+                        Analysis and generation need the Python server.
+                        <a href="https://github.com/urmeo/nova-vision#run">Run locally</a>.
+                    </p>
+
+                    <div class="error-display" id="errorDisplay" role="alert">
+                        <div class="error-message">
+                            <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            <div>
+                                <div class="error-text" id="errorText">Generation failed. Try again.</div>
+                                <div class="error-details" id="errorDetails"></div>
+                            </div>
+                        </div>
+                        <button class="retry-btn" id="retryBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                            Try again
+                        </button>
+                    </div>
+                </div>
+                <div class="app-card output-card">
+                    <p class="visually-hidden" id="generationStatus" role="status" aria-atomic="true"></p>
+                    <div class="image-display" id="imageDisplay">
+                        <div class="skeleton-loader" id="skeletonLoader"></div>
+                        <div class="loading-overlay" id="loadingOverlay">
+                            <div class="loading-spinner-large"></div>
+                            <div class="loading-text">Generating image...</div>
+                            <div class="loading-subtext">The server analyzes text, builds a prompt, and renders an image. Time depends on the backend and device.</div>
+                        </div>
+                        <div class="image-placeholder" id="placeholder">
+                            <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            <p class="placeholder-text">Your image will appear here</p>
+                        </div>
+                        <img id="generatedImage" alt="Generated image">
+                    </div>
+                    <div class="generation-time" id="generationTime">
+                        Generated in <span class="time-value" id="generationTimeValue">0.0</span> seconds
+                    </div>
+
+                    <div class="download-actions" id="downloadActions">
+                        <button class="download-btn primary" id="downloadImageBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Download image
+                        </button>
+                        <button class="download-btn" id="downloadReportBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            Download report
+                        </button>
+                        <button class="regenerate-btn" id="regenerateBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                            New variation
+                        </button>
+                    </div>
+                    <div class="image-history" id="imageHistory">
+                        <div class="history-header">
+                            <span class="history-title">Recent images</span>
+                            <span class="history-count" id="historyCount">0 of 4</span>
+                        </div>
+                        <div class="history-thumbnails" id="historyThumbnails">
+                            <div class="history-placeholder">+</div>
+                            <div class="history-placeholder">+</div>
+                            <div class="history-placeholder">+</div>
+                            <div class="history-placeholder">+</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="analysis-section" id="analysisSection">
+                <h2 class="analysis-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                        <line x1="9" y1="9" x2="9.01" y2="9"/>
+                        <line x1="15" y1="9" x2="15.01" y2="9"/>
+                    </svg>
+                    <span>Text analysis</span>
+                </h2>
+                <div class="analysis-content">
+                    <p class="analysis-scope">The classifier scores emotion labels in text. Valence and arousal combine word scores with preset values for each label. These estimates have not been validated against human feelings.</p>
+
+                    <div class="primary-emotion-display">
+                        <span class="primary-emotion-label">Leading label:</span>
+                        <span class="primary-emotion-value default" id="primaryEmotion">Not run</span>
+                        <span class="primary-emotion-confidence" id="primaryConfidence">—</span>
+                    </div>
+
+                    <div class="dimension-indicators">
+                        <div class="dimension-item">
+                            <div class="dimension-label">Valence</div>
+                            <div class="dimension-value neutral" id="valenceDisplay">—</div>
+                            <div class="dimension-scale valence-scale" aria-hidden="true"></div>
+                            <div class="dimension-range"><span>−1 negative</span><span>+1 positive</span></div>
+                        </div>
+                        <div class="dimension-item">
+                            <div class="dimension-label">Arousal</div>
+                            <div class="dimension-value neutral" id="arousalDisplay">—</div>
+                            <div class="dimension-scale arousal-scale" aria-hidden="true"></div>
+                            <div class="dimension-range"><span>0 low</span><span>1 high</span></div>
+                        </div>
+                    </div>
+
+                    <div class="all-emotions-grid">
+                        <h3 class="emotion-scores-label">Label scores</h3>
+                        <div id="emotionBars">
+                            <div class="emotion-bar">
+                                <span class="emotion-name">Joy</span>
+                                <div class="emotion-track"><div class="emotion-fill"></div></div>
+                                <span class="emotion-value">—</span>
+                            </div>
+                            <div class="emotion-bar">
+                                <span class="emotion-name">Sadness</span>
+                                <div class="emotion-track"><div class="emotion-fill"></div></div>
+                                <span class="emotion-value">—</span>
+                            </div>
+                            <div class="emotion-bar">
+                                <span class="emotion-name">Anger</span>
+                                <div class="emotion-track"><div class="emotion-fill"></div></div>
+                                <span class="emotion-value">—</span>
+                            </div>
+                            <div class="emotion-bar">
+                                <span class="emotion-name">Fear</span>
+                                <div class="emotion-track"><div class="emotion-fill"></div></div>
+                                <span class="emotion-value">—</span>
+                            </div>
+                            <div class="emotion-bar">
+                                <span class="emotion-name">Surprise</span>
+                                <div class="emotion-track"><div class="emotion-fill"></div></div>
+                                <span class="emotion-value">—</span>
+                            </div>
+                            <div class="emotion-bar">
+                                <span class="emotion-name">Disgust</span>
+                                <div class="emotion-track"><div class="emotion-fill"></div></div>
+                                <span class="emotion-value">—</span>
+                            </div>
+                            <div class="emotion-bar">
+                                <span class="emotion-name">Neutral</span>
+                                <div class="emotion-track"><div class="emotion-fill"></div></div>
+                                <span class="emotion-value">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prompt-engineering-section" id="prompt-section">
+                <h2 class="prompt-engineering-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    <span>How the prompt is built</span>
+                </h2>
+                <div class="prompt-engineering-content">
+                    <div class="prompt-comparison">
+                        <div class="prompt-column">
+                            <div class="prompt-column-header">
+                                <div class="prompt-column-icon user">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                </div>
+                                <span class="prompt-column-title">Your text</span>
+                            </div>
+                            <p class="prompt-column-text" id="userInputDisplay">Your text will appear here.</p>
+                        </div>
+                        <div class="prompt-column">
+                            <div class="prompt-column-header">
+                                <div class="prompt-column-icon enhanced">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                    </svg>
+                                </div>
+                                <span class="prompt-column-title">Generation prompt</span>
+                            </div>
+                            <p class="prompt-column-text" id="enhancedPromptDisplay">The generation prompt will appear here.</p>
+                        </div>
+                    </div>
+                    <div class="modifiers-section">
+                        <div class="modifiers-title">Prompt components</div>
+                        <div class="modifier-item">
+                            <span class="modifier-badge user">Text</span>
+                            <div class="modifier-content">
+                                <div class="modifier-text" id="modUserText">-</div>
+                                <div class="modifier-description">Your original description</div>
+                            </div>
+                        </div>
+                        <div class="modifier-item">
+                            <span class="modifier-badge style">Style</span>
+                            <div class="modifier-content">
+                                <div class="modifier-text" id="modStyleText">-</div>
+                                <div class="modifier-description">Terms for the selected style</div>
+                            </div>
+                        </div>
+                        <div class="modifier-item">
+                            <span class="modifier-badge quality">Fixed</span>
+                            <div class="modifier-content">
+                                <div class="modifier-text">"masterpiece, highly detailed, sharp focus, professional"</div>
+                                <div class="modifier-description">Terms added to every generation prompt</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" aria-labelledby="howItWorksTitle">
+        <div class="section-container">
+            <h2 class="section-title" id="howItWorksTitle">How it works</h2>
+            <ol class="generation-steps">
+                <li>
+                    <h3>Analyze text</h3>
+                    <p>Estimate emotion labels, valence, and arousal from your description.</p>
+                </li>
+                <li>
+                    <h3>Build a prompt</h3>
+                    <p>Combine the text and selected style with color and lighting cues.</p>
+                </li>
+                <li>
+                    <h3>Generate an image</h3>
+                    <p>Render with the configured backend. Download the image or try another seed.</p>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <section id="about">
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">About NovaVision</h2>
+            </div>
+            <div class="about-content">
+                <p class="about-text">
+                    NovaVision is a prototype for image prompts guided by text emotion labels.
+                    It supports local diffusion models, hosted image generation, and synthetic test images.
+                </p>
+                <div class="tech-stack">
+                    <span class="tech-badge">Python</span>
+                    <span class="tech-badge">PyTorch</span>
+                    <span class="tech-badge">Transformers</span>
+                    <span class="tech-badge" id="generationBackend">Image backend</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <footer>
+        <div class="footer-logo">NovaVision</div>
+        <p class="footer-copyright">&copy; 2026 urme &middot; MIT license</p>
+    </footer>
+
+    <script src="app.js" defer></script>
+</body>
+</html>

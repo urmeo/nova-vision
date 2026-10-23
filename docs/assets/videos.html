@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Watch NovaVision analyze text, build a prompt, and generate an image in the local Python app.">
+    <meta name="color-scheme" content="light">
+    <title>Website walkthrough · NovaVision</title>
+    <link rel="stylesheet" href="videos.css">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to video</a>
+    <header class="page-header">
+      <a class="brand" href="../">NovaVision</a>
+      <nav aria-label="Project links">
+        <a href="../">Open website</a>
+        <a href="https://github.com/urmeo/nova-vision">Repository</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <div class="intro">
+        <h1 id="demo-heading">Website walkthrough</h1>
+        <p id="demo-description">Recorded locally with SD-Turbo. The public website is a preview.</p>
+      </div>
+
+      <div class="video-card">
+        <video id="demo" controls playsinline preload="metadata" width="1280" height="900" aria-labelledby="demo-heading" aria-describedby="demo-description">
+          <source src="demo.mp4" type="video/mp4">
+          <track kind="captions" src="demo.vtt" srclang="en" label="English descriptions" default>
+          <p>Your browser cannot play this video. <a href="demo.mp4" download>Download the walkthrough</a>.</p>
+        </video>
+        <div class="card-details">
+          <details>
+            <summary>Text description</summary>
+            <p>Enter text, choose a style and seed, generate an image, inspect its prompt and scores, download files, and compare variations.</p>
+            <p>Recorded locally with SD-Turbo at 512 × 512, two steps, and Apple MPS with sequential CPU offloading.</p>
+          </details>
+          <a class="download-link" href="demo.mp4" download>Download MP4</a>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

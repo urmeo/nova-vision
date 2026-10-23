@@ -1,0 +1,127 @@
+<svg width="1440" height="1120" viewBox="0 0 1440 1120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<title>NovaVision signal flow</title>
+<desc>Text analysis builds image prompts from emotion labels and word scores. Separate experiments require an explicit image-classifier checkpoint. Classifier valence and arousal are fixed label priors, not independent image measurements. Current classifier recovery has not been measured; human ratings are unavailable.</desc>
+<g id="Signal flow &#194;&#183; text, image, controlled evaluation">
+<rect width="1440" height="1120" fill="#151B1F"/>
+<text id="Figure title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="32" font-weight="600" letter-spacing="0em"><tspan x="56" y="60.6364">NOVAVISION / SIGNAL FLOW</tspan></text>
+<text id="Figure purpose" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="24" letter-spacing="0em"><tspan x="56" y="105.727">Text shapes the prompt. Separate experiments test the image.</tspan></text>
+<g id="Header rule">
+<rect x="56.25" y="126.25" width="1327.5" height="0.5" rx="0.25" fill="#77858F"/>
+<rect x="56.25" y="126.25" width="1327.5" height="0.5" rx="0.25" stroke="#77858F" stroke-width="0.5"/>
+</g>
+<text id="App lane label" fill="#50C4DF" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" font-weight="600" letter-spacing="0em"><tspan x="56" y="171">01   TEXT TO IMAGE</tspan></text>
+<g id="Input">
+<rect x="56.75" y="316.75" width="222.5" height="166.5" rx="7.25" fill="#1D252A"/>
+<rect x="56.75" y="316.75" width="222.5" height="166.5" rx="7.25" stroke="#77858F" stroke-width="1.5"/>
+<text id="Input / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="76" y="359.455">Write text</tspan></text>
+<text id="Input / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="76" y="397">English text&#10;</tspan><tspan x="76" y="427">3&#x2013;2000 chars&#10;</tspan><tspan x="76" y="457">+ selected style</tspan></text>
+</g>
+<g id="Classifier">
+<rect x="352.75" y="242.75" width="270.5" height="126.5" rx="7.25" fill="#1D252A"/>
+<rect x="352.75" y="242.75" width="270.5" height="126.5" rx="7.25" stroke="#50C4DF" stroke-width="1.5"/>
+<text id="Classifier / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="372" y="285.455">Classify text</tspan></text>
+<text id="Classifier / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="372" y="323">7 emotion scores&#10;</tspan><tspan x="372" y="353">Highest score &#x2192; label</tspan></text>
+</g>
+<g id="Lexicon">
+<rect x="352.75" y="442.75" width="270.5" height="126.5" rx="7.25" fill="#1D252A"/>
+<rect x="352.75" y="442.75" width="270.5" height="126.5" rx="7.25" stroke="#77858F" stroke-width="1.5"/>
+<text id="Lexicon / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="372" y="485.455">Score words</tspan></text>
+<text id="Lexicon / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="372" y="523">Mean word V + A&#10;</tspan><tspan x="372" y="553">Word coverage</tspan></text>
+</g>
+<g id="Affect blend">
+<rect x="728.75" y="510.75" width="290.5" height="126.5" rx="7.25" fill="#1D252A"/>
+<rect x="728.75" y="510.75" width="290.5" height="126.5" rx="7.25" stroke="#50C4DF" stroke-width="1.5"/>
+<text id="Affect blend / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="748" y="553.455">Blend affect</tspan></text>
+<text id="Affect blend / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="748" y="591">Words + label priors&#10;</tspan><tspan x="748" y="621">Weight capped at 0.8</tspan></text>
+</g>
+<g id="Prompt">
+<rect x="728.75" y="242.75" width="290.5" height="214.5" rx="7.25" fill="#1D252A"/>
+<rect x="728.75" y="242.75" width="290.5" height="214.5" rx="7.25" stroke="#50C4DF" stroke-width="1.5"/>
+<text id="Prompt / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="748" y="285.455">Build prompt</tspan></text>
+<text id="Prompt / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="748" y="323">Text, style, quality&#10;</tspan><tspan x="748" y="353">Neutral &#x2192; raw&#10;</tspan><tspan x="748" y="383">Others &#x2192; affect&#10;</tspan><tspan x="748" y="413">Mood + visual cues</tspan></text>
+</g>
+<g id="Backend">
+<rect x="1124.75" y="242.75" width="258.5" height="214.5" rx="7.25" fill="#1D252A"/>
+<rect x="1124.75" y="242.75" width="258.5" height="214.5" rx="7.25" stroke="#77858F" stroke-width="1.5"/>
+<text id="Backend / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="1144" y="285.455">Render image</tspan></text>
+<text id="Backend / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="1144" y="323">Local: Diffusers&#10;</tspan><tspan x="1144" y="353">Hosted: HF API&#10;</tspan><tspan x="1144" y="383">Default: test image</tspan></text>
+</g>
+<g id="Output">
+<rect x="1124.75" y="510.75" width="258.5" height="126.5" rx="7.25" fill="#1D252A"/>
+<rect x="1124.75" y="510.75" width="258.5" height="126.5" rx="7.25" stroke="#77858F" stroke-width="1.5"/>
+<text id="Output / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="1144" y="553.455">Image output</tspan></text>
+<text id="Output / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="1144" y="591">Image + prompt&#10;</tspan><tspan x="1144" y="621">Seed + backend</tspan></text>
+</g>
+<text id="Affect meaning" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="56" y="683">Valence = pleasantness. Arousal = activation. These are text estimates.</tspan></text>
+<g id="Lane divider">
+<rect x="56.25" y="714.25" width="1327.5" height="0.5" rx="0.25" fill="#3B4850"/>
+<rect x="56.25" y="714.25" width="1327.5" height="0.5" rx="0.25" stroke="#3B4850" stroke-width="0.5"/>
+</g>
+<path id="Text shared by analysis branches" d="M280 400H316" stroke="#93A4AE" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Text to classifier" d="M316 400V306H352" stroke="#93A4AE" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Text to classifier / arrowhead" d="M352 306L340 300V312L352 306Z" fill="#93A4AE"/>
+<path id="Text to word lexicon" d="M316 400V506H352" stroke="#93A4AE" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Text to word lexicon / arrowhead" d="M352 506L340 500V512L352 506Z" fill="#93A4AE"/>
+<path id="Original text and selected style bypass analysis" d="M168 316V200H874V242" stroke="#50C4DF" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Original text and selected style bypass analysis / arrowhead" d="M874 242L880 230H868L874 242Z" fill="#50C4DF"/>
+<text id="Content bypass label" fill="#50C4DF" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="352" y="191">original text + selected style</tspan></text>
+<path id="Leading label selects prompt tier and mood" d="M624 306H728" stroke="#50C4DF" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Leading label selects prompt tier and mood / arrowhead" d="M728 306L716 300V312L728 306Z" fill="#50C4DF"/>
+<text id="Label edge" fill="#50C4DF" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="20" letter-spacing="0em"><tspan x="644" y="293.273">label</tspan></text>
+<path id="Leading-label priors feed affect blend" d="M624 344H660V552H728" stroke="#93A4AE" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Leading-label priors feed affect blend / arrowhead" d="M728 552L716 546V558L728 552Z" fill="#93A4AE"/>
+<text id="Prior edge" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="20" letter-spacing="0em"><tspan x="667" y="491.273">priors</tspan></text>
+<path id="Word means and coverage feed affect blend" d="M624 506H640V604H728" stroke="#93A4AE" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Word means and coverage feed affect blend / arrowhead" d="M728 604L716 598V610L728 604Z" fill="#93A4AE"/>
+<path id="Affect estimates select visual cues" d="M874 510V458" stroke="#50C4DF" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Affect estimates select visual cues / arrowhead" d="M874 458L868 470H880L874 458Z" fill="#50C4DF"/>
+<text id="Affect edge" fill="#50C4DF" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="20" letter-spacing="0em"><tspan x="888" y="495.273">V + A</tspan></text>
+<path id="Composed prompt to image backend" d="M1020 306H1124" stroke="#50C4DF" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Composed prompt to image backend / arrowhead" d="M1124 306L1112 300V312L1124 306Z" fill="#50C4DF"/>
+<text id="Prompt edge" fill="#50C4DF" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="20" letter-spacing="0em"><tspan x="1035" y="293.273">prompt</tspan></text>
+<path id="Seed and dimensions control rendering" d="M1254 210V242" stroke="#93A4AE" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Seed and dimensions control rendering / arrowhead" d="M1254 242L1260 230H1248L1254 242Z" fill="#93A4AE"/>
+<text id="Seed edge" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="1154" y="199">seed + size</tspan></text>
+<path id="Backend returns image and metadata" d="M1254 458V510" stroke="#93A4AE" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Backend returns image and metadata / arrowhead" d="M1254 510L1260 498H1248L1254 510Z" fill="#93A4AE"/>
+<text id="Output edge" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="20" letter-spacing="0em"><tspan x="1270" y="495.273">image</tspan></text>
+<text id="Research lane label" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" font-weight="600" letter-spacing="0em"><tspan x="56" y="763">02   SEPARATE VALIDATION</tspan></text>
+<g id="Experiment targets">
+<rect x="56.75" y="804.75" width="270.5" height="158.5" rx="7.25" fill="#1D252A"/>
+<rect x="56.75" y="804.75" width="270.5" height="158.5" rx="7.25" stroke="#77858F" stroke-width="1.5"/>
+<text id="Experiment targets / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="76" y="846.455">Set targets</tspan></text>
+<text id="Experiment targets / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="76" y="885">Subject + known label&#10;</tspan><tspan x="76" y="915">Set affect values first</tspan></text>
+</g>
+<g id="Paired experiment tiers">
+<rect x="408.75" y="804.75" width="270.5" height="158.5" rx="7.25" fill="#1D252A"/>
+<rect x="408.75" y="804.75" width="270.5" height="158.5" rx="7.25" stroke="#77858F" stroke-width="1.5"/>
+<text id="Paired experiment tiers / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="428" y="846.455">Pair prompt tiers</tspan></text>
+<text id="Paired experiment tiers / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="428" y="885">raw / naive&#10;</tspan><tspan x="428" y="915">emotion / affect&#10;</tspan><tspan x="428" y="945">Same seed + settings</tspan></text>
+</g>
+<g id="Measure generated images">
+<rect x="760.75" y="804.75" width="270.5" height="158.5" rx="7.25" fill="#1D252A"/>
+<rect x="760.75" y="804.75" width="270.5" height="158.5" rx="7.25" stroke="#77858F" stroke-width="1.5"/>
+<text id="Measure generated images / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="780" y="846.455">Render + probe</tspan></text>
+<text id="Measure generated images / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="780" y="885">Generate each tier&#10;</tspan><tspan x="780" y="915">Probe each image&#10;</tspan><tspan x="780" y="945">Label + fixed priors</tspan></text>
+</g>
+<g id="Compare and retain evidence">
+<rect x="1112.75" y="804.75" width="270.5" height="158.5" rx="7.25" fill="#1D252A"/>
+<rect x="1112.75" y="804.75" width="270.5" height="158.5" rx="7.25" stroke="#77858F" stroke-width="1.5"/>
+<text id="Compare and retain evidence / title" fill="#EDF3F6" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="26" font-weight="600" letter-spacing="0em"><tspan x="1132" y="846.455">Compare + save</tspan></text>
+<text id="Compare and retain evidence / details" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="1132" y="885">Targets vs. estimates&#10;</tspan><tspan x="1132" y="915">Label agreement&#10;</tspan><tspan x="1132" y="945">Save records + charts</tspan></text>
+</g>
+<path id="Known targets define conditions" d="M328 884H408" stroke="#93A4AE" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Known targets define conditions / arrowhead" d="M408 884L396 878V890L408 884Z" fill="#93A4AE"/>
+<path id="Paired prompt conditions are rendered" d="M680 884H760" stroke="#93A4AE" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Paired prompt conditions are rendered / arrowhead" d="M760 884L748 878V890L760 884Z" fill="#93A4AE"/>
+<path id="Image probe estimates enter comparison" d="M1032 884H1112" stroke="#93A4AE" stroke-width="2.5" stroke-linejoin="round"/>
+<path id="Image probe estimates enter comparison / arrowhead" d="M1112 884L1100 878V890L1112 884Z" fill="#93A4AE"/>
+<text id="Target edge" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="20" letter-spacing="0em"><tspan x="336" y="871.273">targets</tspan></text>
+<text id="Tiers edge" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="20" letter-spacing="0em"><tspan x="686" y="871.273">tiers</tspan></text>
+<text id="Probe edge" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="20" letter-spacing="0em"><tspan x="1046" y="871.273">scores</tspan></text>
+<path id="Targets retained independently for measurement" d="M192 964V1020H1248V964" stroke="#DBA58D" stroke-width="2.5" stroke-linejoin="round" stroke-dasharray="8 7"/>
+<path id="Targets retained independently for measurement / arrowhead" d="M1248 964L1242 976H1254L1248 964Z" fill="#DBA58D"/>
+<text id="Target bypass label" fill="#DBA58D" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="614" y="1008">intended targets</tspan></text>
+<text id="Evidence limit" fill="#ADBAC3" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="22" letter-spacing="0em"><tspan x="56" y="1093">Current classifier recovery is unmeasured. Label priors are not image affect measurements.</tspan></text>
+</g>
+</svg>

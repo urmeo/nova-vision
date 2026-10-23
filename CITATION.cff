@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "Cite this software when using its code or evaluation protocol."
+type: software
+title: "NovaVision: Emotion-guided image generation and recovery evaluation"
+version: 1.0.0
+repository-code: "https://github.com/urmeo/nova-vision"
+license: MIT
+authors:
+  - given-names: urme
+    alias: urmeo
+abstract: >-
+  A Python prototype for emotion-guided image prompts and paired
+  recovery evaluation. Archived pilot charts and tables do not
+  establish emotion controllability.

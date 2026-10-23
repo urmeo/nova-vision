@@ -1,0 +1,23 @@
+# Neutral content prompts for the decoupled controllability track.
+# Each subject is depictable and affect-neutral, so the same content can be
+# rendered under every intended emotion. One subject per line.
+a city street with buildings
+a person standing by a window
+a kitchen table with everyday objects
+a tree in an open field
+a winding road through hills
+a small wooden boat on water
+a living room interior
+a market stall with produce
+a bridge over a river
+a staircase inside a building
+a park bench under a tree
+a coffee cup on a desk
+a mountain seen from a valley
+a corridor with doors
+a garden with flowers and a path
+a child's bicycle leaning on a wall
+a beach with the tide coming in
+a train platform at a station
+a bookshelf filled with books
+a portrait of a person's face
