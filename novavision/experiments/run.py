@@ -187,10 +187,10 @@ def run_experiment(
     kwargs: dict = {"model_id": diffusion_model}
     if backend == "diffusers":
         kwargs["revision"] = diffusion_revision
+        if device:
+            kwargs["device"] = device
     elif backend == "hf-api":
         kwargs["timeout"] = hf_timeout
-    if device:
-        kwargs["device"] = device
     gen = get_backend(backend, **kwargs)
     probe_obj = HFImageClassifierProbe(
         model_id=probe_model, device=device, revision=probe_revision
