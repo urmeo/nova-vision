@@ -46,7 +46,7 @@ The fixed-scene diagnostic and mismatched-label control are separate from the fo
 
 The current image-classifier evaluation has not been run. No measured recovery accuracy, macro-F1, or human-rating results are reported.
 
-A new evaluation needs an image-classification checkpoint whose labels map to the project's emotion classes. Supply it with `--probe-model`, pin it with `--probe-revision`, and validate it on labeled images before running generation experiments.
+A new evaluation needs an image-classification checkpoint whose labels map to the project's emotion classes. Supply it with `--probe-model`, pin it with `--probe-revision`, and validate it on labeled images before running generation experiments. The evaluator does not enforce that mapping yet: it ignores scores for labels outside the seven emotions, which can misreport recovery, so check the checkpoint's labels first.
 
 The classifier's valence and arousal values come from fixed emotion-label priors. They are not independent measurements of an image's affect. Image–text similarity is unavailable in the current evaluator.
 
@@ -75,15 +75,18 @@ NOVA_BACKEND=diffusers python -m novavision.web
 | `novavision/` | Text analysis, prompts, generation, experiments, evaluation, and the Flask server. |
 | `docs/` | Web interface and the walkthrough with captions. |
 | `figma/` | Pipeline diagram exports. |
-| `scripts/` | Commands for evaluation reports, data setup, and site exports. |
+| `scripts/` | Commands for evaluation reports and data setup. |
 | `tests/` | Pipeline, API, interface, and evaluation checks. |
 | `outputs/generated/` | New local runs and reports; ignored by Git. |
 
 ## Roadmap
 
+- Time cold and repeat SD-Turbo requests on the target machine.
 - Run all four prompt tiers with more text descriptions and seeds.
 - Validate emotion probes on generated images across all seven labels.
 - Collect blinded human ratings of emotion, valence, and arousal.
+- Record resolved dataset commits when building benchmarks and validating probes.
+- Resample by description before generalizing results beyond the sampled descriptions.
 - Publish images, CSV results, and charts with dataset and model revisions.
 
 ## Tech Stack

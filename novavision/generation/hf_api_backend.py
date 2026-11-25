@@ -68,8 +68,6 @@ class HFApiBackend(ImageBackend):
         model_id: str = DIFFUSION_MODEL,
         token: str | None = None,
         timeout: float = DEFAULT_HF_TIMEOUT,
-        *,
-        device: str | None = None,
     ) -> None:
         timeout_error = "Hosted generation timeout must be finite and greater than zero."
         if isinstance(timeout, bool) or not isinstance(timeout, Real):
@@ -81,8 +79,6 @@ class HFApiBackend(ImageBackend):
         if not math.isfinite(timeout) or timeout <= 0:
             raise ValueError(timeout_error)
         _require_nonempty_string(model_id, "model_id")
-        if device is not None:
-            _require_nonempty_string(device, "device")
         self.timeout: float = timeout
         resolved_token = token if token is not None else os.getenv("HF_TOKEN")
         if resolved_token is None:

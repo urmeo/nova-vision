@@ -5,7 +5,7 @@ import random
 
 
 def set_determinism(seed: int = 0) -> None:
-    # Child processes
+    # Reaches only subprocesses; this interpreter's hash seed was fixed at startup.
     os.environ["PYTHONHASHSEED"] = str(seed % 2**32)
     random.seed(seed)
 

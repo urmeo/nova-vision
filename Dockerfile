@@ -19,7 +19,6 @@ COPY novavision/generation/*.py ./novavision/generation/
 RUN python -m pip install --no-cache-dir -r requirements.txt
 
 COPY docs/ ./docs/
-COPY figma/ ./figma/
 
 RUN useradd --create-home --uid 10001 nova
 USER 10001

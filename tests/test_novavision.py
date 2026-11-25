@@ -28,8 +28,8 @@ def pipeline():
 
 def test_text_to_image_pipeline_is_deterministic(pipeline):
     text = "A happy sunrise"
-    result = pipeline.auto_run(text, style="nature", seed=17, width=32, height=24)
-    repeated = pipeline.auto_run(text, style="nature", seed=17, width=32, height=24)
+    result = pipeline.generate(text, style="nature", seed=17, width=32, height=24)
+    repeated = pipeline.generate(text, style="nature", seed=17, width=32, height=24)
 
     assert result.analysis.primary == "joy"
     assert result.analysis.valence > 0

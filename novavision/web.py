@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request
 
 from novavision.affect.analyzer import EmotionAnalysis
 from novavision.pipeline import NovaVision, Settings, build_pipeline
@@ -132,10 +132,6 @@ def create_app(*, pipeline: NovaVision | None = None) -> Flask:
             mimetype="text/html",
         )
 
-    @app.get("/figma/<path:filename>")
-    def figma_assets(filename):
-        return send_from_directory(_ROOT / "figma", filename)
-
     @app.post("/api/analyze")
     def analyze():
         if (limited := rate_limited()) is not None:
@@ -172,7 +168,7 @@ def create_app(*, pipeline: NovaVision | None = None) -> Flask:
         if not generation_guard.acquire():
             return jsonify({"error": "Server busy. Try again shortly."}), 429
         try:
-            result = get_pipeline().auto_run(text, style=style, seed=seed)
+            result = get_pipeline().generate(text, style=style, seed=seed)
             with BytesIO() as buffer:
                 result.image.save(buffer, format="PNG")
                 image = base64.b64encode(buffer.getvalue()).decode("ascii")

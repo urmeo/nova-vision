@@ -305,6 +305,3 @@ def paired_binary_test(
         "ci_high": float(hi),
         "p_value": float(mcnemar_exact(a, b)["p_value"]),
     }
-
-
-paired_bootstrap_test = paired_binary_test
