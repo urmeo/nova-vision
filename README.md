@@ -75,7 +75,7 @@ NOVA_BACKEND=diffusers python -m novavision.web
 | `novavision/` | Text analysis, prompts, generation, experiments, evaluation, and the Flask server. |
 | `docs/` | Web interface and the walkthrough with captions. |
 | `figma/` | Pipeline diagram exports. |
-| `scripts/` | Commands for evaluation reports, data setup, and site exports. |
+| `scripts/` | Commands for evaluation reports and data setup. |
 | `tests/` | Pipeline, API, interface, and evaluation checks. |
 | `outputs/generated/` | New local runs and reports; ignored by Git. |
 
