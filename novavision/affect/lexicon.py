@@ -9,7 +9,7 @@ from pathlib import Path
 
 from novavision.data.loaders import LEXICON_PATH
 
-# Contractions
+# Words, keeping contractions such as "don't" as one token.
 _TOKEN = re.compile(r"[a-z]+(?:'[a-z]+)*")
 _NEGATION_BOUNDARY = re.compile(r"[.!?,;:\r\n\v\f\x85\u2028\u2029…–—]|--|\s-\s")
 

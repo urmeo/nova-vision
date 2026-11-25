@@ -10,5 +10,5 @@ authors:
     alias: urmeo
 abstract: >-
   A Python prototype for emotion-guided image prompts and paired
-  recovery evaluation. Archived pilot charts and tables do not
-  establish emotion controllability.
+  recovery evaluation. Image-classifier recovery has not yet been
+  measured.
